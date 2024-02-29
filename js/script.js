@@ -743,7 +743,7 @@
 				}
 			}
 
-			$.getScript('//maps.google.com/maps/api/js?'+ ( key ? 'key='+ key + '&' : '' ) +'sensor=false&libraries=geometry,places&v=quarterly', function () {
+			$.getScript('https://maps.google.com/maps/api/js?'+ ( key ? 'key='+ key + '&' : '' ) +'sensor=false&libraries=geometry,places&v=quarterly', function () {
 				var geocoder = new google.maps.Geocoder;
 				for (var i = 0; i < plugins.maps.length; i++) {
 					var zoom = parseInt(plugins.maps[i].getAttribute("data-zoom"), 4) || 5;
