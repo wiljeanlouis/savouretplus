@@ -49,7 +49,7 @@
 			rdInputLabel: $(".form-label"),
 			regula: $("[data-constraints]"),
 			radio: $("input[type='radio']"),
-			swiper: document.querySelectorAll( '.swiper-container' ),
+			swiper: document.querySelectorAll('.swiper-container'),
 			search: $(".rd-search"),
 			searchResults: $('.rd-search-results'),
 			statefulButton: $('.btn-stateful'),
@@ -61,11 +61,11 @@
 			slick: $('.slick-slider'),
 			stepper: $("input[type='number']"),
 			radioPanel: $('.radio-panel .radio-inline'),
-			multitoggle: document.querySelectorAll( '[data-multitoggle]' ),
-			counter:                 document.querySelectorAll('.counter'),
-			progressLinear:          document.querySelectorAll('.progress-linear'),
-			progressCircle:          document.querySelectorAll('.progress-circle'),
-			countdown:               document.querySelectorAll('.countdown')
+			multitoggle: document.querySelectorAll('[data-multitoggle]'),
+			counter: document.querySelectorAll('.counter'),
+			progressLinear: document.querySelectorAll('.progress-linear'),
+			progressCircle: document.querySelectorAll('.progress-circle'),
+			countdown: document.querySelectorAll('.countdown')
 		};
 
 	/**
@@ -73,8 +73,8 @@
 	 * @param {object} elem - jQuery object
 	 * @return {boolean}
 	 */
-	function isScrolledIntoView ( elem ) {
-		if ( isNoviBuilder ) return true;
+	function isScrolledIntoView(elem) {
+		if (isNoviBuilder) return true;
 		return elem.offset().top + elem.outerHeight() >= $window.scrollTop() && elem.offset().top <= $window.scrollTop() + $window.height();
 	}
 
@@ -83,16 +83,16 @@
 	 * @param {object} element - jQuery object
 	 * @param {function} func - init function
 	 */
-	function lazyInit( element, func ) {
+	function lazyInit(element, func) {
 		var scrollHandler = function () {
-			if ( ( !element.hasClass( 'lazy-loaded' ) && ( isScrolledIntoView( element ) ) ) ) {
+			if ((!element.hasClass('lazy-loaded') && (isScrolledIntoView(element)))) {
 				func.call();
-				element.addClass( 'lazy-loaded' );
+				element.addClass('lazy-loaded');
 			}
 		};
 
 		scrollHandler();
-		$window.on( 'scroll', scrollHandler );
+		$window.on('scroll', scrollHandler);
 	}
 
 	// Initialize scripts that require a loaded page
@@ -100,7 +100,7 @@
 		// Page loader & Page transition
 		if (plugins.preloader.length && !isNoviBuilder) {
 			pageTransition({
-				target: document.querySelector( '.page' ),
+				target: document.querySelector('.page'),
 				delay: 0,
 				duration: 500,
 				classIn: 'fadeIn',
@@ -109,10 +109,10 @@
 				conditions: function (event, link) {
 					return !/(\#|callto:|tel:|mailto:|:\/\/)/.test(link) && !event.currentTarget.hasAttribute('data-lightgallery');
 				},
-				onTransitionStart: function ( options ) {
-					setTimeout( function () {
+				onTransitionStart: function (options) {
+					setTimeout(function () {
 						plugins.preloader.removeClass('loaded');
-					}, options.duration * .75 );
+					}, options.duration * .75);
 				},
 				onReady: function () {
 					plugins.preloader.addClass('loaded');
@@ -127,7 +127,7 @@
 				let
 					node = plugins.counter[i],
 					counter = aCounter({
-						node:     node,
+						node: node,
 						duration: node.getAttribute('data-duration') || 1000
 					}),
 					scrollHandler = (function () {
@@ -159,23 +159,23 @@
 					bar = container.querySelector('.progress-linear-bar'),
 					duration = container.getAttribute('data-duration') || 1000,
 					counter = aCounter({
-						node:     container.querySelector('.progress-linear-counter'),
+						node: container.querySelector('.progress-linear-counter'),
 						duration: duration,
-						onStart:  function () {
+						onStart: function () {
 							this.custom.bar.style.width = this.params.to + '%';
 						}
 					});
 				bar.style.transitionDuration = duration / 1000 + 's';
 				counter.custom = {
 					container: container,
-					bar:       bar,
-					onScroll:  (function () {
+					bar: bar,
+					onScroll: (function () {
 						if ((Util.inViewport(this.custom.container) && !this.custom.container.classList.contains('animated')) || isNoviBuilder) {
 							this.run();
 							this.custom.container.classList.add('animated');
 						}
 					}).bind(counter),
-					onBlur:    (function () {
+					onBlur: (function () {
 						this.params.to = parseInt(this.params.node.textContent, 10);
 						this.run();
 					}).bind(counter)
@@ -197,7 +197,7 @@
 				let
 					container = plugins.progressCircle[i],
 					counter = aCounter({
-						node:     container.querySelector('.progress-circle-counter'),
+						node: container.querySelector('.progress-circle-counter'),
 						duration: 500,
 						onUpdate: function (value) {
 							this.custom.bar.render(value * 3.6);
@@ -208,14 +208,14 @@
 
 				counter.custom = {
 					container: container,
-					bar:       aProgressCircle({node: container.querySelector('.progress-circle-bar')}),
-					onScroll:  (function () {
+					bar: aProgressCircle({ node: container.querySelector('.progress-circle-bar') }),
+					onScroll: (function () {
 						if (Util.inViewport(this.custom.container) && !this.custom.container.classList.contains('animated')) {
 							this.run();
 							this.custom.container.classList.add('animated');
 						}
 					}).bind(counter),
-					onBlur:    (function () {
+					onBlur: (function () {
 						this.params.to = parseInt(this.params.node.textContent, 10);
 						this.run();
 					}).bind(counter)
@@ -232,53 +232,53 @@
 		}
 
 		// Isotope
-		if ( plugins.isotope.length ) {
-			for ( var i = 0; i < plugins.isotope.length; i++ ) {
+		if (plugins.isotope.length) {
+			for (var i = 0; i < plugins.isotope.length; i++) {
 				var
-					wrap = plugins.isotope[ i ],
-					filterHandler = function ( event ) {
+					wrap = plugins.isotope[i],
+					filterHandler = function (event) {
 						event.preventDefault();
-						for ( var n = 0; n < this.isoGroup.filters.length; n++ ) this.isoGroup.filters[ n ].classList.remove( 'active' );
-						this.classList.add( 'active' );
-						this.isoGroup.isotope.arrange( { filter: this.getAttribute( "data-isotope-filter" ) !== '*' ? '[data-filter*="' + this.getAttribute( "data-isotope-filter" ) + '"]' : '*' } );
+						for (var n = 0; n < this.isoGroup.filters.length; n++) this.isoGroup.filters[n].classList.remove('active');
+						this.classList.add('active');
+						this.isoGroup.isotope.arrange({ filter: this.getAttribute("data-isotope-filter") !== '*' ? '[data-filter*="' + this.getAttribute("data-isotope-filter") + '"]' : '*' });
 					},
 					resizeHandler = function () {
 						this.isoGroup.isotope.layout();
 					};
 
 				wrap.isoGroup = {};
-				wrap.isoGroup.filters = wrap.querySelectorAll( '[data-isotope-filter]' );
-				wrap.isoGroup.node = wrap.querySelector( '.isotope' );
-				wrap.isoGroup.layout = wrap.isoGroup.node.getAttribute( 'data-isotope-layout' ) ? wrap.isoGroup.node.getAttribute( 'data-isotope-layout' ) : 'masonry';
-				wrap.isoGroup.isotope = new Isotope( wrap.isoGroup.node, {
+				wrap.isoGroup.filters = wrap.querySelectorAll('[data-isotope-filter]');
+				wrap.isoGroup.node = wrap.querySelector('.isotope');
+				wrap.isoGroup.layout = wrap.isoGroup.node.getAttribute('data-isotope-layout') ? wrap.isoGroup.node.getAttribute('data-isotope-layout') : 'masonry';
+				wrap.isoGroup.isotope = new Isotope(wrap.isoGroup.node, {
 					itemSelector: '.isotope-item',
 					layoutMode: wrap.isoGroup.layout,
 					filter: '*',
 					masonry: {
 						columnWidth: '.col-1'
 					}
-				} );
+				});
 
-				for ( var n = 0; n < wrap.isoGroup.filters.length; n++ ) {
-					var filter = wrap.isoGroup.filters[ n ];
+				for (var n = 0; n < wrap.isoGroup.filters.length; n++) {
+					var filter = wrap.isoGroup.filters[n];
 					filter.isoGroup = wrap.isoGroup;
-					filter.addEventListener( 'click', filterHandler );
+					filter.addEventListener('click', filterHandler);
 				}
 
-				window.addEventListener( 'resize', resizeHandler.bind( wrap ) );
+				window.addEventListener('resize', resizeHandler.bind(wrap));
 			}
 		}
 
 		// Material Parallax
-		if ( plugins.materialParallax.length ) {
-			if ( !isNoviBuilder && !isIE && !isMobile) {
+		if (plugins.materialParallax.length) {
+			if (!isNoviBuilder && !isIE && !isMobile) {
 				plugins.materialParallax.parallax();
 			} else {
-				for ( var i = 0; i < plugins.materialParallax.length; i++ ) {
+				for (var i = 0; i < plugins.materialParallax.length; i++) {
 					var $parallax = $(plugins.materialParallax[i]);
 
-					$parallax.addClass( 'parallax-disabled' );
-					$parallax.css({ "background-image": 'url('+ $parallax.data("parallax-img") +')' });
+					$parallax.addClass('parallax-disabled');
+					$parallax.css({ "background-image": 'url(' + $parallax.data("parallax-img") + ')' });
 				}
 			}
 		}
@@ -427,8 +427,8 @@
 				animateOut: c.attr('data-animation-out') ? c.attr('data-animation-out') : false,
 				responsive: responsive,
 				smartSpeed: c.attr('data-smart-speed') ? c.attr('data-smart-speed') : 250,
-				navText: c.attr("data-nav-text") ? $.parseJSON( c.attr("data-nav-text") ) : [],
-				navClass: c.attr("data-nav-class") ? $.parseJSON( c.attr("data-nav-class") ) : ['owl-prev', 'owl-next']
+				navText: c.attr("data-nav-text") ? $.parseJSON(c.attr("data-nav-text")) : [],
+				navClass: c.attr("data-nav-class") ? $.parseJSON(c.attr("data-nav-class")) : ['owl-prev', 'owl-next']
 			});
 		}
 
@@ -470,9 +470,9 @@
 			regula.custom({
 				name: 'PhoneNumber',
 				defaultMessage: 'Invalid phone number format',
-				validator: function() {
-					if ( this.value === '' ) return true;
-					else return /^(\+\d)?[0-9\-\(\) ]{5,}$/i.test( this.value );
+				validator: function () {
+					if (this.value === '') return true;
+					else return /^(\+\d)?[0-9\-\(\) ]{5,}$/i.test(this.value);
 				}
 			});
 
@@ -489,7 +489,7 @@
 				if (e.type !== "blur") if (!$this.parent().hasClass("has-error")) return;
 				if ($this.parents('.rd-mailform').hasClass('success')) return;
 
-				if (( results = $this.regula('validate') ).length) {
+				if ((results = $this.regula('validate')).length) {
 					for (i = 0; i < results.length; i++) {
 						$this.siblings(".form-validation").text(results[i].message).parent().addClass("has-error");
 					}
@@ -631,9 +631,9 @@
 			plugins.bootstrapTooltip.tooltip('dispose');
 
 			if (window.innerWidth < 576) {
-				plugins.bootstrapTooltip.tooltip({placement: 'bottom'});
+				plugins.bootstrapTooltip.tooltip({ placement: 'bottom' });
 			} else {
-				plugins.bootstrapTooltip.tooltip({placement: tooltipPlacement});
+				plugins.bootstrapTooltip.tooltip({ placement: tooltipPlacement });
 			}
 		}
 
@@ -716,7 +716,7 @@
 					coordinates.lng
 				), marker, map)
 			} catch (e) {
-				map.geocoder.geocode({'address': str}, function (results, status) {
+				map.geocoder.geocode({ 'address': str }, function (results, status) {
 					if (status === google.maps.GeocoderStatus.OK) {
 						var latitude = results[0].geometry.location.lat();
 						var longitude = results[0].geometry.location.lng();
@@ -736,14 +736,14 @@
 		function initMaps() {
 			var key;
 
-			for ( var i = 0; i < plugins.maps.length; i++ ) {
-				if ( plugins.maps[i].hasAttribute( "data-key" ) ) {
-					key = plugins.maps[i].getAttribute( "data-key" );
+			for (var i = 0; i < plugins.maps.length; i++) {
+				if (plugins.maps[i].hasAttribute("data-key")) {
+					key = plugins.maps[i].getAttribute("data-key");
 					break;
 				}
 			}
 
-			$.getScript('https://maps.google.com/maps/api/js?'+ ( key ? 'key='+ key + '&' : '' ) +'sensor=false&libraries=geometry,places&v=quarterly', function () {
+			$.getScript('https://maps.google.com/maps/api/js?' + (key ? 'key=' + key + '&' : '') + 'sensor=false&libraries=geometry,places&v=quarterly', function () {
 				var geocoder = new google.maps.Geocoder;
 				for (var i = 0; i < plugins.maps.length; i++) {
 					var zoom = parseInt(plugins.maps[i].getAttribute("data-zoom"), 4) || 5;
@@ -755,7 +755,7 @@
 						zoom: zoom,
 						styles: styles,
 						scrollwheel: false,
-						center: {lat: 0, lng: 0}
+						center: { lat: 0, lng: 0 }
 					});
 
 					// Add map object to map node
@@ -771,11 +771,11 @@
 					// Add markers from google-map-markers array
 					var markerItems = plugins.maps[i].querySelectorAll(".google-map-markers li");
 
-					if (markerItems.length){
+					if (markerItems.length) {
 						var markers = [];
-						for (var j = 0; j < markerItems.length; j++){
+						for (var j = 0; j < markerItems.length; j++) {
 							var markerElement = markerItems[j];
-							getLatLngObject(markerElement.getAttribute("data-location"), markerElement, plugins.maps[i], function(location, markerElement, mapElement){
+							getLatLngObject(markerElement.getAttribute("data-location"), markerElement, plugins.maps[i], function (location, markerElement, mapElement) {
 								var icon = markerElement.getAttribute("data-icon") || mapElement.getAttribute("data-icon");
 								var activeIcon = markerElement.getAttribute("data-icon-active") || mapElement.getAttribute("data-icon-active");
 								var info = markerElement.getAttribute("data-description") || "";
@@ -787,15 +787,15 @@
 									position: location,
 									map: mapElement.map
 								}
-								if (icon){
+								if (icon) {
 									markerData.icon = icon;
 								}
 								var marker = new google.maps.Marker(markerData);
 								markerElement.gmarker = marker;
-								markers.push({markerElement: markerElement, infoWindow: infoWindow});
+								markers.push({ markerElement: markerElement, infoWindow: infoWindow });
 								marker.isActive = false;
 								// Handle infoWindow close click
-								google.maps.event.addListener(infoWindow,'closeclick',(function(markerElement, mapElement){
+								google.maps.event.addListener(infoWindow, 'closeclick', (function (markerElement, mapElement) {
 									var markerIcon = null;
 									markerElement.gmarker.isActive = false;
 									markerIcon = markerElement.getAttribute("data-icon") || mapElement.getAttribute("data-icon");
@@ -804,16 +804,16 @@
 
 
 								// Set marker active on Click and open infoWindow
-								google.maps.event.addListener(marker, 'click', (function(markerElement, mapElement) {
+								google.maps.event.addListener(marker, 'click', (function (markerElement, mapElement) {
 									if (markerElement.infoWindow.getContent().length === 0) return;
 									var gMarker, currentMarker = markerElement.gmarker, currentInfoWindow;
-									for (var k =0; k < markers.length; k++){
+									for (var k = 0; k < markers.length; k++) {
 										var markerIcon;
-										if (markers[k].markerElement === markerElement){
+										if (markers[k].markerElement === markerElement) {
 											currentInfoWindow = markers[k].infoWindow;
 										}
 										gMarker = markers[k].markerElement.gmarker;
-										if (gMarker.isActive && markers[k].markerElement !== markerElement){
+										if (gMarker.isActive && markers[k].markerElement !== markerElement) {
 											gMarker.isActive = false;
 											markerIcon = markers[k].markerElement.getAttribute("data-icon") || mapElement.getAttribute("data-icon")
 											gMarker.setIcon(markerIcon);
@@ -823,13 +823,13 @@
 
 									currentMarker.isActive = !currentMarker.isActive;
 									if (currentMarker.isActive) {
-										if (markerIcon = markerElement.getAttribute("data-icon-active") || mapElement.getAttribute("data-icon-active")){
+										if (markerIcon = markerElement.getAttribute("data-icon-active") || mapElement.getAttribute("data-icon-active")) {
 											currentMarker.setIcon(markerIcon);
 										}
 
 										currentInfoWindow.open(map, marker);
-									}else{
-										if (markerIcon = markerElement.getAttribute("data-icon") || mapElement.getAttribute("data-icon")){
+									} else {
+										if (markerIcon = markerElement.getAttribute("data-icon") || mapElement.getAttribute("data-icon")) {
 											currentMarker.setIcon(markerIcon);
 										}
 										currentInfoWindow.close();
@@ -846,9 +846,9 @@
 		 * @desc Sets the actual previous index based on the position of the slide in the markup. Should be the most recent action.
 		 * @param {object} swiper - swiper instance
 		 */
-		function setRealPrevious( swiper ) {
-			var element = swiper.$wrapperEl[0].children[ swiper.activeIndex ];
-			swiper.realPrevious = Array.prototype.indexOf.call( element.parentNode.children, element );
+		function setRealPrevious(swiper) {
+			var element = swiper.$wrapperEl[0].children[swiper.activeIndex];
+			swiper.realPrevious = Array.prototype.indexOf.call(element.parentNode.children, element);
 		}
 
 		function initSwiper(sliderMarkup) {
@@ -1034,8 +1034,8 @@
 		}
 
 		// Google maps
-		if( plugins.maps.length ) {
-			lazyInit( plugins.maps, initMaps );
+		if (plugins.maps.length) {
+			lazyInit(plugins.maps, initMaps);
 		}
 
 		// Add custom styling options for input[type="radio"]
@@ -1144,9 +1144,9 @@
 			}
 
 			// Owl bug with webkit scrollbar
-			if ( !isIE || isIE >= 12 ) {
-				setTimeout( function() {
-					window.dispatchEvent( new Event('resize') );
+			if (!isIE || isIE >= 12) {
+				setTimeout(function () {
+					window.dispatchEvent(new Event('resize'));
 				}, 500)
 			}
 		}
@@ -1255,32 +1255,32 @@
 		 * @desc Animate captions on active slides
 		 * @param {object} swiper - swiper instance
 		 */
-		function initCaptionAnimate( swiper ) {
+		function initCaptionAnimate(swiper) {
 			var
-				animate = function ( caption ) {
-					return function() {
+				animate = function (caption) {
+					return function () {
 						var duration;
-						if ( duration = caption.getAttribute( 'data-caption-duration' ) ) caption.style.animationDuration = duration +'ms';
-						caption.classList.remove( 'not-animated' );
-						caption.classList.add( caption.getAttribute( 'data-caption-animate' ) );
-						caption.classList.add( 'animated' );
+						if (duration = caption.getAttribute('data-caption-duration')) caption.style.animationDuration = duration + 'ms';
+						caption.classList.remove('not-animated');
+						caption.classList.add(caption.getAttribute('data-caption-animate'));
+						caption.classList.add('animated');
 					};
 				},
-				initializeAnimation = function ( captions ) {
-					for ( var i = 0; i < captions.length; i++ ) {
+				initializeAnimation = function (captions) {
+					for (var i = 0; i < captions.length; i++) {
 						var caption = captions[i];
-						caption.classList.remove( 'animated' );
-						caption.classList.remove( caption.getAttribute( 'data-caption-animate' ) );
-						caption.classList.add( 'not-animated' );
+						caption.classList.remove('animated');
+						caption.classList.remove(caption.getAttribute('data-caption-animate'));
+						caption.classList.add('not-animated');
 					}
 				},
-				finalizeAnimation = function ( captions ) {
-					for ( var i = 0; i < captions.length; i++ ) {
+				finalizeAnimation = function (captions) {
+					for (var i = 0; i < captions.length; i++) {
 						var caption = captions[i];
-						if ( caption.getAttribute( 'data-caption-delay' ) ) {
-							setTimeout( animate( caption ), Number( caption.getAttribute( 'data-caption-delay' ) ) );
+						if (caption.getAttribute('data-caption-delay')) {
+							setTimeout(animate(caption), Number(caption.getAttribute('data-caption-delay')));
 						} else {
-							animate( caption )();
+							animate(caption)();
 						}
 					}
 				};
@@ -1290,21 +1290,21 @@
 				animationEvent: 'slideChangeTransitionEnd'
 			};
 
-			initializeAnimation( swiper.$wrapperEl[0].querySelectorAll( '[data-caption-animate]' ) );
-			finalizeAnimation( swiper.$wrapperEl[0].children[ swiper.activeIndex ].querySelectorAll( '[data-caption-animate]' ) );
+			initializeAnimation(swiper.$wrapperEl[0].querySelectorAll('[data-caption-animate]'));
+			finalizeAnimation(swiper.$wrapperEl[0].children[swiper.activeIndex].querySelectorAll('[data-caption-animate]'));
 
-			if ( swiper.params.caption.animationEvent === 'slideChangeTransitionEnd' ) {
-				swiper.on( swiper.params.caption.animationEvent, function() {
-					initializeAnimation( swiper.$wrapperEl[0].children[ swiper.previousIndex ].querySelectorAll( '[data-caption-animate]' ) );
-					finalizeAnimation( swiper.$wrapperEl[0].children[ swiper.activeIndex ].querySelectorAll( '[data-caption-animate]' ) );
+			if (swiper.params.caption.animationEvent === 'slideChangeTransitionEnd') {
+				swiper.on(swiper.params.caption.animationEvent, function () {
+					initializeAnimation(swiper.$wrapperEl[0].children[swiper.previousIndex].querySelectorAll('[data-caption-animate]'));
+					finalizeAnimation(swiper.$wrapperEl[0].children[swiper.activeIndex].querySelectorAll('[data-caption-animate]'));
 				});
 			} else {
-				swiper.on( 'slideChangeTransitionEnd', function() {
-					initializeAnimation( swiper.$wrapperEl[0].children[ swiper.previousIndex ].querySelectorAll( '[data-caption-animate]' ) );
+				swiper.on('slideChangeTransitionEnd', function () {
+					initializeAnimation(swiper.$wrapperEl[0].children[swiper.previousIndex].querySelectorAll('[data-caption-animate]'));
 				});
 
-				swiper.on( swiper.params.caption.animationEvent, function() {
-					finalizeAnimation( swiper.$wrapperEl[0].children[ swiper.activeIndex ].querySelectorAll( '[data-caption-animate]' ) );
+				swiper.on(swiper.params.caption.animationEvent, function () {
+					finalizeAnimation(swiper.$wrapperEl[0].children[swiper.activeIndex].querySelectorAll('[data-caption-animate]'));
 				});
 			}
 		}
@@ -1316,10 +1316,10 @@
 			}
 
 			var dynamicSwipers = $('.swiper-slider-custom');
-			if(dynamicSwipers.length) {
+			if (dynamicSwipers.length) {
 				$window.on('resize orientationchange', function () {
 					for (var i = 0; i < dynamicSwipers.length; i++) {
-						if(window.innerWidth < 576 && dynamicSwipers[i].swiper.params.direction === 'vertical') {
+						if (window.innerWidth < 576 && dynamicSwipers[i].swiper.params.direction === 'vertical') {
 							dynamicSwipers[i].setAttribute('data-direction', 'horizontal');
 							dynamicSwipers[i].swiper.destroy();
 							initSwiper(dynamicSwipers[i]);
@@ -1358,7 +1358,7 @@
 				$mailchimpItem.attr('novalidate', 'true');
 				$email.attr('name', 'EMAIL');
 
-				$mailchimpItem.on('submit', $.proxy( function ( $email, event ) {
+				$mailchimpItem.on('submit', $.proxy(function ($email, event) {
 					event.preventDefault();
 
 					var $this = this;
@@ -1386,8 +1386,8 @@
 						success: function (resp) {
 							$output.html(resp.msg).addClass('active');
 							$email[0].value = '';
-							var $label = $('[for="'+ $email.attr( 'id' ) +'"]');
-							if ( $label.length ) $label.removeClass( 'focus not-empty' );
+							var $label = $('[for="' + $email.attr('id') + '"]');
+							if ($label.length) $label.removeClass('focus not-empty');
 
 							setTimeout(function () {
 								$output.removeClass("active");
@@ -1434,7 +1434,7 @@
 					});
 
 					return false;
-				}, $mailchimpItem, $email ));
+				}, $mailchimpItem, $email));
 			}
 		}
 
@@ -1485,8 +1485,8 @@
 					var inputs = $this[0].getElementsByTagName('input');
 					for (var i = 0; i < inputs.length; i++) {
 						inputs[i].value = '';
-						var label = document.querySelector( '[for="'+ inputs[i].getAttribute( 'id' ) +'"]' );
-						if( label ) label.classList.remove( 'focus', 'not-empty' );
+						var label = document.querySelector('[for="' + inputs[i].getAttribute('id') + '"]');
+						if (label) label.classList.remove('focus', 'not-empty');
 					}
 
 					return false;
@@ -1543,7 +1543,7 @@
 								$.ajax({
 									method: "POST",
 									url: "bat/reCaptcha.php",
-									data: {'g-recaptcha-response': captchaToken},
+									data: { 'g-recaptcha-response': captchaToken },
 									async: false
 								})
 									.done(function (responceCode) {
@@ -1692,8 +1692,8 @@
 				if ($this.attr("data-custom-toggle-hide-on-blur") === "true") {
 					$body.on("click", $this, function (e) {
 						if (e.target !== e.data[0]
-								&& $(e.data.attr('data-custom-toggle')).find($(e.target)).length
-								&& e.data.find($(e.target)).length === 0) {
+							&& $(e.data.attr('data-custom-toggle')).find($(e.target)).length
+							&& e.data.find($(e.target)).length === 0) {
 							$(e.data.attr('data-custom-toggle')).add(e.data[0]).removeClass('active');
 						}
 					})
@@ -1713,12 +1713,12 @@
 		if (plugins.rdRange.length && !isNoviBuilder) {
 			plugins.rdRange.RDRange({
 				callbacks: {
-					onChange: function() {
+					onChange: function () {
 						var $inputs = $('.rd-range-input-value-1, .rd-range-input-value-2');
 
-						for(var z = 0; z < $inputs.length; z++) {
+						for (var z = 0; z < $inputs.length; z++) {
 
-							if(isDesktop) {
+							if (isDesktop) {
 								$inputs[z].style.width = ($inputs[z].value.length + 1) * 1.15 + 'ch';
 							}
 						}
@@ -1737,7 +1737,7 @@
 
 				select.select2({
 					placeholder: select.attr("data-placeholder") ? select.attr("data-placeholder") : false,
-					minimumResultsForSearch: select.attr("data-minimum-results-search") ? select.attr("data-minimum-results-search") :  -1,
+					minimumResultsForSearch: select.attr("data-minimum-results-search") ? select.attr("data-minimum-results-search") : -1,
 					maximumSelectionSize: 3,
 					dropdownCssClass: select.attr("data-dropdown-class") ? select.attr("data-dropdown-class") : false
 				});
@@ -1764,7 +1764,7 @@
 					swipe: $slickItem.attr("data-swipe") === "true",
 					autoplay: $slickItem.attr("data-autoplay") === "true",
 					centerMode: $slickItem.attr("data-center-mode") === "true",
-					fade:  $slickItem.attr("data-slide-effect") === "true",
+					fade: $slickItem.attr("data-slide-effect") === "true",
 					centerPadding: $slickItem.attr("data-center-padding") ? $slickItem.attr("data-center-padding") : '0.50',
 					mobileFirst: true,
 					appendArrows: $slickItem.attr("data-arrows-class") || $slickItem,
@@ -1815,15 +1815,15 @@
 						}
 					]
 				})
-				.on('afterChange', function (event, slick, currentSlide, nextSlide) {
-					var $this = $(this),
-						childCarousel = $this.attr('data-child');
+					.on('afterChange', function (event, slick, currentSlide, nextSlide) {
+						var $this = $(this),
+							childCarousel = $this.attr('data-child');
 
-					if (childCarousel) {
-						$(childCarousel + ' .slick-slide').removeClass('slick-current');
-						$(childCarousel + ' .slick-slide').eq(currentSlide).addClass('slick-current');
-					}
-				});
+						if (childCarousel) {
+							$(childCarousel + ' .slick-slide').removeClass('slick-current');
+							$(childCarousel + ' .slick-slide').eq(currentSlide).addClass('slick-current');
+						}
+					});
 			}
 		}
 
@@ -1849,7 +1849,7 @@
 		}
 
 		// Multitoggles
-		if(plugins.multitoggle.length) {
+		if (plugins.multitoggle.length) {
 			multitoggles();
 		}
 
@@ -1860,13 +1860,212 @@
 				let
 					node = plugins.countdown[i],
 					countdown = aCountdown({
-						node:  node,
-						from:  node.getAttribute('data-from'),
-						to:    node.getAttribute('data-to'),
+						node: node,
+						from: node.getAttribute('data-from'),
+						to: node.getAttribute('data-to'),
 						count: node.getAttribute('data-count'),
-						tick:  100,
+						tick: 100,
 					});
 			}
 		}
 	});
+
+
+
+
+	(function () {
+		var scriptURL = 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js';
+		if (window.ShopifyBuy) {
+			if (window.ShopifyBuy.UI) {
+				ShopifyBuyInit();
+			} else {
+				loadScript();
+			}
+		} else {
+			loadScript();
+		}
+		function loadScript() {
+			var script = document.createElement('script');
+			script.async = true;
+			script.src = scriptURL;
+			(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(script);
+			script.onload = ShopifyBuyInit;
+		}
+		function ShopifyBuyInit() {
+			var client = ShopifyBuy.buildClient({
+				domain: '53k8f8-fv.myshopify.com',
+				storefrontAccessToken: 'efb27f231441cbc0cf25a891c6c539c9',
+			});
+			ShopifyBuy.UI.onReady(client).then(function (ui) {
+				ui.createComponent('product', {
+					id: '8998763430120',
+					node: document.getElementById('product-component-1731299551154'),
+					moneyFormat: '%24%7B%7Bamount%7D%7D',
+					options: {
+						"product": {
+							"styles": {
+								"product": {
+									"@media (min-width: 601px)": {
+										"max-width": "calc(25% - 20px)",
+										"margin-left": "20px",
+										"margin-bottom": "50px"
+									},
+									"text-align": "right"
+								},
+								"button": {
+									"font-family": "Roboto, sans-serif",
+									"font-weight": "bold",
+									"font-size": "16px",
+									"padding-top": "16px",
+									"padding-bottom": "16px",
+									":hover": {
+										"background-color": "#94315a"
+									},
+									"background-color": "#a43664",
+									":focus": {
+										"background-color": "#94315a"
+									}
+								},
+								"quantityInput": {
+									"font-size": "16px",
+									"padding-top": "16px",
+									"padding-bottom": "16px"
+								}
+							},
+							"contents": {
+								"img": false,
+								"title": false,
+								"price": false
+							},
+							"text": {
+								"button": "Ajouter au panier"
+							},
+							"googleFonts": [
+								"Roboto"
+							]
+						},
+						"productSet": {
+							"styles": {
+								"products": {
+									"@media (min-width: 601px)": {
+										"margin-left": "-20px"
+									}
+								}
+							}
+						},
+						"modalProduct": {
+							"contents": {
+								"img": false,
+								"imgWithCarousel": true,
+								"button": false,
+								"buttonWithQuantity": true
+							},
+							"styles": {
+								"product": {
+									"@media (min-width: 601px)": {
+										"max-width": "100%",
+										"margin-left": "0px",
+										"margin-bottom": "0px"
+									}
+								},
+								"button": {
+									"font-family": "Roboto, sans-serif",
+									"font-weight": "bold",
+									"font-size": "16px",
+									"padding-top": "16px",
+									"padding-bottom": "16px",
+									":hover": {
+										"background-color": "#94315a"
+									},
+									"background-color": "#a43664",
+									":focus": {
+										"background-color": "#94315a"
+									}
+								},
+								"quantityInput": {
+									"font-size": "16px",
+									"padding-top": "16px",
+									"padding-bottom": "16px"
+								}
+							},
+							"googleFonts": [
+								"Roboto"
+							],
+							"text": {
+								"button": "Add to cart"
+							}
+						},
+						"option": {
+							"styles": {
+								"label": {
+									"font-family": "Roboto, sans-serif"
+								},
+								"select": {
+									"font-family": "Roboto, sans-serif"
+								}
+							},
+							"googleFonts": [
+								"Roboto"
+							]
+						},
+						"cart": {
+							"styles": {
+								"button": {
+									"font-family": "Roboto, sans-serif",
+									"font-weight": "bold",
+									"font-size": "16px",
+									"padding-top": "16px",
+									"padding-bottom": "16px",
+									":hover": {
+										"background-color": "#94315a"
+									},
+									"background-color": "#a43664",
+									":focus": {
+										"background-color": "#94315a"
+									}
+								}
+							},
+							"text": {
+								"title": "Panier",
+								"total": "Sous-total",
+								"empty": "Votre panier est vide",
+								"notice": "Frais de livraison appliquable au paiement",
+								"button": "Passer à la caisse",
+								"noteDescription": "Instructions spéciales pour le vendeur"
+							},
+							"contents": {
+								"note": true
+							},
+							"googleFonts": [
+								"Roboto"
+							]
+						},
+						"toggle": {
+							"styles": {
+								"toggle": {
+									"font-family": "Roboto, sans-serif",
+									"font-weight": "bold",
+									"background-color": "#a43664",
+									":hover": {
+										"background-color": "#94315a"
+									},
+									":focus": {
+										"background-color": "#94315a"
+									}
+								},
+								"count": {
+									"font-size": "16px"
+								}
+							},
+							"googleFonts": [
+								"Roboto"
+							]
+						}
+					},
+				});
+			});
+		}
+	})();
+
+
 }());
