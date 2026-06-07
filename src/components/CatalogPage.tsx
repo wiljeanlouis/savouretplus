@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { BreadcrumbHero } from "./BreadcrumbHero";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
-import { fetchCatalogProducts } from "../lib/supabaseClient";
+import { fetchCatalogProducts } from "../application/commerce";
 import { formatCurrency } from "../lib/format";
 
 const cateringHighlights = [

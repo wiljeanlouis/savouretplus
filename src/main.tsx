@@ -9,6 +9,10 @@ import { QuotePage } from "./components/QuotePage";
 import { ContactPage } from "./components/ContactPage";
 import { CartDrawer } from "./components/CartDrawer";
 import { useCart } from "./lib/useCart";
+import { configureCommerceGateway } from "./application/commerce";
+import { createCommerceGateway } from "./infrastructure/createCommerceGateway";
+
+configureCommerceGateway(createCommerceGateway());
 
 const pages = {
   accueil: HomePage,

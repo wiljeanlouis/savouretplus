@@ -2,7 +2,7 @@ import { Check, ClipboardList, Send } from "lucide-react";
 import { useState } from "react";
 import { BreadcrumbHero } from "./BreadcrumbHero";
 import { Button } from "./ui/button";
-import { submitQuoteRequest } from "../lib/supabaseClient";
+import { submitQuoteRequest } from "../application/commerce";
 
 const initialForm = {
   request_type: "",

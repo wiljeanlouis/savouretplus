@@ -1,7 +1,7 @@
 import { Send, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
-import { createCustomerOrder } from "../lib/supabaseClient";
+import { createCustomerOrder } from "../application/commerce";
 import { formatCurrency } from "../lib/format";
 
 export function CartDrawer({ cart, open, onClose }) {

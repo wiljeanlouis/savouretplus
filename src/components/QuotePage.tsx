@@ -2,8 +2,16 @@ import { CalendarDays, Check, ClipboardList, HeartHandshake, Send, Sparkles } fr
 import { useEffect, useMemo, useState } from "react";
 import { BreadcrumbHero } from "./BreadcrumbHero";
 import { Button } from "./ui/button";
-import { fetchCatalogProducts, submitQuoteRequest } from "../lib/supabaseClient";
-import type { CatalogProduct, QuoteItemDraft } from "../lib/types";
+import { fetchCatalogProducts, submitQuoteRequest } from "../application/commerce";
+import type { CatalogProduct } from "../domain/catalog";
+
+type QuoteItemDraft = {
+  offering_id: string;
+  name: string;
+  requested_quantity: number | string;
+  configuration: Record<string, unknown>;
+  note: string;
+};
 
 const initialForm = {
   request_type: "",

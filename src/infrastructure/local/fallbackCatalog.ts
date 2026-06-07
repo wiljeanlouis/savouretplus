@@ -1,4 +1,4 @@
-import type { CatalogProduct } from "../lib/types";
+import type { CatalogProduct } from "../../domain/catalog";
 
 export const fallbackCatalog: CatalogProduct[] = [
   {

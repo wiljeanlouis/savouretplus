@@ -31,6 +31,41 @@ npm run dev
 
 Le serveur Vite affiche l'URL locale au démarrage.
 
+## Supabase local
+
+SAVIS est propriétaire de la stack Supabase locale, de ses migrations et de
+ses données de développement. Depuis le dépôt SAVIS :
+
+```bash
+make run-local
+```
+
+Cette commande démarre Supabase et SAVIS, puis génère automatiquement le
+`.env.local` de Savouretplus. Il reste ensuite à démarrer le frontend :
+
+```bash
+npm run dev
+```
+
+Services locaux :
+
+```text
+API Supabase   http://127.0.0.1:54321
+PostgreSQL     127.0.0.1:54322
+Studio         http://127.0.0.1:54323
+Inbucket       http://127.0.0.1:54324
+```
+
+Commandes utiles depuis SAVIS :
+
+```bash
+make supabase-status
+make supabase-reset
+make stop
+```
+
+Le schéma et les seeds sont versionnés dans le dossier `supabase/` de SAVIS.
+
 ## Variables d'environnement
 
 ```env
@@ -40,7 +75,7 @@ VITE_SUPABASE_ANON_KEY=your-public-anon-key
 
 Sans configuration Supabase :
 
-- le catalogue utilise `src/data/fallbackCatalog.ts`;
+- le catalogue utilise `src/infrastructure/local/fallbackCatalog.ts`;
 - les commandes et soumissions sont simulées dans la console;
 - l'interface demeure utilisable pour le développement.
 
@@ -88,8 +123,10 @@ Une soumission peut être présélectionnée :
 src/
   components/       Pages et composants React
   components/ui/    Primitives d'interface
-  data/             Catalogue local de secours
-  lib/              Supabase, panier, types et utilitaires
+  application/      Cas d'utilisation et port du backend commercial
+  domain/           Modèles métier du catalogue et du panier
+  infrastructure/   Adaptateurs local et Supabase
+  lib/              État du panier et utilitaires
   main.tsx           Routage et composition de l'application
   styles.css         Thème et styles globaux
 ```
@@ -130,7 +167,7 @@ Le frontend utilise le point d'entrée générique `submitQuoteRequest()`.
 
 ## Modèle produit
 
-Les types principaux sont définis dans `src/lib/types.ts`.
+Les modèles métier principaux sont définis dans `src/domain/`.
 
 Types de produits :
 
@@ -152,7 +189,7 @@ Le frontend utilise :
 
 | Ressource | Usage |
 | --- | --- |
-| `public_catalog_products` | Lecture du catalogue public disponible |
+| `published_catalog_products` | Lecture des produits publiés et disponibles |
 | `customer_orders` | Création des commandes directes |
 | `submit_quote_request(payload jsonb)` | Création des demandes de soumission |
 

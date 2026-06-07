@@ -1,20 +1,17 @@
-import { createClient } from "@supabase/supabase-js";
-import { fallbackCatalog } from "../data/fallbackCatalog";
-import type { CatalogProduct, ChoiceGroup, IngredientOption, PurchaseMode, ProductType } from "./types";
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
-
-export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-    })
-  : null;
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type {
+  CommerceGateway,
+  CustomerOrder,
+  QuoteRequest,
+} from "../../application/ports/CommerceGateway";
+import { fallbackCatalog } from "../local/fallbackCatalog";
+import type {
+  CatalogProduct,
+  ChoiceGroup,
+  IngredientOption,
+  ProductType,
+  PurchaseMode,
+} from "../../domain/catalog";
 
 type SupabaseCatalogProduct = Partial<CatalogProduct> & {
   purchase_modes?: Partial<PurchaseMode>[];
@@ -22,34 +19,35 @@ type SupabaseCatalogProduct = Partial<CatalogProduct> & {
   ingredient_options?: Partial<IngredientOption>[];
 };
 
-type QuotePayload = Record<string, unknown>;
+export class SupabaseCommerceGateway implements CommerceGateway {
+  private readonly client: SupabaseClient;
 
-export async function fetchCatalogProducts(): Promise<CatalogProduct[]> {
-  if (!supabase) return fallbackCatalog;
-
-  const { data, error } = await supabase
-    .from("public_catalog_products")
-    .select("*")
-    .eq("is_available", true)
-    .order("display_order", { ascending: true });
-
-  if (error) {
-    console.warn("[SAVIS] Impossible de charger le catalogue Supabase.", error);
-    return fallbackCatalog;
+  constructor(url: string, anonKey: string) {
+    this.client = createClient(url, anonKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    });
   }
 
-  return data?.length ? data.map(normalizeCatalogProduct) : fallbackCatalog;
-}
+  async fetchCatalogProducts(): Promise<CatalogProduct[]> {
+    const { data, error } = await this.client
+      .from("published_catalog_products")
+      .select("*")
+      .eq("is_available", true)
+      .order("display_order", { ascending: true });
 
-export async function createCustomerOrder(order: any) {
-  if (!supabase) {
-    console.info("[SAVIS] Supabase non configuré. Commande simulée.", order);
-    return { id: `local-${Date.now()}` };
+    if (error) {
+      console.warn("[SAVIS] Impossible de charger le catalogue Supabase.", error);
+      return fallbackCatalog;
+    }
+
+    return data?.length ? data.map(normalizeCatalogProduct) : fallbackCatalog;
   }
 
-  const { data, error } = await supabase
-    .from("customer_orders")
-    .insert({
+  async createCustomerOrder(order: CustomerOrder) {
+    const { error } = await this.client.from("customer_orders").insert({
       customer_name: order.customer.name,
       customer_phone: order.customer.phone,
       customer_email: order.customer.email || null,
@@ -58,26 +56,20 @@ export async function createCustomerOrder(order: any) {
       source: "savouretplus",
       total_cents: order.totalCents,
       items: order.items,
-    })
-    .select("id")
-    .single();
+    });
 
-  if (error) throw error;
-  return data;
-}
-
-export async function submitQuoteRequest(payload: QuotePayload) {
-  if (!supabase) {
-    console.info("[SAVIS] Supabase non configuré. Soumission simulée.", payload);
-    return { id: `local-quote-${Date.now()}` };
+    if (error) throw error;
+    return { accepted: true };
   }
 
-  const { data, error } = await supabase.rpc("submit_quote_request", {
-    payload,
-  });
+  async submitQuoteRequest(payload: QuoteRequest) {
+    const { data, error } = await this.client.rpc("submit_quote_request", {
+      payload,
+    });
 
-  if (error) throw error;
-  return data;
+    if (error) throw error;
+    return data;
+  }
 }
 
 function normalizeCatalogProduct(product: SupabaseCatalogProduct): CatalogProduct {
@@ -93,7 +85,7 @@ function normalizeCatalogProduct(product: SupabaseCatalogProduct): CatalogProduc
     choice_group: normalizeChoiceGroup(product.choice_group),
     ingredient_options: normalizeIngredientOptions(product.ingredient_options),
     unit_label: product.unit_label || "unité",
-    price_cents: product.price_cents || 0,
+    price_cents: Number(product.price_cents ?? 0),
     dozen_price_cents: product.dozen_price_cents,
     image_url: product.image_url || "./images/offer-1-340x243.png",
     gallery: product.gallery?.length ? product.gallery : [product.image_url],
@@ -141,7 +133,9 @@ function normalizePurchaseModes(product: SupabaseCatalogProduct): PurchaseMode[]
   return [];
 }
 
-function normalizeChoiceGroup(choiceGroup?: SupabaseCatalogProduct["choice_group"]): ChoiceGroup | null {
+function normalizeChoiceGroup(
+  choiceGroup?: SupabaseCatalogProduct["choice_group"],
+): ChoiceGroup | null {
   if (!choiceGroup?.options?.length) return null;
 
   return {
@@ -154,7 +148,9 @@ function normalizeChoiceGroup(choiceGroup?: SupabaseCatalogProduct["choice_group
   };
 }
 
-function normalizeIngredientOptions(ingredientOptions?: SupabaseCatalogProduct["ingredient_options"]): IngredientOption[] {
+function normalizeIngredientOptions(
+  ingredientOptions?: SupabaseCatalogProduct["ingredient_options"],
+): IngredientOption[] {
   if (!ingredientOptions?.length) return [];
 
   return ingredientOptions.map((ingredient) => ({

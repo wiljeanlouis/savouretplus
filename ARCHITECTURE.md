@@ -45,12 +45,21 @@ src/
     CartDrawer.tsx       Panier et envoi de commande
     Header.tsx           Navigation principale
     Footer.tsx           Pied de page
-  data/
-    fallbackCatalog.ts   Catalogue local de secours
+  application/
+    commerce.ts          Façade des cas d'utilisation
+    ports/
+      CommerceGateway.ts Port indépendant du fournisseur de backend
+  domain/
+    catalog.ts           Modèle métier du catalogue
+    cart.ts              Modèle métier du panier
+  infrastructure/
+    createCommerceGateway.ts       Composition des dépendances
+    local/LocalCommerceGateway.ts  Mode de développement simulé
+    local/fallbackCatalog.ts       Catalogue local de secours
+    supabase/SupabaseCommerceGateway.ts
+                                  Adaptateur Supabase et normalisation
   lib/
-    supabaseClient.ts    Adaptateur Supabase et normalisation
     useCart.ts           État et persistance locale du panier
-    types.ts             Types métier partagés
     format.ts            Formatage des valeurs
     utils.ts             Utilitaires d'interface
   main.tsx               Composition de l'application et routage
@@ -58,6 +67,22 @@ src/
 ```
 
 ## Principes architecturaux
+
+### Frontière du backend commercial
+
+Les composants appellent la façade `application/commerce.ts`. Celle-ci
+délègue au port `CommerceGateway` et ne connaît ni Supabase, ni HTTP, ni la
+forme future de l'API SAVIS.
+
+La composition dans `main.tsx` choisit actuellement :
+
+- `SupabaseCommerceGateway` lorsque les variables Supabase sont présentes;
+- `LocalCommerceGateway` pour le catalogue de secours et les écritures simulées.
+
+Une migration vers l'API SAVIS consiste à implémenter un
+`SavisApiCommerceGateway` puis à le sélectionner dans
+`createCommerceGateway.ts`. Les pages et les cas d'utilisation restent
+inchangés.
 
 ### Application frontend statique
 
@@ -120,7 +145,8 @@ Une soumission n'a pas de prix final côté client. Le budget est indicatif et l
 
 ### Source du catalogue
 
-`fetchCatalogProducts()` lit la vue Supabase `public_catalog_products` :
+`fetchCatalogProducts()` passe par le port commercial. L'adaptateur Supabase
+lit la vue `public_catalog_products` :
 
 ```text
 public_catalog_products
@@ -139,7 +165,7 @@ Cette stratégie permet :
 
 ### Modèle de produit
 
-Les produits utilisent un modèle explicite défini dans `lib/types.ts` :
+Les produits utilisent un modèle explicite défini dans `domain/catalog.ts` :
 
 - `standard` : produit sans personnalisation;
 - `single_choice` : un choix exclusif dans `choice_group`;
@@ -170,6 +196,16 @@ Supabase peut exposer des champs partiels ou historiques. `normalizeCatalogProdu
 La normalisation doit rester dans l'adaptateur Supabase, pas dans les composants visuels.
 
 ## Panier et commandes
+
+### Supabase local
+
+La stack locale est détenue et démarrée par SAVIS avec `make run-local`. Elle
+est gérée par la CLI Supabase et Docker, et utilise les ports `54321` à
+`54324`, dont PostgreSQL sur `54322`.
+
+Les migrations et seeds vivent dans le dépôt SAVIS. Savouretplus reçoit
+seulement `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY` dans son
+`.env.local`, généré par le démarrage local de SAVIS.
 
 ### État local
 
@@ -353,7 +389,7 @@ Tout le code applicatif sous `src/` est en TypeScript.
 
 Décisions actuelles :
 
-- les types métier partagés vivent dans `lib/types.ts`;
+- les modèles métier partagés vivent dans `domain/`;
 - les composants utilisent `.tsx`;
 - les adaptateurs et utilitaires utilisent `.ts`;
 - `tsc --noEmit` est la vérification de type officielle;
@@ -403,9 +439,10 @@ Le projet ne possède pas encore de suite de tests automatisés ni de linter con
 ## Règles d'évolution
 
 - Garder `main.tsx` comme composition root légère.
-- Garder l'accès aux données dans `lib/supabaseClient.ts`.
-- Ne pas appeler Supabase directement depuis plusieurs composants.
-- Définir les modèles partagés dans `lib/types.ts`.
+- Garder les contrats backend dans `application/ports`.
+- Ne pas appeler Supabase directement depuis les composants.
+- Ajouter un adaptateur d'infrastructure pour chaque nouveau backend.
+- Définir les modèles métier partagés dans `domain/`.
 - Ne pas mélanger commande directe et soumission.
 - Ne jamais considérer le prix calculé dans le navigateur comme une validation serveur.
 - Maintenir le catalogue local compatible avec `CatalogProduct`.

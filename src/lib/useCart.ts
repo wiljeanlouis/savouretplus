@@ -1,5 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
-import type { AddToCartOptions, CartAllocation, CartIngredient, CartItem, CartSelection, CatalogProduct, PurchaseMode } from "./types";
+import type {
+  CartAllocation,
+  CartIngredient,
+  CartItem,
+  CartSelection,
+} from "../domain/cart";
+import type { CatalogProduct, PurchaseMode } from "../domain/catalog";
+
+export type AddToCartOptions = {
+  quantity?: number;
+  unitPriceCents?: number;
+  purchaseMode?: PurchaseMode | null;
+  selection?: CartSelection | null;
+  allocation?: CartAllocation[];
+  ingredients?: CartIngredient[];
+};
 
 const storageKey = "savouretplus-cart";
 
