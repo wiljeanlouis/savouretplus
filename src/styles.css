@@ -1,0 +1,43 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", ui-serif, Georgia, serif;
+}
+
+@layer base {
+  * {
+    @apply border-zinc-200;
+  }
+
+  html {
+    @apply scroll-smooth bg-zinc-50 text-zinc-950;
+  }
+
+  body {
+    @apply min-w-80 bg-[radial-gradient(circle_at_top_left,rgba(244,63,94,0.10),transparent_34rem),linear-gradient(180deg,#fff_0%,#fafafa_42%,#f4f4f5_100%)] font-sans antialiased;
+  }
+
+  a {
+    @apply no-underline;
+  }
+
+  img {
+    @apply max-w-full;
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .eyebrow {
+    @apply text-xs font-bold uppercase tracking-[0.2em] text-rose-600;
+  }
+
+  .glass-panel {
+    @apply border border-white/60 bg-white/80 shadow-xl shadow-rose-950/5 backdrop-blur;
+  }
+}
