@@ -4,8 +4,8 @@ import type {
   CartIngredient,
   CartItem,
   CartSelection,
-} from "../domain/cart";
-import type { CatalogProduct, PurchaseMode } from "../domain/catalog";
+} from "../../domain/cart";
+import type { CatalogProduct, PurchaseMode } from "../../domain/catalog";
 
 export type AddToCartOptions = {
   quantity?: number;

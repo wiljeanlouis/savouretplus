@@ -8,7 +8,7 @@ import { CatalogPage } from "./components/CatalogPage";
 import { QuotePage } from "./components/QuotePage";
 import { ContactPage } from "./components/ContactPage";
 import { CartDrawer } from "./components/CartDrawer";
-import { useCart } from "./lib/useCart";
+import { useCart } from "./application/cart/useCart";
 import { configureCommerceGateway } from "./application/commerce";
 import { createCommerceGateway } from "./infrastructure/createCommerceGateway";
 

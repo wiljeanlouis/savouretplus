@@ -38,7 +38,7 @@ export function HomePage() {
           <div className="max-w-2xl">
             <p className="eyebrow">Cuisine, traiteur & événements</p>
             <h1 className="mt-5 font-serif text-6xl font-extrabold leading-[0.95] tracking-tight text-zinc-950 sm:text-7xl">
-              Savourez, recevez et célébrez avec Savour Et Plus.
+              Savourez et célébrez avec Savour Et Plus.
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-8 text-zinc-600">
               Commandez nos spécialités faites avec soin, ou demandez une soumission pour un service traiteur, une

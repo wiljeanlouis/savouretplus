@@ -2,7 +2,7 @@ import { Send, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { createCustomerOrder } from "../application/commerce";
-import { formatCurrency } from "../lib/format";
+import { formatCurrency } from "../shared/format";
 
 export function CartDrawer({ cart, open, onClose }) {
   const [customer, setCustomer] = useState({ name: "", phone: "", email: "", note: "" });

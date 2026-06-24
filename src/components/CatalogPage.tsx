@@ -4,7 +4,7 @@ import { BreadcrumbHero } from "./BreadcrumbHero";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { fetchCatalogProducts } from "../application/commerce";
-import { formatCurrency } from "../lib/format";
+import { formatCurrency } from "../shared/format";
 
 const cateringHighlights = [
   {
@@ -229,20 +229,24 @@ function ProductPriceSummary({ product }) {
 }
 
 function ProductOptionSummary({ product }) {
-  if (product.product_type === "single_choice") {
+  if (
+    (product.product_type === "single_choice" ||
+      product.product_type === "single_choice_bundle") &&
+    product.choice_group?.options?.length
+  ) {
     return (
       <div className="mt-4 rounded-xl bg-zinc-50 p-3 text-sm text-zinc-600">
-        <span className="font-semibold text-zinc-900">{product.choice_group?.label || "Option"}: </span>
-        {product.choice_group?.options?.map((option) => option.name).join(", ")}
-      </div>
-    );
-  }
-
-  if (product.product_type === "single_choice_bundle") {
-    return (
-      <div className="mt-4 rounded-xl bg-zinc-50 p-3 text-sm text-zinc-600">
-        <span className="font-semibold text-zinc-900">Modes: </span>
-        {product.purchase_modes?.map((mode) => mode.label).join(", ")}
+        <p className="font-semibold text-zinc-900">{product.choice_group.label || "Options"}:</p>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {product.choice_group.options.map((option) => (
+            <span
+              className="rounded-full border border-rose-200 bg-white px-2.5 py-1 text-xs font-semibold text-rose-700"
+              key={option.id}
+            >
+              {option.name}
+            </span>
+          ))}
+        </div>
       </div>
     );
   }
@@ -250,8 +254,17 @@ function ProductOptionSummary({ product }) {
   if (product.product_type === "ingredient_customization") {
     return (
       <div className="mt-4 rounded-xl bg-zinc-50 p-3 text-sm text-zinc-600">
-        <span className="font-semibold text-zinc-900">Inclus: </span>
-        {product.ingredient_options?.map((ingredient) => ingredient.name).join(", ")}
+        <p className="font-semibold text-zinc-900">Inclus:</p>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {product.ingredient_options?.map((ingredient) => (
+            <span
+              className="rounded-full border border-rose-200 bg-white px-2.5 py-1 text-xs font-semibold text-rose-700"
+              key={ingredient.id}
+            >
+              {ingredient.name}
+            </span>
+          ))}
+        </div>
       </div>
     );
   }
