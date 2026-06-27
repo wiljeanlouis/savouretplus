@@ -3,10 +3,9 @@ import type { CatalogProduct } from "../../domain/catalog";
 export const fallbackCatalog: CatalogProduct[] = [
   {
     id: "pate-four",
-    bom_id: "local-pate-four",
     slug: "pate-cuit-au-four",
     name: "Pâté cuit au four",
-    category: "degustation",
+    category: "tasting",
     description:
       "Une pâte brisée croustillante enveloppe généreusement une farce savoureuse faite à partir d'ingrédients frais.",
     product_type: "single_choice_bundle",
@@ -47,10 +46,9 @@ export const fallbackCatalog: CatalogProduct[] = [
   },
   {
     id: "pate-kode",
-    bom_id: "local-pate-kode",
     slug: "pate-kode",
     name: "Pâté kòde",
-    category: "degustation",
+    category: "tasting",
     description:
       "Une pâte frite soigneusement dans l'huile, servie avec une sauce piquante haïtienne pour une expérience authentique.",
     product_type: "ingredient_customization",
@@ -106,4 +104,28 @@ export const fallbackCatalog: CatalogProduct[] = [
     ],
     availability_note: "Préparé chaque samedi",
   },
+  {
+        "id": "4dd23499-6f59-4f88-bdd9-a60f9c54a984",
+        "slug": "arche-de-ballon",
+        "name": "Arche de ballon",
+        "category": "decoration",
+        "description": "",
+        "product_type": "standard",
+        "purchase_modes": [
+            {
+                "id": "unit",
+                "label": "unité",
+                "quantity": 1,
+                "price_cents": 10000,
+                "allocation_type": "none"
+            }
+        ],
+        "choice_group": null,
+        "ingredient_options": [],
+        "image_url": "https://savouretplus.com/images/decoration-3-530x480.png",
+        "gallery": [
+            "https://savouretplus.com/images/decoration-3-530x480.png"
+        ],
+        "availability_note": "Disponible sur commande",
+    }
 ];

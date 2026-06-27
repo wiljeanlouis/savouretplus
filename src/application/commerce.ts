@@ -3,6 +3,7 @@ import type {
   CustomerOrder,
   QuoteRequest,
 } from "./ports/CommerceGateway";
+import type { CatalogCategory } from "../domain/catalog";
 
 let gateway: CommerceGateway | null = null;
 
@@ -18,8 +19,8 @@ function getGateway(): CommerceGateway {
   return gateway;
 }
 
-export function fetchCatalogProducts() {
-  return getGateway().fetchCatalogProducts();
+export function fetchCatalogProducts(category?: CatalogCategory) {
+  return getGateway().fetchCatalogProducts(category);
 }
 
 export function createCustomerOrder(order: CustomerOrder) {

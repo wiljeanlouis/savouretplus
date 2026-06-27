@@ -1,6 +1,6 @@
 import { Mail, Phone, PlayCircle } from "lucide-react";
-import { BreadcrumbHero } from "./BreadcrumbHero";
-import { Card, CardContent } from "./ui/card";
+import { BreadcrumbHero } from "../layout/BreadcrumbHero";
+import { Card, CardContent } from "../ui/card";
 
 export function ContactPage() {
   return (

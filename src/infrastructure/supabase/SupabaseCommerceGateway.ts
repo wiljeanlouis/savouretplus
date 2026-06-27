@@ -6,6 +6,7 @@ import type {
 } from "../../application/ports/CommerceGateway";
 import { fallbackCatalog } from "../local/fallbackCatalog";
 import type {
+  CatalogCategory,
   CatalogProduct,
   ChoiceGroup,
   IngredientOption,
@@ -14,6 +15,7 @@ import type {
 } from "../../domain/catalog";
 
 type SupabaseCatalogProduct = Partial<CatalogProduct> & {
+  category?: string;
   purchase_modes?: Partial<PurchaseMode>[];
   choice_group?: Partial<ChoiceGroup> & { options?: ChoiceGroup["options"] };
   ingredient_options?: Partial<IngredientOption>[];
@@ -31,21 +33,27 @@ export class SupabaseCommerceGateway implements CommerceGateway {
     });
   }
 
-  async fetchCatalogProducts(): Promise<CatalogProduct[]> {
-    const { data, error } = await this.client
+  async fetchCatalogProducts(category?: CatalogCategory): Promise<CatalogProduct[]> {
+    let query = this.client
       .from("published_catalog_products")
       .select("*")
       .eq("is_available", true)
       .order("display_order", { ascending: true });
 
+    if (category) {
+      query = query.eq("category", category);
+    }
+
+    const { data, error } = await query;
+
     if (error) {
       console.warn("[SAVIS] Impossible de charger le catalogue Supabase.", error);
-      return fallbackCatalog;
+      return getFallbackCatalog(category);
     }
 
     const products = data?.map(normalizeCatalogProduct).filter(isCatalogProduct) ?? [];
 
-    return products.length ? products : fallbackCatalog;
+    return products.length ? products : getFallbackCatalog(category);
   }
 
   async createCustomerOrder(order: CustomerOrder) {
@@ -74,6 +82,10 @@ export class SupabaseCommerceGateway implements CommerceGateway {
   }
 }
 
+function getFallbackCatalog(category?: CatalogCategory): CatalogProduct[] {
+  return category ? fallbackCatalog.filter((product) => product.category === category) : fallbackCatalog;
+}
+
 function normalizeCatalogProduct(product: SupabaseCatalogProduct): CatalogProduct | null {
   const purchaseModes = normalizePurchaseModes(product);
   if (!purchaseModes.length) return null;
@@ -82,10 +94,9 @@ function normalizeCatalogProduct(product: SupabaseCatalogProduct): CatalogProduc
 
   return {
     id: product.id,
-    bom_id: product.bom_id,
     slug: product.slug,
     name: product.name,
-    category: product.category || "degustation",
+    category: normalizeCategory(product.category),
     description: product.description || "",
     product_type: product.product_type || inferProductType(product),
     purchase_modes: purchaseModes,
@@ -95,6 +106,12 @@ function normalizeCatalogProduct(product: SupabaseCatalogProduct): CatalogProduc
     gallery: product.gallery?.length ? product.gallery : [imageUrl],
     availability_note: product.availability_note || "Disponible sur commande",
   };
+}
+
+function normalizeCategory(category?: string): CatalogCategory {
+  if (category === "decoration") return "decoration";
+  if (category === "tasting") return "tasting";
+  return "tasting";
 }
 
 function isCatalogProduct(product: CatalogProduct | null): product is CatalogProduct {

@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
-import { Header } from "./components/Header";
-import { Footer } from "./components/Footer";
-import { HomePage } from "./components/HomePage";
-import { CatalogPage } from "./components/CatalogPage";
-import { QuotePage } from "./components/QuotePage";
-import { ContactPage } from "./components/ContactPage";
-import { CartDrawer } from "./components/CartDrawer";
+import { CartDrawer } from "./components/cart/CartDrawer";
+import { DecorationCatalogPage, TastingCatalogPage } from "./components/catalog/CatalogPage";
+import { ContactPage } from "./components/contact/ContactPage";
+import { HomePage } from "./components/home/HomePage";
+import { Footer } from "./components/layout/Footer";
+import { Header } from "./components/layout/Header";
+import { QuotePage } from "./components/quote/QuotePage";
 import { useCart } from "./application/cart/useCart";
 import { configureCommerceGateway } from "./application/commerce";
 import { createCommerceGateway } from "./infrastructure/createCommerceGateway";
@@ -16,7 +16,8 @@ configureCommerceGateway(createCommerceGateway());
 
 const pages = {
   accueil: HomePage,
-  degustation: CatalogPage,
+  decoration: DecorationCatalogPage,
+  degustation: TastingCatalogPage,
   soumission: QuotePage,
   contact: ContactPage,
 };

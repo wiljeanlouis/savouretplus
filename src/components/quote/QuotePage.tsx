@@ -1,9 +1,9 @@
 import { CalendarDays, Check, ClipboardList, HeartHandshake, Send, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { BreadcrumbHero } from "./BreadcrumbHero";
-import { Button } from "./ui/button";
-import { fetchCatalogProducts, submitQuoteRequest } from "../application/commerce";
-import type { CatalogProduct } from "../domain/catalog";
+import { fetchCatalogProducts, submitQuoteRequest } from "../../application/commerce";
+import type { CatalogProduct } from "../../domain/catalog";
+import { BreadcrumbHero } from "../layout/BreadcrumbHero";
+import { Button } from "../ui/button";
 
 type QuoteItemDraft = {
   offering_id: string;

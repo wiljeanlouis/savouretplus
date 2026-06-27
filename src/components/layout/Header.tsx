@@ -1,10 +1,11 @@
 import { Menu, ShoppingBag, X } from "lucide-react";
 import { useState } from "react";
-import { Button } from "./ui/button";
-import { cn } from "../shared/utils";
+import { cn } from "../../shared/utils";
+import { Button } from "../ui/button";
 
 const navItems = [
   ["accueil", "Accueil"],
+  ["decoration", "Décoration"],
   ["degustation", "Dégustation"],
   ["soumission", "Soumission"],
   ["contact", "Contact"],

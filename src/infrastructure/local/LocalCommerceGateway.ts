@@ -3,11 +3,12 @@ import type {
   CustomerOrder,
   QuoteRequest,
 } from "../../application/ports/CommerceGateway";
+import type { CatalogCategory } from "../../domain/catalog";
 import { fallbackCatalog } from "./fallbackCatalog";
 
 export class LocalCommerceGateway implements CommerceGateway {
-  async fetchCatalogProducts() {
-    return fallbackCatalog;
+  async fetchCatalogProducts(category?: CatalogCategory) {
+    return category ? fallbackCatalog.filter((product) => product.category === category) : fallbackCatalog;
   }
 
   async createCustomerOrder(order: CustomerOrder) {
