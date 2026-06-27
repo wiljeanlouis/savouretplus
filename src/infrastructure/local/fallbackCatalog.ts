@@ -37,9 +37,6 @@ export const fallbackCatalog: CatalogProduct[] = [
       ],
     },
     ingredient_options: [],
-    unit_label: "unité",
-    price_cents: 300,
-    dozen_price_cents: 3000,
     image_url: "./images/pate-au-four-1-530x480.png",
     gallery: [
       "./images/pate-au-four-1-530x480.png",
@@ -47,7 +44,7 @@ export const fallbackCatalog: CatalogProduct[] = [
       "./images/pate-au-four-3-530x480.png",
     ],
     availability_note: "Préparé sur commande",
-  }, 
+  },
   {
     id: "pate-kode",
     bom_id: "local-pate-kode",
@@ -57,7 +54,15 @@ export const fallbackCatalog: CatalogProduct[] = [
     description:
       "Une pâte frite soigneusement dans l'huile, servie avec une sauce piquante haïtienne pour une expérience authentique.",
     product_type: "ingredient_customization",
-    purchase_modes: [],
+    purchase_modes: [
+      {
+        id: "unit",
+        label: "À l'unité",
+        quantity: 1,
+        price_cents: 800,
+        allocation_type: "single_choice",
+      },
+    ],
     choice_group: null,
     ingredient_options: [
       {
@@ -93,9 +98,6 @@ export const fallbackCatalog: CatalogProduct[] = [
         extra_price_cents: 150,
       },
     ],
-    unit_label: "unité",
-    price_cents: 800,
-    dozen_price_cents: null,
     image_url: "./images/pate-kode-1-530x480.png",
     gallery: [
       "./images/pate-kode-1-530x480.png",

@@ -43,9 +43,6 @@ export type CatalogProduct = {
   purchase_modes: PurchaseMode[];
   choice_group: ChoiceGroup | null;
   ingredient_options: IngredientOption[];
-  unit_label: string;
-  price_cents: number;
-  dozen_price_cents?: number | null;
   image_url: string;
   gallery: string[];
   availability_note: string;

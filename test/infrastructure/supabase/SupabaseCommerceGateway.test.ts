@@ -41,8 +41,22 @@ describe("SupabaseCommerceGateway", () => {
           bom_id: "bom-1",
           slug: "pate-four",
           name: "Pate four",
-          price_cents: "300",
-          dozen_price_cents: "3000",
+          purchase_modes: [
+            {
+              id: "unit",
+              label: "À l'unité",
+              quantity: "1",
+              price_cents: "300",
+              allocation_type: "single_choice",
+            },
+            {
+              id: "dozen",
+              label: "Douzaine",
+              quantity: "12",
+              price_cents: "3000",
+              allocation_type: "choice_allocation",
+            },
+          ],
           image_url: "",
         },
       ],
@@ -62,11 +76,12 @@ describe("SupabaseCommerceGateway", () => {
     expect(products[0]).toMatchObject({
       id: "pate-four",
       category: "degustation",
-      product_type: "standard",
-      price_cents: 300,
-      dozen_price_cents: "3000",
+      product_type: "single_choice_bundle",
       availability_note: "Disponible sur commande",
     });
+    expect(products[0]).not.toHaveProperty("unit_label");
+    expect(products[0]).not.toHaveProperty("price_cents");
+    expect(products[0]).not.toHaveProperty("dozen_price_cents");
     expect(products[0].purchase_modes).toEqual([
       {
         id: "unit",
@@ -81,6 +96,54 @@ describe("SupabaseCommerceGateway", () => {
         quantity: 12,
         price_cents: 3000,
         allocation_type: "choice_allocation",
+      },
+    ]);
+  });
+
+  it("ignores catalog products that do not define purchase modes", async () => {
+    supabaseMock.from.mockReturnValue({
+      select: () => ({
+        eq: () => ({
+          order: () =>
+            Promise.resolve({
+              data: [
+                {
+                  id: "invalid-product",
+                  bom_id: "bom-invalid",
+                  slug: "invalid-product",
+                  name: "Invalid product",
+                  purchase_modes: [],
+                },
+                {
+                  id: "valid-product",
+                  bom_id: "bom-valid",
+                  slug: "valid-product",
+                  name: "Valid product",
+                  purchase_modes: [
+                    {
+                      id: "unit",
+                      label: "À l'unité",
+                      quantity: 1,
+                      price_cents: 900,
+                      allocation_type: "single_choice",
+                    },
+                  ],
+                },
+              ],
+              error: null,
+            }),
+        }),
+      }),
+    });
+    const { SupabaseCommerceGateway } = await import(
+      "../../../src/infrastructure/supabase/SupabaseCommerceGateway"
+    );
+    const gateway = new SupabaseCommerceGateway("https://example.supabase.co", "anon-key");
+
+    await expect(gateway.fetchCatalogProducts()).resolves.toMatchObject([
+      {
+        id: "valid-product",
+        purchase_modes: [{ price_cents: 900 }],
       },
     ]);
   });

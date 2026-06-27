@@ -198,7 +198,12 @@ function ProductCard({ product, onCustomize }) {
             </div>
 
             <div className="mt-4">
-              <Button className="w-full" type="button" onClick={onCustomize}>
+              <Button
+                className="w-full"
+                type="button"
+                disabled={!product.purchase_modes?.length}
+                onClick={onCustomize}
+              >
                 <Settings2 className="h-4 w-4" />
                 Commander
               </Button>
@@ -211,21 +216,12 @@ function ProductCard({ product, onCustomize }) {
 }
 
 function ProductPriceSummary({ product }) {
-  if (product.purchase_modes?.length) {
-    return product.purchase_modes.map((mode) => (
-      <span className="inline-flex items-baseline gap-1" key={mode.id}>
-        <span className="text-2xl font-extrabold text-zinc-950">{formatCurrency(mode.price_cents)}</span>
-        <span className="text-sm font-semibold text-zinc-500">/ {mode.label.toLowerCase()}</span>
-      </span>
-    ));
-  }
-
-  return (
-    <>
-      <span className="text-2xl font-extrabold text-zinc-950">{formatCurrency(product.price_cents)}</span>
-      <span className="text-sm font-semibold text-zinc-500">/ {product.unit_label}</span>
-    </>
-  );
+  return product.purchase_modes.map((mode) => (
+    <span className="inline-flex items-baseline gap-1" key={mode.id}>
+      <span className="text-2xl font-extrabold text-zinc-950">{formatCurrency(mode.price_cents)}</span>
+      <span className="text-sm font-semibold text-zinc-500">/ {mode.label.toLowerCase()}</span>
+    </span>
+  ));
 }
 
 function ProductOptionSummary({ product }) {
@@ -297,13 +293,14 @@ function ProductConfigurator({ product, open, onClose, onAdd }) {
   const configuredAllocation = getConfiguredAllocation(product, choiceAllocation);
   const allocationTotal = configuredAllocation.reduce((sum, choice) => sum + choice.quantity, 0);
   const configuredIngredients = getConfiguredIngredients(product, ingredientQuantities);
-  const unitPriceCents = calculateUnitPrice(product, configuredIngredients, selectedPurchaseMode);
+  const unitPriceCents = calculateUnitPrice(configuredIngredients, selectedPurchaseMode);
   const canAdd =
-    product.product_type === "single_choice_bundle"
+    Boolean(selectedPurchaseMode) &&
+    (product.product_type === "single_choice_bundle"
       ? selectedPurchaseMode?.allocation_type === "choice_allocation"
         ? allocationTotal === selectedPurchaseMode.quantity
         : Boolean(selectedChoice)
-      : product.product_type !== "single_choice" || Boolean(selectedChoice);
+      : product.product_type !== "single_choice" || Boolean(selectedChoice));
 
   function updateIngredientQuantity(ingredient, nextQuantity) {
     const boundedQuantity = Math.min(
@@ -328,6 +325,7 @@ function ProductConfigurator({ product, open, onClose, onAdd }) {
             id: selectedPurchaseMode.id,
             label: selectedPurchaseMode.label,
             quantity: selectedPurchaseMode.quantity,
+            price_cents: selectedPurchaseMode.price_cents,
             allocation_type: selectedPurchaseMode.allocation_type,
           }
         : null,
@@ -671,11 +669,11 @@ function getConfiguredIngredients(product, quantities) {
   }));
 }
 
-function calculateUnitPrice(product, ingredients, purchaseMode) {
+function calculateUnitPrice(ingredients, purchaseMode) {
   const extrasTotal = ingredients.reduce((sum, ingredient) => {
     const extraCount = Math.max(0, ingredient.quantity - ingredient.default_quantity);
     return sum + extraCount * ingredient.extra_price_cents;
   }, 0);
 
-  return (purchaseMode?.price_cents ?? product.price_cents) + extrasTotal;
+  return (purchaseMode?.price_cents ?? 0) + extrasTotal;
 }

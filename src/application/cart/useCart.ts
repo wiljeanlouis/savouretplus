@@ -48,7 +48,8 @@ export function useCart() {
     const purchaseMode = options.purchaseMode || null;
     const allocation = options.allocation || [];
     const ingredients = options.ingredients || [];
-    const unitPriceCents = options.unitPriceCents || product.price_cents;
+    const unitPriceCents = options.unitPriceCents ?? purchaseMode?.price_cents ?? 0;
+    const basePriceCents = purchaseMode?.price_cents ?? unitPriceCents;
     const key = buildCartItemKey(product.id, purchaseMode, selection, allocation, ingredients);
 
     setItems((current) => {
@@ -67,7 +68,7 @@ export function useCart() {
           bom_id: product.bom_id,
           name: product.name,
           product_type: product.product_type,
-          base_price_cents: product.price_cents,
+          base_price_cents: basePriceCents,
           unit_price_cents: unitPriceCents,
           purchase_mode: purchaseMode,
           selection,

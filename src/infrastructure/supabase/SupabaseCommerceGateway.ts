@@ -43,7 +43,9 @@ export class SupabaseCommerceGateway implements CommerceGateway {
       return fallbackCatalog;
     }
 
-    return data?.length ? data.map(normalizeCatalogProduct) : fallbackCatalog;
+    const products = data?.map(normalizeCatalogProduct).filter(isCatalogProduct) ?? [];
+
+    return products.length ? products : fallbackCatalog;
   }
 
   async createCustomerOrder(order: CustomerOrder) {
@@ -72,7 +74,12 @@ export class SupabaseCommerceGateway implements CommerceGateway {
   }
 }
 
-function normalizeCatalogProduct(product: SupabaseCatalogProduct): CatalogProduct {
+function normalizeCatalogProduct(product: SupabaseCatalogProduct): CatalogProduct | null {
+  const purchaseModes = normalizePurchaseModes(product);
+  if (!purchaseModes.length) return null;
+
+  const imageUrl = product.image_url || "./images/offer-1-340x243.png";
+
   return {
     id: product.id,
     bom_id: product.bom_id,
@@ -81,16 +88,17 @@ function normalizeCatalogProduct(product: SupabaseCatalogProduct): CatalogProduc
     category: product.category || "degustation",
     description: product.description || "",
     product_type: product.product_type || inferProductType(product),
-    purchase_modes: normalizePurchaseModes(product),
+    purchase_modes: purchaseModes,
     choice_group: normalizeChoiceGroup(product.choice_group),
     ingredient_options: normalizeIngredientOptions(product.ingredient_options),
-    unit_label: product.unit_label || "unité",
-    price_cents: Number(product.price_cents ?? 0),
-    dozen_price_cents: product.dozen_price_cents,
-    image_url: product.image_url || "./images/offer-1-340x243.png",
-    gallery: product.gallery?.length ? product.gallery : [product.image_url],
+    image_url: imageUrl,
+    gallery: product.gallery?.length ? product.gallery : [imageUrl],
     availability_note: product.availability_note || "Disponible sur commande",
   };
+}
+
+function isCatalogProduct(product: CatalogProduct | null): product is CatalogProduct {
+  return product !== null;
 }
 
 function inferProductType(product: SupabaseCatalogProduct): ProductType {
@@ -101,36 +109,15 @@ function inferProductType(product: SupabaseCatalogProduct): ProductType {
 }
 
 function normalizePurchaseModes(product: SupabaseCatalogProduct): PurchaseMode[] {
-  if (product.purchase_modes?.length) {
-    return product.purchase_modes.map((mode) => ({
+  return (product.purchase_modes || [])
+    .map((mode) => ({
       id: mode.id,
       label: mode.label,
       quantity: Number(mode.quantity ?? 1),
-      price_cents: Number(mode.price_cents ?? product.price_cents ?? 0),
+      price_cents: Number(mode.price_cents ?? 0),
       allocation_type: mode.allocation_type || "single_choice",
-    }));
-  }
-
-  if (product.dozen_price_cents) {
-    return [
-      {
-        id: "unit",
-        label: "À l'unité",
-        quantity: 1,
-        price_cents: Number(product.price_cents ?? 0),
-        allocation_type: "single_choice",
-      },
-      {
-        id: "dozen",
-        label: "Douzaine",
-        quantity: 12,
-        price_cents: Number(product.dozen_price_cents),
-        allocation_type: "choice_allocation",
-      },
-    ];
-  }
-
-  return [];
+    }))
+    .filter((mode) => mode.id && mode.label && Number.isFinite(mode.price_cents));
 }
 
 function normalizeChoiceGroup(
