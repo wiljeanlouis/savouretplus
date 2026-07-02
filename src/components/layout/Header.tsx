@@ -18,7 +18,7 @@ export function Header({ activeRoute, cartCount, onCartOpen }) {
     <header className="sticky top-0 z-40 border-b border-zinc-200/70 bg-white/85 backdrop-blur-xl">
       <div className="container-page flex h-20 items-center justify-between gap-4">
         <a className="flex items-center gap-3" href="#/accueil" aria-label="Savour Et Plus">
-          <img className="h-14 w-auto" src="./images/savour_et_plus_logo.png" alt="Savour Et Plus" />
+          <img className="h-14 w-auto" src="./images/brand/savour_et_plus_logo.png" alt="Savour Et Plus" />
         </a>
 
         <nav className="hidden items-center gap-1 md:flex">

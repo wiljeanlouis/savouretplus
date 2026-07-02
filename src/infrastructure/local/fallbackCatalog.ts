@@ -36,11 +36,11 @@ export const fallbackCatalog: CatalogProduct[] = [
       ],
     },
     ingredient_options: [],
-    image_url: "./images/pate-au-four-1-530x480.png",
+    image_url: "./images/catalog/tasting/pate-au-four-1-530x480.png",
     gallery: [
-      "./images/pate-au-four-1-530x480.png",
-      "./images/pate-au-four-2-530x480.png",
-      "./images/pate-au-four-3-530x480.png",
+      "./images/catalog/tasting/pate-au-four-1-530x480.png",
+      "./images/catalog/tasting/pate-au-four-2-530x480.png",
+      "./images/catalog/tasting/pate-au-four-3-530x480.png",
     ],
     availability_note: "Préparé sur commande",
   },
@@ -96,11 +96,11 @@ export const fallbackCatalog: CatalogProduct[] = [
         extra_price_cents: 150,
       },
     ],
-    image_url: "./images/pate-kode-1-530x480.png",
+    image_url: "./images/catalog/tasting/pate-kode-1-530x480.png",
     gallery: [
-      "./images/pate-kode-1-530x480.png",
-      "./images/pate-kode-2-530x480.png",
-      "./images/pate-kode-3-530x480.png",
+      "./images/catalog/tasting/pate-kode-1-530x480.png",
+      "./images/catalog/tasting/pate-kode-2-530x480.png",
+      "./images/catalog/tasting/pate-kode-3-530x480.png",
     ],
     availability_note: "Préparé chaque samedi",
   },
@@ -122,9 +122,9 @@ export const fallbackCatalog: CatalogProduct[] = [
         ],
         "choice_group": null,
         "ingredient_options": [],
-        "image_url": "https://savouretplus.com/images/decoration-3-530x480.png",
+        "image_url": "./images/catalog/decoration/decoration-3-530x480.png",
         "gallery": [
-            "https://savouretplus.com/images/decoration-3-530x480.png"
+            "./images/catalog/decoration/decoration-3-530x480.png"
         ],
         "availability_note": "Disponible sur commande",
     }

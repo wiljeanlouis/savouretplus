@@ -13,8 +13,8 @@ export function TastingCatalogPage({ cart, onCartOpen }) {
     <CatalogExperience
       category={TASTING_CATEGORY}
       title="Dégustation"
-      heroImage="./images/breadcrumbs-bg-pates.png"
-      subtitle="Passez votre commande pour déguster nos spécialités ou demandez une soumission pour service traiteur."
+      heroImage="./images/catalog/tasting/breadcrumbs-bg-pates.png"
+      subtitle="Complétez votre événement avec nos spécialités ou demandez une soumission traiteur."
       intro={<TastingIntro />}
       action="order"
       cart={cart}
@@ -28,8 +28,8 @@ export function DecorationCatalogPage() {
     <CatalogExperience
       category={DECORATION_CATEGORY}
       title="Décoration"
-      heroImage="./images/breadcrumbs-bg-decoration.png"
-      subtitle="Découvrez nos produits de décoration et demandez une soumission pour votre événement."
+      heroImage="./images/catalog/decoration/breadcrumbs-bg-decoration.png"
+      subtitle="Imaginez le décor de votre événement et demandez une soumission adaptée à votre thème."
       intro={<DecorationIntro />}
       action="quote"
     />

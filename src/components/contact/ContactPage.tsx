@@ -7,8 +7,8 @@ export function ContactPage() {
     <>
       <BreadcrumbHero
         title="Nous contacter"
-        image="./images/breadcrumbs-bg-nous-contacter.png"
-        subtitle="Pour savourer nos produits ou réserver un service, écrivez-nous ou appelez-nous."
+        image="./images/contact/breadcrumbs-bg-nous-contacter.png"
+        subtitle="Pour une décoration, une organisation d'événement, un service traiteur ou une commande, écrivez-nous ou appelez-nous."
       />
       <section className="py-20">
         <div className="container-page grid gap-5 md:grid-cols-3">

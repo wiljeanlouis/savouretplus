@@ -7,8 +7,8 @@ const cateringHighlights = [
     image: "https://images.unsplash.com/photo-1543352634-a1c51d9f1fa7?auto=format&fit=crop&w=900&h=700&q=80",
   },
   {
-    label: "Service pour évènements",
-    image: "./images/offer-2-340x243.png",
+    label: "Service pour événements",
+    image: "./images/home/offer-2-340x243.png",
   },
   {
     label: "Tables de réception",
@@ -17,22 +17,22 @@ const cateringHighlights = [
 ];
 
 const decorationImages = [
-  "./images/decoration-1-530x480.png",
-  "./images/decoration-2-530x480.png",
-  "./images/decoration-3-530x480.png",
+  "./images/catalog/decoration/decoration-1-530x480.png",
+  "./images/catalog/decoration/decoration-2-530x480.png",
+  "./images/catalog/decoration/decoration-3-530x480.png",
 ];
 
 export function TastingIntro() {
   return (
     <div className="mb-10 grid gap-6 rounded-3xl border border-rose-100 bg-white p-5 shadow-sm lg:grid-cols-[0.86fr_1.14fr] lg:items-center lg:p-6">
       <div className="max-w-xl">
-        <p className="eyebrow">Événement</p>
+        <p className="eyebrow">Complément événementiel</p>
         <h2 className="mt-2 font-serif text-4xl font-extrabold tracking-tight text-zinc-950">
-          Besoin d'un service traiteur?
+          Ajoutez le traiteur à votre événement.
         </h2>
         <p className="mt-4 text-base leading-7 text-zinc-600">
-          Découvrez quelques présentations possibles, puis envoyez les détails de votre activité pour recevoir une
-          soumission adaptée à votre événement.
+          Découvrez quelques présentations possibles, puis envoyez les détails de votre activité pour compléter votre
+          décor avec une offre traiteur adaptée.
         </p>
         <Button asChild className="mt-6 w-full sm:w-auto">
           <a href="#/soumission?service=traiteur">
@@ -69,9 +69,9 @@ export function DecorationIntro() {
   return (
     <div className="mb-10 grid gap-6 rounded-3xl border border-rose-100 bg-white p-5 shadow-sm lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:p-6">
       <div className="max-w-xl">
-        <p className="eyebrow">Décoration</p>
+        <p className="eyebrow">Décoration d'événement</p>
         <h2 className="mt-2 font-serif text-4xl font-extrabold tracking-tight text-zinc-950">
-          Des décors pensés pour votre fête.
+          Des décors pensés pour célébrer.
         </h2>
         <p className="mt-4 text-base leading-7 text-zinc-600">
           Parcourez nos éléments de décoration, puis envoyez vos détails d'événement pour recevoir une proposition

@@ -30,39 +30,39 @@ const initialForm = {
 
 const requestTypes = [
   {
-    value: "traiteur",
-    label: "Traiteur",
-    description: "Repas, plateaux et items pour votre événement.",
-    image: "https://images.unsplash.com/photo-1543352634-a1c51d9f1fa7?auto=format&fit=crop&w=900&h=700&q=80",
-    services: ["traiteur"],
-  },
-  {
     value: "decoration",
     label: "Décoration",
     description: "Ambiance, thème et mise en place visuelle.",
-    image: "./images/decoration-1-530x480.png",
+    image: "./images/catalog/decoration/decoration-1-530x480.png",
     services: ["decoration"],
-  },
-  {
-    value: "organisation",
-    label: "Organisation d'évènement",
-    description: "Aide pour coordonner les détails importants.",
-    image: "./images/offer-3-340x243.png",
-    services: ["organisation"],
   },
   {
     value: "decoration-organisation",
     label: "Décoration + organisation",
     description: "Un accompagnement plus complet pour votre occasion.",
-    image: "./images/decoration-2-530x480.png",
+    image: "./images/catalog/decoration/decoration-2-530x480.png",
     services: ["decoration", "organisation"],
   },
   {
+    value: "organisation",
+    label: "Organisation d'évènement",
+    description: "Aide pour coordonner les détails importants.",
+    image: "./images/home/offer-3-340x243.png",
+    services: ["organisation"],
+  },
+  {
     value: "traiteur-decoration-organisation",
-    label: "Traiteur + décoration/organisation",
+    label: "Décoration + organisation + traiteur",
     description: "Une demande combinée pour simplifier les échanges.",
-    image: "./images/decoration-3-530x480.png",
-    services: ["traiteur", "decoration", "organisation"],
+    image: "./images/catalog/decoration/decoration-3-530x480.png",
+    services: ["decoration", "organisation", "traiteur"],
+  },
+  {
+    value: "traiteur",
+    label: "Traiteur",
+    description: "Repas, plateaux et items pour votre événement.",
+    image: "https://images.unsplash.com/photo-1543352634-a1c51d9f1fa7?auto=format&fit=crop&w=900&h=700&q=80",
+    services: ["traiteur"],
   },
 ];
 
@@ -117,7 +117,7 @@ export function QuotePage() {
 
   useEffect(() => {
     let mounted = true;
-    fetchCatalogProducts()
+    fetchCatalogProducts("tasting")
       .then((data) => {
         if (mounted) setProducts(data);
       })
@@ -200,22 +200,22 @@ export function QuotePage() {
     <>
       <BreadcrumbHero
         title="Soumission"
-        image="./images/breadcrumbs-bg-decoration.png"
-        subtitle="Une seule demande pour le traiteur, la décoration et l'organisation de votre événement."
+        image="./images/catalog/decoration/breadcrumbs-bg-decoration.png"
+        subtitle="Une seule demande pour la décoration, l'organisation et le traiteur de votre événement."
       />
       <section className="py-20">
         <div className="container-page grid gap-10 lg:grid-cols-[0.72fr_1.28fr]">
           <div>
             <p className="eyebrow">Demande personnalisée</p>
             <h2 className="mt-3 font-serif text-4xl font-extrabold tracking-tight text-zinc-950">
-              Dites-nous ce que vous préparez.
+              Dites-nous l'ambiance que vous imaginez.
             </h2>
             <p className="mt-5 text-lg leading-8 text-zinc-600">
-              Choisissez le service souhaité, ajoutez les informations de l'événement et, au besoin, les items traiteur
-              qui vous intéressent.
+              Choisissez votre besoin de décoration ou d'organisation, ajoutez les informations de l'événement et, au
+              besoin, les items traiteur qui vous intéressent.
             </p>
             <div className="mt-7 grid gap-3 text-sm font-semibold text-zinc-700">
-              {["Une seule demande à remplir", "Traiteur, décoration ou organisation", "Réponse adaptée à votre budget"].map((item) => (
+              {["Décoration et événement d'abord", "Traiteur disponible au besoin", "Réponse adaptée à votre budget"].map((item) => (
                 <div className="flex items-center gap-3" key={item}>
                   <span className="grid h-7 w-7 place-items-center rounded-full bg-rose-100 text-rose-700">
                     <Check className="h-4 w-4" />

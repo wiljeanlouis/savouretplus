@@ -90,7 +90,7 @@ function normalizeCatalogProduct(product: SupabaseCatalogProduct): CatalogProduc
   const purchaseModes = normalizePurchaseModes(product);
   if (!purchaseModes.length) return null;
 
-  const imageUrl = product.image_url || "./images/offer-1-340x243.png";
+  const imageUrl = product.image_url || "./images/home/offer-1-340x243.png";
 
   return {
     id: product.id,
