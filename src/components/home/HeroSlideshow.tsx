@@ -1,5 +1,6 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Button } from "../ui/button";
 import { heroSlides } from "./homeContent";
 
 export function HeroSlideshow() {
@@ -21,7 +22,7 @@ export function HeroSlideshow() {
 
     const timer = window.setInterval(() => {
       setActiveSlide((current) => (current + 1) % heroSlides.length);
-    }, 5000);
+    }, 10000);
 
     return () => window.clearInterval(timer);
   }, [activeSlide, paused, reducedMotion]);
@@ -38,7 +39,7 @@ export function HeroSlideshow() {
 
   return (
     <div
-      className="glass-panel relative overflow-hidden rounded-3xl p-3"
+      className="glass-panel relative h-full overflow-hidden rounded-3xl p-3"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
@@ -46,7 +47,7 @@ export function HeroSlideshow() {
       aria-roledescription="carrousel"
       aria-label="Aperçu des services Savour Et Plus"
     >
-      <div className="relative h-[32rem] overflow-hidden rounded-2xl bg-zinc-100">
+      <div className="relative h-[32rem] overflow-hidden rounded-2xl bg-zinc-100 sm:h-auto sm:aspect-[16/9] lg:h-full lg:aspect-auto">
         {heroSlides.map((slide, index) => (
           <img
             className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
@@ -76,10 +77,25 @@ export function HeroSlideshow() {
           <ChevronRight className="h-5 w-5" />
         </button>
 
-        <div className="absolute bottom-8 left-8 right-8 rounded-2xl border border-white/70 bg-white/90 p-5 shadow-lg backdrop-blur">
-          <div aria-live="polite">
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-rose-700">{currentSlide.eyebrow}</p>
-            <p className="mt-2 text-lg font-bold text-zinc-950">{currentSlide.text}</p>
+        <div className="absolute bottom-4 left-4 right-4 rounded-2xl border border-white/70 bg-white/92 p-5 shadow-lg backdrop-blur sm:bottom-8 sm:left-8 sm:right-8 sm:p-6">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+            <div className="max-w-2xl" aria-live="polite">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-rose-700">
+                Ce que nous offrons
+              </p>
+              <h2 className="mt-2 font-serif text-2xl font-extrabold text-zinc-950 sm:text-3xl">
+                {currentSlide.title}
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-zinc-600 sm:text-base">
+                {currentSlide.text}
+              </p>
+            </div>
+            <Button asChild className="shrink-0">
+              <a href={currentSlide.href}>
+                {currentSlide.actionLabel}
+                <ArrowRight className="h-4 w-4" />
+              </a>
+            </Button>
           </div>
           <div className="mt-4 flex gap-2" aria-label="Choisir une image">
             {heroSlides.map((slide, index) => (
@@ -89,7 +105,7 @@ export function HeroSlideshow() {
                 }`}
                 type="button"
                 onClick={() => setActiveSlide(index)}
-                aria-label={`Afficher l'image ${index + 1}: ${slide.eyebrow}`}
+                aria-label={`Afficher le service ${index + 1}: ${slide.title}`}
                 aria-current={activeSlide === index ? "true" : undefined}
                 key={slide.image}
               />

@@ -1,51 +1,27 @@
 export const heroSlides = [
   {
-    image: "./images/catalog/decoration/decoration-1-530x480.png",
-    alt: "Décoration d'événement réalisée par Savour Et Plus",
-    eyebrow: "Décoration personnalisée",
-    text: "Une ambiance pensée selon votre thème et votre occasion.",
-  },
-  {
-    image: "./images/catalog/decoration/decoration-3-530x480.png",
-    alt: "Organisation et décoration d'un événement",
-    eyebrow: "Votre événement",
-    text: "Décoration, organisation et traiteur réunis dans une seule demande.",
-  },
-  {
-    image: "./images/home/offer-2-340x243.png",
-    alt: "Présentation du service traiteur Savour Et Plus",
-    eyebrow: "Service traiteur",
-    text: "Des plateaux et des formules adaptés à votre événement.",
-  },
-  {
-    image: "./images/catalog/tasting/plateau-sucre-1.png",
-    alt: "Spécialités Savour Et Plus prêtes à partager",
-    eyebrow: "Préparé avec soin",
-    text: "Des spécialités savoureuses pour vos repas et vos moments à partager.",
-  },
-];
-
-export const offerCards = [
-  {
-    href: "#/decoration",
-    icon: "event",
     image: "./images/home/offer-3-340x243.png",
+    alt: "Décoration personnalisée pour un événement",
     title: "Décoration",
     text: "Décoration, mise en place et organisation selon l'occasion, le thème et le style souhaité.",
+    href: "#/decoration",
+    actionLabel: "Je choisis ma décoration",
   },
   {
-    href: "#/degustation",
-    icon: "chef",
     image: "./images/home/offer-1-340x243.png",
+    alt: "Spécialités Savour Et Plus à déguster",
     title: "Spécialités à déguster",
-    text: "Recettes disponibles à commander ou pour compléter vos événements.",
+    text: "Des recettes préparées avec soin, disponibles à commander ou pour compléter vos événements.",
+    href: "#/degustation",
+    actionLabel: "Je commande",
   },
   {
-    href: "#/soumission?service=decoration-organisation",
-    icon: "sparkles",
     image: "./images/catalog/decoration/decoration-2-530x480.png",
-    title: "Soumission événementielle",
-    text: "Une demande claire pour préciser votre décor, votre salle, votre budget et vos besoins.",
+    alt: "Planification et organisation d'un événement",
+    title: "Event planning",
+    text: "Confiez-nous votre décor, votre salle, votre budget et vos besoins pour construire un événement cohérent.",
+    href: "#/soumission?service=decoration-organisation",
+    actionLabel: "Je planifie mon événement",
   },
 ];
 

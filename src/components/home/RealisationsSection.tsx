@@ -1,4 +1,4 @@
-import { ArrowRight, ChevronLeft, ChevronRight, PlayCircle, X } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Maximize2, PlayCircle, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { realizationPhotos, youtubeChannelUrl, youtubeEmbedUrl } from "./homeContent";
@@ -31,14 +31,14 @@ export function RealisationsSection() {
 
   return (
     <section className="bg-zinc-950 py-20 text-white">
-      <div className="container-page grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+      <div className="container-page grid gap-10 lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.65fr)] lg:items-center">
         <div>
           <p className="eyebrow text-rose-300">Réalisations</p>
           <h2 className="mt-3 max-w-3xl font-serif text-4xl font-extrabold tracking-tight sm:text-5xl">
             Voyez l'ambiance que nous pouvons créer.
           </h2>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-zinc-300">
-            Décoration, mise en place, présentations traiteur et moments de fête: parcourez quelques réalisations et
+            Parcourez quelques de nos réalisations et
             découvrez nos vidéos directement depuis YouTube.
           </p>
 
@@ -54,6 +54,10 @@ export function RealisationsSection() {
                 src={activePhoto.src}
                 alt={activePhoto.alt}
               />
+              <span className="absolute right-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/92 px-3 py-2 text-xs font-bold text-zinc-950 shadow-lg backdrop-blur transition group-hover:bg-white">
+                <Maximize2 className="h-4 w-4" />
+                Cliquez pour agrandir
+              </span>
               <span className="absolute inset-x-4 bottom-4 rounded-xl bg-zinc-950/80 px-4 py-3 backdrop-blur">
                 <span className="block text-sm font-extrabold">{activePhoto.label}</span>
                 <span className="mt-1 block text-xs font-semibold text-zinc-300">
