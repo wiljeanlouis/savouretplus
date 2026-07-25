@@ -1,4 +1,4 @@
-export function BreadcrumbHero({ title, image, subtitle }) {
+export function BreadcrumbHero({ title, image, subtitle, action = null }) {
   return (
     <section className="relative overflow-hidden bg-zinc-950 text-white">
       <img className="absolute inset-0 h-full w-full object-cover opacity-55" src={image} alt="" />
@@ -7,6 +7,7 @@ export function BreadcrumbHero({ title, image, subtitle }) {
         <div className="max-w-2xl">
           <h1 className="mt-3 font-serif text-5xl font-extrabold tracking-tight sm:text-6xl">{title}</h1>
           {subtitle ? <p className="mt-4 max-w-xl text-lg text-zinc-200">{subtitle}</p> : null}
+          {action ? <div className="mt-6">{action}</div> : null}
         </div>
       </div>
     </section>

@@ -1,6 +1,13 @@
+import { useState } from "react";
+import { BreadcrumbHero } from "../../layout/BreadcrumbHero";
+import { CatalogLoadingState } from "../CatalogLoadingState";
+import { Button } from "../../ui/button";
+import { ProductCard } from "../ProductCard";
+import { ProductConfigurator } from "../ProductConfigurator";
+import { useCatalogProducts } from "../useCatalogProducts";
 import { ClipboardList } from "lucide-react";
-import { Button } from "../ui/button";
 
+const TASTING_CATEGORY = "tasting";
 const cateringHighlights = [
   {
     label: "Plateaux à partager",
@@ -16,13 +23,56 @@ const cateringHighlights = [
   },
 ];
 
-const decorationImages = [
-  "./images/catalog/decoration/decoration-1-530x480.png",
-  "./images/catalog/decoration/decoration-2-530x480.png",
-  "./images/catalog/decoration/decoration-3-530x480.png",
-];
 
-export function TastingIntro() {
+export function TastingCatalogPage({ cart, onCartOpen }) {
+  const { products, loading } = useCatalogProducts(TASTING_CATEGORY);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  function addConfiguredProduct(product, options) {
+    cart.add(product, options);
+    setSelectedProduct(null);
+    onCartOpen();
+  }
+
+  return (
+    <>
+      <BreadcrumbHero
+        title="Dégustation"
+        image="./images/catalog/tasting/breadcrumbs-bg-pates.png"
+        subtitle="Complétez votre événement avec nos spécialités ou demandez une soumission traiteur."
+      />
+      <section className="py-20">
+        <div className="container-page">
+          <TastingIntro />
+
+          {loading ? (
+            <CatalogLoadingState />
+          ) : (
+            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  action="order"
+                  onCustomize={() => setSelectedProduct(product)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <ProductConfigurator
+        product={selectedProduct}
+        open={Boolean(selectedProduct)}
+        onClose={() => setSelectedProduct(null)}
+        onAdd={addConfiguredProduct}
+      />
+    </>
+  );
+}
+
+function TastingIntro() {
   return (
     <div className="mb-10 grid gap-6 rounded-3xl border border-rose-100 bg-white p-5 shadow-sm lg:grid-cols-[0.86fr_1.14fr] lg:items-center lg:p-6">
       <div className="max-w-xl">
@@ -58,37 +108,6 @@ export function TastingIntro() {
             <figcaption className="absolute inset-x-3 bottom-3 rounded-xl bg-white/92 px-3 py-2 text-sm font-extrabold text-zinc-950 shadow-sm backdrop-blur">
               {highlight.label}
             </figcaption>
-          </figure>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export function DecorationIntro() {
-  return (
-    <div className="mb-10 grid gap-6 rounded-3xl border border-rose-100 bg-white p-5 shadow-sm lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:p-6">
-      <div className="max-w-xl">
-        <p className="eyebrow">Décoration d'événement</p>
-        <h2 className="mt-2 font-serif text-4xl font-extrabold tracking-tight text-zinc-950">
-          Des décors pensés pour célébrer.
-        </h2>
-        <p className="mt-4 text-base leading-7 text-zinc-600">
-          Parcourez nos éléments de décoration, puis envoyez vos détails d'événement pour recevoir une proposition
-          adaptée à votre salle, votre thème et votre budget.
-        </p>
-        <Button asChild className="mt-6 w-full sm:w-auto">
-          <a href="#/soumission?service=decoration">
-            <ClipboardList className="h-4 w-4" />
-            Demander une soumission décoration
-          </a>
-        </Button>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-3">
-        {decorationImages.map((image, index) => (
-          <figure className="relative overflow-hidden rounded-2xl bg-zinc-100" key={image}>
-            <img className="h-56 w-full object-cover" src={image} alt={`Décoration ${index + 1}`} />
           </figure>
         ))}
       </div>

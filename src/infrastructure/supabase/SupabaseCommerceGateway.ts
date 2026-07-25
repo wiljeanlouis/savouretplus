@@ -9,12 +9,14 @@ import type {
   CatalogCategory,
   CatalogProduct,
   ChoiceGroup,
+  DecorationSubcategory,
   IngredientOption,
   ProductType,
   PurchaseMode,
 } from "../../domain/catalog";
 
 type SupabaseCatalogProduct = Partial<CatalogProduct> & {
+  bom_id?: string;
   category?: string;
   purchase_modes?: Partial<PurchaseMode>[];
   choice_group?: Partial<ChoiceGroup> & { options?: ChoiceGroup["options"] };
@@ -94,9 +96,11 @@ function normalizeCatalogProduct(product: SupabaseCatalogProduct): CatalogProduc
 
   return {
     id: product.id,
+    bom_id: product.bom_id || product.id,
     slug: product.slug,
     name: product.name,
     category: normalizeCategory(product.category),
+    subcategory: normalizeDecorationSubcategory(product.subcategory),
     description: product.description || "",
     product_type: product.product_type || inferProductType(product),
     purchase_modes: purchaseModes,
@@ -106,6 +110,21 @@ function normalizeCatalogProduct(product: SupabaseCatalogProduct): CatalogProduc
     gallery: product.gallery?.length ? product.gallery : [imageUrl],
     availability_note: product.availability_note || "Disponible sur commande",
   };
+}
+
+function normalizeDecorationSubcategory(
+  subcategory?: DecorationSubcategory | null,
+): DecorationSubcategory | null {
+  if (
+    subcategory === "balloon-arch" ||
+    subcategory === "centerpiece" ||
+    subcategory === "birthday" ||
+    subcategory === "wedding"
+  ) {
+    return subcategory;
+  }
+
+  return null;
 }
 
 function normalizeCategory(category?: string): CatalogCategory {

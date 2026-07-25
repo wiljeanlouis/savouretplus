@@ -4,7 +4,7 @@ import { formatCurrency } from "../../shared/format";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 
-export function ProductCard({ product, action, onCustomize }) {
+export function ProductCard({ product, action, onCustomize = undefined }) {
   const [activeImage, setActiveImage] = useState(0);
   const gallery = product.gallery?.length ? product.gallery : [product.image_url];
   const currentImage = gallery[activeImage] || gallery[0];

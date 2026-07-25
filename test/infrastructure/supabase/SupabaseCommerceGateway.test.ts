@@ -41,6 +41,8 @@ describe("SupabaseCommerceGateway", () => {
           bom_id: "bom-1",
           slug: "pate-four",
           name: "Pate four",
+          category: "decoration",
+          subcategory: "balloon-arch",
           purchase_modes: [
             {
               id: "unit",
@@ -75,7 +77,9 @@ describe("SupabaseCommerceGateway", () => {
     expect(supabaseMock.order).toHaveBeenCalledWith("display_order", { ascending: true });
     expect(products[0]).toMatchObject({
       id: "pate-four",
-      category: "degustation",
+      bom_id: "bom-1",
+      category: "decoration",
+      subcategory: "balloon-arch",
       product_type: "single_choice_bundle",
       availability_note: "Disponible sur commande",
     });

@@ -6,6 +6,8 @@ export type ProductType =
 
 export type CatalogCategory = "tasting" | "decoration";
 
+export type DecorationSubcategory = "balloon-arch" | "centerpiece" | "birthday" | "wedding";
+
 export type ChoiceOption = {
   id: string;
   name: string;
@@ -36,9 +38,11 @@ export type IngredientOption = {
 
 export type CatalogProduct = {
   id: string;
+  bom_id: string;
   slug: string;
   name: string;
   category: CatalogCategory;
+  subcategory: DecorationSubcategory | null;
   description: string;
   product_type: ProductType;
   purchase_modes: PurchaseMode[];
