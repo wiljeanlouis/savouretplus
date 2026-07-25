@@ -107,11 +107,11 @@ export const realizationPhotos = [
     label: "Pâté au four",
   },
   {
-    src: "./images/catalog/tasting/pate-kode-1-530x480.png",
+    src: "./images/catalog/tasting/pate-kode-2-530x480.png",
     alt: "Pâté kòde",
     label: "Pâté kòde",
   },
 ];
 
 export const youtubeChannelUrl = "https://youtube.com/@SavourEtplus";
-export const youtubeEmbedUrl = "https://www.youtube.com/embed/tT407AAW8JE";
+export const youtubeEmbedUrl = "https://www.youtube.com/embed/u2pTPB8lK94";
