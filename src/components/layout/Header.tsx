@@ -10,7 +10,7 @@ const navItems = [
   ["contact", "Contact"],
 ];
 
-export function Header({ activeRoute, cartCount, onCartOpen }) {
+export function Header({ activeRoute, cartCount }) {
   const [open, setOpen] = useState(false);
   const [decorationOpen, setDecorationOpen] = useState(false);
   const decorationMenuRef = useRef(null);
@@ -120,11 +120,26 @@ export function Header({ activeRoute, cartCount, onCartOpen }) {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button className="relative" variant="outline" size="icon" type="button" onClick={onCartOpen}>
-            <ShoppingBag className="h-5 w-5" />
-            <span className="absolute -right-2 -top-2 grid h-5 min-w-5 place-items-center rounded-full bg-rose-600 px-1 text-[11px] font-bold text-white">
-              {cartCount}
-            </span>
+          <Button
+            asChild
+            className={cn(
+              "relative",
+              activeRoute === "panier" && "border-rose-300 bg-rose-50 text-rose-700",
+            )}
+            variant="outline"
+            size="icon"
+          >
+            <a
+              href="#/panier"
+              aria-current={activeRoute === "panier" ? "page" : undefined}
+              aria-label={`Voir le panier, ${cartCount} article${cartCount > 1 ? "s" : ""}`}
+              onClick={() => setOpen(false)}
+            >
+              <ShoppingBag className="h-5 w-5" />
+              <span className="absolute -right-2 -top-2 grid h-5 min-w-5 place-items-center rounded-full bg-rose-600 px-1 text-[11px] font-bold text-white">
+                {cartCount}
+              </span>
+            </a>
           </Button>
           <Button className="md:hidden" variant="ghost" size="icon" type="button" onClick={() => setOpen(!open)}>
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}

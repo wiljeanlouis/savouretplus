@@ -24,14 +24,13 @@ const cateringHighlights = [
 ];
 
 
-export function TastingCatalogPage({ cart, onCartOpen }) {
+export function TastingCatalogPage({ cart }) {
   const { products, loading } = useCatalogProducts(TASTING_CATEGORY);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   function addConfiguredProduct(product, options) {
     cart.add(product, options);
     setSelectedProduct(null);
-    onCartOpen();
   }
 
   return (

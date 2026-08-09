@@ -42,7 +42,7 @@ src/
     HomePage.tsx         Accueil et carrousel des offres
     CatalogPage.tsx      Catalogue et configuration des produits
     QuotePage.tsx        Demande de soumission centralisée
-    CartDrawer.tsx       Panier et envoi de commande
+    CartPage.tsx         Page du panier et envoi de commande
     Header.tsx           Navigation principale
     Footer.tsx           Pied de page
   application/
@@ -128,7 +128,7 @@ Les commandes directes et les demandes de soumission sont deux parcours différe
 Commande directe
   -> catalogue
   -> configuration d'un produit
-  -> panier
+  -> page panier
   -> coordonnées du client
   -> customer_orders
 
@@ -248,7 +248,8 @@ Deux configurations identiques fusionnent leurs quantités. Deux configurations 
 
 ### Envoi d'une commande
 
-`CartDrawer` collecte les coordonnées du client puis appelle `createCustomerOrder()`.
+L'icône du panier mène à la route `#/panier`. `CartPage` affiche les articles,
+collecte les coordonnées du client puis appelle `createCustomerOrder()`.
 
 Écriture Supabase :
 

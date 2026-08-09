@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
-import { CartDrawer } from "./components/cart/CartDrawer";
+import { CartPage } from "./components/cart/CartPage";
 import { DecorationCatalogPage } from "./components/catalog/page/DecorationCatalogPage";
 import { TastingCatalogPage } from "./components/catalog/page/TastingCatalogPage";
 import { ContactPage } from "./components/contact/ContactPage";
@@ -19,6 +19,7 @@ const pages = {
   accueil: HomePage,
   decoration: DecorationCatalogPage,
   degustation: TastingCatalogPage,
+  panier: CartPage,
   soumission: QuotePage,
   contact: ContactPage,
 };
@@ -31,7 +32,6 @@ function normalizeRoute() {
 
 function App() {
   const [route, setRoute] = useState(normalizeRoute);
-  const [cartOpen, setCartOpen] = useState(false);
   const cart = useCart();
   const Page = useMemo(() => pages[route] || HomePage, [route]);
 
@@ -43,12 +43,11 @@ function App() {
 
   return (
     <div className="min-h-svh">
-      <Header activeRoute={route} cartCount={cart.count} onCartOpen={() => setCartOpen(true)} />
+      <Header activeRoute={route} cartCount={cart.count} />
       <main>
-        <Page cart={cart} onCartOpen={() => setCartOpen(true)} />
+        <Page cart={cart} />
       </main>
       <Footer />
-      <CartDrawer cart={cart} open={cartOpen} onClose={() => setCartOpen(false)} />
     </div>
   );
 }
