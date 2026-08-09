@@ -6,7 +6,7 @@ export type ProductType =
 
 export type CatalogCategory = "tasting" | "decoration";
 
-export type DecorationSubcategory = "balloon-arch" | "centerpiece" | "birthday" | "wedding";
+export type ProductSubcategory = "balloon-arch" | "centerpiece" | "birthday" | "wedding";
 
 export type ChoiceOption = {
   id: string;
@@ -42,7 +42,7 @@ export type CatalogProduct = {
   slug: string;
   name: string;
   category: CatalogCategory;
-  subcategory: DecorationSubcategory | null;
+  subcategory: ProductSubcategory | null;
   description: string;
   product_type: ProductType;
   purchase_modes: PurchaseMode[];

@@ -9,7 +9,7 @@ import type {
   CatalogCategory,
   CatalogProduct,
   ChoiceGroup,
-  DecorationSubcategory,
+  ProductSubcategory,
   IngredientOption,
   ProductType,
   PurchaseMode,
@@ -100,7 +100,7 @@ function normalizeCatalogProduct(product: SupabaseCatalogProduct): CatalogProduc
     slug: product.slug,
     name: product.name,
     category: normalizeCategory(product.category),
-    subcategory: normalizeDecorationSubcategory(product.subcategory),
+    subcategory: normalizeProductSubcategory(product.subcategory),
     description: product.description || "",
     product_type: product.product_type || inferProductType(product),
     purchase_modes: purchaseModes,
@@ -112,9 +112,9 @@ function normalizeCatalogProduct(product: SupabaseCatalogProduct): CatalogProduc
   };
 }
 
-function normalizeDecorationSubcategory(
-  subcategory?: DecorationSubcategory | null,
-): DecorationSubcategory | null {
+function normalizeProductSubcategory(
+  subcategory?: ProductSubcategory | null,
+): ProductSubcategory | null {
   if (
     subcategory === "balloon-arch" ||
     subcategory === "centerpiece" ||

@@ -189,11 +189,16 @@ Supabase peut exposer des champs partiels ou historiques. `normalizeCatalogProdu
 
 - tableaux vides pour les options absentes;
 - catégorie et libellés par défaut;
+- sous-catégorie reconnue ou `null` pour une valeur absente/inconnue;
 - prix convertis en nombres;
 - galerie et image de secours;
 - inférence du `product_type` si nécessaire.
 
 La normalisation doit rester dans l'adaptateur Supabase, pas dans les composants visuels.
+
+Les sous-catégories utilisent le type général `ProductSubcategory`. La
+taxonomie Décoration associe leurs codes publics aux sections de la page; les
+produits non associés sont conservés dans la section « Autres décorations ».
 
 ## Panier et commandes
 

@@ -4,11 +4,11 @@ import {
   getDecorationCategoryFromHash,
   groupDecorationProducts,
 } from "../../src/domain/decoration";
-import type { CatalogProduct, DecorationSubcategory } from "../../src/domain/catalog";
+import type { CatalogProduct, ProductSubcategory } from "../../src/domain/catalog";
 
 function decorationProduct(
   id: string,
-  subcategory: DecorationSubcategory | null,
+  subcategory: ProductSubcategory | null,
 ): CatalogProduct {
   return {
     id,

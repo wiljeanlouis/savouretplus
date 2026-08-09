@@ -7,10 +7,10 @@ export function HeroSection() {
         <div className="mx-auto max-w-4xl text-center">
           <p className="eyebrow">Événements, décoration & dégustation</p>
           <h1 className="mt-4 font-serif text-5xl font-extrabold leading-[0.98] tracking-tight text-zinc-950 sm:text-6xl">
-            Célébrez avec élégance, savourez chaque moment.
+            Célébrez avec élégance, savourez chaque moment
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-lg leading-7 text-zinc-600">
-            Créez une ambiance mémorable en faisant le choix d'un service d'organisation d'événements, de décoration ou de dégustation.
+            Créez une ambiance mémorable en faisant le choix d'un service d'organisation d'événements, de décoration ou de dégustation
           </p>
         </div>
 

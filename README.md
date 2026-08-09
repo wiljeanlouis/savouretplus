@@ -176,6 +176,17 @@ Types de produits :
 - `single_choice_bundle`;
 - `ingredient_customization`.
 
+Chaque produit possède une catégorie et peut recevoir une sous-catégorie
+optionnelle. Les codes actuellement pris en charge sont :
+
+- `balloon-arch`;
+- `centerpiece`;
+- `birthday`;
+- `wedding`.
+
+La page Décoration regroupe les produits par sous-catégorie. Un produit sans
+sous-catégorie reconnue reste visible dans « Autres décorations ».
+
 Un bundle peut utiliser :
 
 - `single_choice` pour appliquer une option à tout le format;
@@ -189,7 +200,7 @@ Le frontend utilise :
 
 | Ressource | Usage |
 | --- | --- |
-| `published_catalog_products` | Lecture des produits publiés et disponibles |
+| `published_catalog_products` | Lecture des produits publiés, disponibles et de leur sous-catégorie optionnelle |
 | `customer_orders` | Création des commandes directes |
 | `submit_quote_request(payload jsonb)` | Création des demandes de soumission |
 

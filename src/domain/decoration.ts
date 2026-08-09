@@ -1,7 +1,7 @@
-import type { CatalogProduct, DecorationSubcategory } from "./catalog";
+import type { CatalogProduct, ProductSubcategory } from "./catalog";
 
 export type DecorationCategoryDefinition = {
-  id: DecorationSubcategory;
+  id: ProductSubcategory;
   slug: string;
   label: string;
   description: string;
@@ -42,7 +42,7 @@ export function getDecorationCategoryFromHash(hash: string) {
 }
 
 export function groupDecorationProducts(products: CatalogProduct[]) {
-  const groups = new Map<DecorationSubcategory, CatalogProduct[]>(
+  const groups = new Map<ProductSubcategory, CatalogProduct[]>(
     decorationCategories.map((category) => [category.id, []]),
   );
   const other: CatalogProduct[] = [];
