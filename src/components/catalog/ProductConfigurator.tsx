@@ -6,6 +6,7 @@ import {
   calculateUnitPrice,
   getConfiguredAllocation,
   getConfiguredIngredients,
+  getConfiguredSelection,
   getDefaultChoiceAllocation,
   getDefaultIngredientQuantities,
 } from "./catalogPricing";
@@ -78,13 +79,7 @@ export function ProductConfigurator({ product, open, onClose, onAdd }) {
             allocation_type: selectedPurchaseMode.allocation_type,
           }
         : null,
-      selection: selectedChoice
-        ? {
-            choice_id: selectedChoice.id,
-            choice_name: selectedChoice.name,
-            group_label: product.choice_group?.label || "Option",
-          }
-        : null,
+      selection: getConfiguredSelection(product, selectedPurchaseMode, selectedChoice),
       allocation:
         product.product_type === "single_choice_bundle" &&
         selectedPurchaseMode?.allocation_type === "choice_allocation"

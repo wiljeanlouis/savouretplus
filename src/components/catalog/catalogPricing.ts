@@ -32,6 +32,21 @@ export function getConfiguredAllocation(product, allocation) {
   }));
 }
 
+export function getConfiguredSelection(product, purchaseMode, selectedChoice) {
+  const usesSingleChoice =
+    product.product_type === "single_choice" ||
+    (product.product_type === "single_choice_bundle" &&
+      purchaseMode?.allocation_type === "single_choice");
+
+  if (!usesSingleChoice || !selectedChoice) return null;
+
+  return {
+    choice_id: selectedChoice.id,
+    choice_name: selectedChoice.name,
+    group_label: product.choice_group?.label || "Option",
+  };
+}
+
 export function getConfiguredIngredients(product, quantities) {
   return (product.ingredient_options || []).map((ingredient) => ({
     id: ingredient.id,
