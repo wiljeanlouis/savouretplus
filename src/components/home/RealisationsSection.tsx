@@ -35,7 +35,7 @@ export function RealisationsSection() {
         <div>
           <p className="eyebrow text-rose-300">Réalisations</p>
           <h2 className="mt-3 max-w-3xl font-serif text-4xl font-extrabold tracking-tight sm:text-5xl">
-            Voyez l'ambiance que nous pouvons créer.
+            Voyez quelques ambiances que nous avons déjà créées.
           </h2>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-zinc-300">
             Parcourez quelques de nos réalisations et
