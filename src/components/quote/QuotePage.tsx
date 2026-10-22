@@ -1,21 +1,27 @@
-import { CalendarDays, Check, ClipboardList, HeartHandshake, Send, Sparkles } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { CalendarDays, Check, ClipboardList, HeartHandshake, Send, Sparkles, UserRound } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchCatalogProducts, submitQuoteRequest } from "../../application/commerce";
 import type { CatalogProduct } from "../../domain/catalog";
 import {
   CommercialValidationError,
   formatDateForDisplay,
   formatPhoneInput,
-  type QuoteRequest,
   type ValidationErrors,
   validateQuoteRequest,
 } from "../../domain/commercialValidation";
 import { getDecorationCategory } from "../../domain/decoration";
 import {
+  buildQuoteRequest,
+  buildQuoteHash,
   createDecorationQuoteItem,
+  createQuoteSubmitter,
   findSelectedDecoration,
   getQuoteQueryFromHash,
+  getRequestedServices,
+  quoteIncludesService,
+  shouldRequestGuestCount,
   type QuoteQuery,
+  type QuoteService,
 } from "../../domain/quote";
 import { BreadcrumbHero } from "../layout/BreadcrumbHero";
 import { focusFirstInvalidField, ValidatedField } from "../forms/ValidatedField";
@@ -44,41 +50,41 @@ const initialForm = {
   note: "",
 };
 
-const requestTypes = [
+const requestTypes: Array<{
+  value: QuoteService;
+  label: string;
+  description: string;
+  image: string;
+}> = [
   {
     value: "decoration",
     label: "Décoration",
     description: "Ambiance, thème et mise en place visuelle.",
     image: "./images/catalog/decoration/decoration-1-530x480.png",
-    services: ["decoration"],
   },
   {
     value: "decoration-organisation",
     label: "Décoration + organisation",
     description: "Un accompagnement plus complet pour votre occasion.",
     image: "./images/catalog/decoration/decoration-2-530x480.png",
-    services: ["decoration", "organisation"],
   },
   {
     value: "organisation",
     label: "Organisation d'évènement",
     description: "Aide pour coordonner les détails importants.",
     image: "./images/home/offer-3-340x243.png",
-    services: ["organisation"],
   },
   {
     value: "traiteur-decoration-organisation",
     label: "Décoration + organisation + traiteur",
     description: "Une demande combinée pour simplifier les échanges.",
     image: "./images/catalog/decoration/decoration-3-530x480.png",
-    services: ["decoration", "organisation", "traiteur"],
   },
   {
     value: "traiteur",
     label: "Traiteur",
     description: "Repas, plateaux et items pour votre événement.",
-    image: "https://images.unsplash.com/photo-1543352634-a1c51d9f1fa7?auto=format&fit=crop&w=900&h=700&q=80",
-    services: ["traiteur"],
+    image: "./images/catalog/tasting/traiteur-1.png",
   },
 ];
 
@@ -99,10 +105,18 @@ export function QuotePage() {
   const [items, setItems] = useState<Record<string, QuoteItemDraft>>({});
   const [status, setStatus] = useState("idle");
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const quoteSubmitterRef = useRef<ReturnType<typeof createQuoteSubmitter> | null>(null);
+  if (!quoteSubmitterRef.current) {
+    quoteSubmitterRef.current = createQuoteSubmitter(submitQuoteRequest);
+  }
 
   const selectedRequest = requestTypes.find((type) => type.value === form.request_type) || null;
-  const includesCatering = Boolean(selectedRequest?.services.includes("traiteur"));
-  const includesDecoration = Boolean(selectedRequest?.services.includes("decoration"));
+  const requestedServices = getRequestedServices(form.request_type);
+  const includesCatering = requestedServices.includes("traiteur");
+  const includesDecoration = requestedServices.includes("decoration");
+  const includesGuestCount = shouldRequestGuestCount(form.request_type);
+  const requestTypeError =
+    errors["event_details.request_type"] || errors.requested_services;
   const selectedDecoration = includesDecoration
     ? findSelectedDecoration(decorationProducts, selectedItemSlug)
     : null;
@@ -135,8 +149,7 @@ export function QuotePage() {
     form.event_address &&
     form.name &&
     form.phone &&
-    form.budget &&
-    (!includesCatering || selectedCateringItems.length > 0);
+    form.budget;
 
   useEffect(() => {
     let mounted = true;
@@ -166,7 +179,7 @@ export function QuotePage() {
       setSelectedItemSlug(query.itemSlug);
       setForm((current) => ({
         ...current,
-        request_type: query.service || current.request_type,
+        request_type: query.service,
       }));
     };
 
@@ -190,6 +203,15 @@ export function QuotePage() {
       });
       return next;
     });
+  }
+
+  function selectRequestType(requestType: QuoteQuery["service"]) {
+    updateForm({ request_type: requestType });
+    window.history.replaceState(
+      null,
+      "",
+      buildQuoteHash(requestType, selectedItemSlug),
+    );
   }
 
   function updateItem(product: CatalogProduct, patch: Partial<QuoteItemDraft>) {
@@ -237,9 +259,12 @@ export function QuotePage() {
     setErrors({});
     setStatus("saving");
     try {
-      await submitQuoteRequest(validation.value);
+      const result = await quoteSubmitterRef.current(validation.value);
+      if (!result.submitted) return;
       setForm(initialForm);
       setItems({});
+      setSelectedItemSlug(null);
+      window.history.replaceState(null, "", "#/soumission");
       setStatus("success");
     } catch (error) {
       if (error instanceof CommercialValidationError) {
@@ -287,6 +312,7 @@ export function QuotePage() {
             className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm"
             onSubmit={submitQuote}
             noValidate
+            aria-busy={status === "saving"}
           >
             <section>
               <p className="mb-3 flex items-center gap-2 text-sm font-extrabold text-zinc-950">
@@ -295,11 +321,11 @@ export function QuotePage() {
               </p>
               <div
                 className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
-                aria-invalid={Boolean(errors["event_details.request_type"])}
+                aria-invalid={Boolean(requestTypeError)}
                 aria-describedby={
-                  errors["event_details.request_type"] ? "quote-request-type-error" : undefined
+                  requestTypeError ? "quote-request-type-error" : undefined
                 }
-                tabIndex={errors["event_details.request_type"] ? -1 : undefined}
+                tabIndex={requestTypeError ? -1 : undefined}
               >
                 {requestTypes.map((option) => {
                   const selected = form.request_type === option.value;
@@ -313,7 +339,7 @@ export function QuotePage() {
                       }`}
                       key={option.value}
                       type="button"
-                      onClick={() => updateForm({ request_type: option.value })}
+                      onClick={() => selectRequestType(option.value)}
                       aria-pressed={selected}
                     >
                       <span className="relative block h-36 overflow-hidden bg-zinc-100">
@@ -338,13 +364,13 @@ export function QuotePage() {
                   );
                 })}
               </div>
-              {errors["event_details.request_type"] ? (
+              {requestTypeError ? (
                 <p
                   className="mt-2 text-sm font-medium text-red-700"
                   id="quote-request-type-error"
                   role="alert"
                 >
-                  {errors["event_details.request_type"]}
+                  {requestTypeError}
                 </p>
               ) : null}
             </section>
@@ -356,10 +382,10 @@ export function QuotePage() {
               />
             ) : null}
 
-            <section className="mt-8 grid gap-4">
-              <h3 className="flex items-center gap-2 text-lg font-bold text-zinc-950">
-                <CalendarDays className="h-5 w-5 text-rose-700" />
-                Informations de l'événement
+            <section className="mt-8 grid gap-4" aria-labelledby="quote-customer-title">
+              <h3 className="flex items-center gap-2 text-lg font-bold text-zinc-950" id="quote-customer-title">
+                <UserRound className="h-5 w-5 text-rose-700" aria-hidden="true" />
+                Vos coordonnées
               </h3>
               <div className="grid gap-4 sm:grid-cols-2">
                 <ValidatedField
@@ -396,8 +422,22 @@ export function QuotePage() {
                   label="Courriel"
                   error={errors["customer.email"]}
                 >
-                  <input type="email" value={form.email} onChange={(event) => updateForm({ email: event.target.value })} />
+                  <input
+                    autoComplete="email"
+                    type="email"
+                    value={form.email}
+                    onChange={(event) => updateForm({ email: event.target.value })}
+                  />
                 </ValidatedField>
+              </div>
+            </section>
+
+            <section className="mt-8 grid gap-4" aria-labelledby="quote-event-title">
+              <h3 className="flex items-center gap-2 text-lg font-bold text-zinc-950" id="quote-event-title">
+                <CalendarDays className="h-5 w-5 text-rose-700" aria-hidden="true" />
+                Informations de l'événement
+              </h3>
+              <div className="grid gap-4 sm:grid-cols-2">
                 <ValidatedField
                   id="quote-event-type"
                   label="Type d'événement"
@@ -438,13 +478,21 @@ export function QuotePage() {
                 >
                   <input type="time" value={form.event_time} onChange={(event) => updateForm({ event_time: event.target.value })} />
                 </ValidatedField>
-                <ValidatedField
-                  id="quote-guest-count"
-                  label="Nombre d'invités"
-                  error={errors["event_details.guest_count"]}
-                >
-                  <input min="1" step="1" type="number" value={form.guest_count} onChange={(event) => updateForm({ guest_count: event.target.value })} />
-                </ValidatedField>
+                {includesGuestCount ? (
+                  <ValidatedField
+                    id="quote-guest-count"
+                    label="Nombre d'invités"
+                    error={errors["event_details.guest_count"]}
+                  >
+                    <input
+                      min="1"
+                      step="1"
+                      type="number"
+                      value={form.guest_count}
+                      onChange={(event) => updateForm({ guest_count: event.target.value })}
+                    />
+                  </ValidatedField>
+                ) : null}
                 <ValidatedField
                   id="quote-budget"
                   label="Budget"
@@ -477,7 +525,14 @@ export function QuotePage() {
                   <textarea rows={2} value={form.allergies} onChange={(event) => updateForm({ allergies: event.target.value })}></textarea>
                 </ValidatedField>
               ) : null}
-              <ValidatedField id="quote-note" label="Détails, thème ou besoins particuliers">
+              <ValidatedField
+                id="quote-note"
+                label={
+                  includesDecoration
+                    ? "Thème, couleurs ou besoins particuliers"
+                    : "Commentaires ou besoins particuliers"
+                }
+              >
                 <textarea rows={4} value={form.note} onChange={(event) => updateForm({ note: event.target.value })}></textarea>
               </ValidatedField>
             </section>
@@ -494,6 +549,16 @@ export function QuotePage() {
               />
             ) : null}
 
+            {selectedRequest ? (
+              <QuoteSummary
+                requestLabel={selectedRequest.label}
+                form={form}
+                selectedDecoration={selectedDecoration}
+                selectedCateringItemsCount={includesCatering ? selectedCateringItems.length : 0}
+                includesGuestCount={includesGuestCount}
+              />
+            ) : null}
+
             <div className="mt-8 rounded-xl border border-rose-100 bg-rose-50 p-4">
               <div className="flex gap-3">
                 <HeartHandshake className="mt-0.5 h-5 w-5 shrink-0 text-rose-700" />
@@ -507,11 +572,19 @@ export function QuotePage() {
               <Send className="h-5 w-5" />
               {status === "saving" ? "Envoi..." : "Envoyer la demande"}
             </Button>
-            {status === "success" ? <p className="mt-3 text-sm font-semibold text-emerald-700">Demande envoyée.</p> : null}
-            {status === "error" ? <p className="mt-3 text-sm font-semibold text-red-700">Impossible d'envoyer la demande.</p> : null}
+            {status === "success" ? (
+              <p className="mt-3 text-sm font-semibold text-emerald-700" role="status">
+                Demande envoyée. Nous communiquerons avec vous pour confirmer les détails.
+              </p>
+            ) : null}
+            {status === "error" ? (
+              <p className="mt-3 text-sm font-semibold text-red-700" role="alert">
+                Impossible d'envoyer la demande. Vos informations sont conservées; vous pouvez réessayer.
+              </p>
+            ) : null}
             {!canSubmit ? (
               <p className="mt-3 text-xs text-zinc-500">
-                Remplissez les champs requis{includesCatering ? " et ajoutez au moins un item traiteur" : ""}.
+                Remplissez les champs requis pour envoyer la demande.
               </p>
             ) : null}
           </form>
@@ -553,7 +626,9 @@ function SelectedDecorationSection({ loading, product }) {
         <img
           className="aspect-[4/3] w-full rounded-lg bg-white object-cover"
           src={product.image_url}
-          alt=""
+          alt={product.name}
+          loading="lazy"
+          decoding="async"
         />
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-rose-700">
@@ -562,6 +637,9 @@ function SelectedDecorationSection({ loading, product }) {
           <h3 className="mt-1 text-lg font-extrabold text-zinc-950" id="selected-decoration-title">
             {product.name}
           </h3>
+          <p className="mt-1 text-xs font-semibold text-zinc-500">
+            Référence du modèle : {product.slug}
+          </p>
           {product.description ? (
             <p className="mt-1 text-sm leading-6 text-zinc-600">{product.description}</p>
           ) : null}
@@ -593,9 +671,11 @@ function CateringItemsSection({
         <div>
           <h3 className="flex items-center gap-2 text-lg font-bold text-zinc-950">
             <Sparkles className="h-5 w-5 text-rose-700" />
-            Items traiteur souhaités
+            Items traiteur souhaités <span className="font-medium text-zinc-500">(facultatif)</span>
           </h3>
-          <p className="mt-1 text-sm text-zinc-500">Indiquez les produits qui vous intéressent pour la fête.</p>
+          <p className="mt-1 text-sm text-zinc-500">
+            Sélectionnez des produits si vous en avez déjà repéré; vous pouvez aussi décrire un besoin personnalisé.
+          </p>
         </div>
         <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold text-zinc-600">
           {selectedItemsCount} sélectionné{selectedItemsCount > 1 ? "s" : ""}
@@ -605,6 +685,11 @@ function CateringItemsSection({
       {loading ? (
         <div className="mt-4 rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-center text-sm text-zinc-500">
           Chargement des items...
+        </div>
+      ) : products.length === 0 ? (
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-900">
+          Aucun item traiteur publié n’est disponible pour le moment. Vous pouvez choisir un autre
+          type de demande ou nous contacter.
         </div>
       ) : (
         <div className="mt-4 grid gap-3">
@@ -622,7 +707,13 @@ function CateringItemsSection({
             return (
               <div className="rounded-xl border border-zinc-200 bg-white p-4" key={product.id}>
                 <div className="grid gap-3 sm:grid-cols-[4.5rem_1fr_auto] sm:items-start">
-                  <img className="h-18 w-18 rounded-lg bg-rose-50 object-contain p-2" src={product.image_url} alt="" />
+                  <img
+                    className="h-18 w-18 rounded-lg bg-rose-50 object-contain p-2"
+                    src={product.image_url}
+                    alt={product.name}
+                    loading="lazy"
+                    decoding="async"
+                  />
                   <div>
                     <p className="font-bold text-zinc-950">{product.name}</p>
                     <p className="mt-1 line-clamp-2 text-sm text-zinc-500">{product.description}</p>
@@ -638,6 +729,8 @@ function CateringItemsSection({
                       className="grid h-10 w-9 place-items-center text-zinc-500 hover:text-zinc-950"
                       type="button"
                       onClick={() => onUpdateItem(product, { requested_quantity: Math.max(0, requestedQuantity - 1) })}
+                      disabled={requestedQuantity <= 0}
+                      aria-label={`Réduire la quantité de ${product.name}`}
                     >
                       -
                     </button>
@@ -652,11 +745,13 @@ function CateringItemsSection({
                         quantityError ? `quote-item-${product.id}-quantity-error` : undefined
                       }
                       onChange={(event) => onUpdateItem(product, { requested_quantity: event.target.value })}
+                      aria-label={`Quantité souhaitée pour ${product.name}`}
                     />
                     <button
                       className="grid h-10 w-9 place-items-center text-zinc-500 hover:text-zinc-950"
                       type="button"
                       onClick={() => onUpdateItem(product, { requested_quantity: requestedQuantity + 1 })}
+                      aria-label={`Augmenter la quantité de ${product.name}`}
                     >
                       +
                     </button>
@@ -689,6 +784,52 @@ function CateringItemsSection({
   );
 }
 
+export function QuoteSummary({
+  requestLabel,
+  form,
+  selectedDecoration,
+  selectedCateringItemsCount,
+  includesGuestCount,
+}) {
+  const formattedDate = formatDateForDisplay(form.event_date);
+
+  return (
+    <section className="mt-8 rounded-xl border border-zinc-200 bg-zinc-50 p-4" aria-labelledby="quote-summary-title">
+      <h3 className="font-bold text-zinc-950" id="quote-summary-title">
+        Résumé de la demande
+      </h3>
+      <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+        <SummaryEntry label="Service" value={requestLabel} />
+        <SummaryEntry label="Événement" value={form.event_type || "À préciser"} />
+        <SummaryEntry label="Date" value={formattedDate || "À préciser"} />
+        <SummaryEntry label="Lieu" value={form.event_address || "À préciser"} />
+        {selectedDecoration ? (
+          <SummaryEntry label="Modèle" value={`${selectedDecoration.name} (${selectedDecoration.slug})`} />
+        ) : null}
+        {includesGuestCount && form.guest_count ? (
+          <SummaryEntry label="Invités" value={String(form.guest_count)} />
+        ) : null}
+        {selectedCateringItemsCount > 0 ? (
+          <SummaryEntry
+            label="Items traiteur"
+            value={`${selectedCateringItemsCount} sélectionné${selectedCateringItemsCount > 1 ? "s" : ""}`}
+          />
+        ) : null}
+        <SummaryEntry label="Budget" value={form.budget || "À préciser"} />
+      </dl>
+    </section>
+  );
+}
+
+function SummaryEntry({ label, value }) {
+  return (
+    <div className="flex justify-between gap-3 rounded-lg bg-white px-3 py-2">
+      <dt className="font-semibold text-zinc-500">{label}</dt>
+      <dd className="text-right font-semibold text-zinc-900">{value}</dd>
+    </div>
+  );
+}
+
 const formFieldPaths = {
   request_type: ["event_details.request_type", "requested_services"],
   event_type: ["event_details.event_type"],
@@ -701,32 +842,6 @@ const formFieldPaths = {
   phone: ["customer.phone"],
   email: ["customer.email"],
 };
-
-function buildQuoteRequest(form, items): QuoteRequest {
-  const request = requestTypes.find((type) => type.value === form.request_type) || null;
-
-  return {
-    type: "QUOTE_REQUEST",
-    customer: {
-      name: form.name,
-      phone: form.phone,
-      email: form.email,
-    },
-    requested_services: request ? [...request.services] : [],
-    event_details: {
-      request_type: form.request_type,
-      event_type: form.event_type,
-      event_date: form.event_date,
-      event_time: form.event_time || null,
-      event_address: form.event_address,
-      guest_count: form.guest_count ? Number(form.guest_count) : null,
-      budget: form.budget,
-      allergies: form.allergies || null,
-      note: form.note || null,
-    },
-    items,
-  };
-}
 
 function updateFieldError(errors: ValidationErrors, path: string, error?: string) {
   const next = { ...errors };

@@ -1,5 +1,6 @@
 import { AsYouType, parsePhoneNumberFromString } from "libphonenumber-js";
 import type { CartItem } from "./cart";
+import { getRequestedServices, shouldRequestGuestCount } from "./quote";
 
 export type CustomerContact = {
   name: string;
@@ -159,8 +160,8 @@ export function validateQuoteRequest(request: QuoteRequest): ValidationResult<Qu
   if (!hasText(event?.request_type)) {
     errors["event_details.request_type"] = "Choisissez un type de demande.";
   } else {
-    const expectedServices = servicesForRequestType[event.request_type];
-    if (!expectedServices) {
+    const expectedServices = getRequestedServices(event.request_type);
+    if (!expectedServices.length) {
       errors["event_details.request_type"] = "Le type de demande est invalide.";
     } else if (
       [...(request?.requested_services || [])].sort().join("|") !==
@@ -198,14 +199,6 @@ export function validateQuoteRequest(request: QuoteRequest): ValidationResult<Qu
     );
   }
 
-  if (
-    request?.requested_services?.includes("traiteur") &&
-    (!Array.isArray(request?.items) ||
-      !request.items.some((item) => item.configuration?.category === "tasting"))
-  ) {
-    errors.items = "Ajoutez au moins un item traiteur.";
-  }
-
   if (hasErrors(errors) || !customerResult.valid) return invalid(errors);
 
   return valid({
@@ -216,7 +209,11 @@ export function validateQuoteRequest(request: QuoteRequest): ValidationResult<Qu
       request_type: event.request_type.trim(),
       event_type: event.event_type.trim(),
       event_address: event.event_address.trim(),
+      guest_count: shouldRequestGuestCount(event.request_type) ? event.guest_count : null,
       budget: event.budget.trim(),
+      allergies: getRequestedServices(event.request_type).includes("traiteur")
+        ? event.allergies
+        : null,
     },
   });
 }
@@ -307,6 +304,11 @@ function validateQuoteItem(
     Array.isArray(item.configuration)
   ) {
     errors[`${prefix}.configuration`] = "La configuration transmise est invalide.";
+  } else if (
+    item.configuration.category !== "decoration" &&
+    item.configuration.category !== "tasting"
+  ) {
+    errors[`${prefix}.configuration`] = "La catégorie catalogue transmise est invalide.";
   }
   if (
     item?.configuration?.category === "decoration" &&
@@ -328,14 +330,6 @@ function validateQuoteItem(
     errors[`${prefix}.note`] = "La note de cet item est invalide.";
   }
 }
-
-const servicesForRequestType = {
-  traiteur: ["traiteur"],
-  decoration: ["decoration"],
-  organisation: ["organisation"],
-  "decoration-organisation": ["decoration", "organisation"],
-  "traiteur-decoration-organisation": ["traiteur", "decoration", "organisation"],
-};
 
 function isValidIsoDate(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;

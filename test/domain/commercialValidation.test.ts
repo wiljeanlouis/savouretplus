@@ -161,7 +161,11 @@ describe("quote request validation", () => {
     });
 
     expect(result.valid).toBe(true);
-    if (result.valid) expect(result.value.customer.phone).toBe("+15145551234");
+    if (result.valid) {
+      expect(result.value.customer.phone).toBe("+15145551234");
+      expect(result.value.event_details.guest_count).toBeNull();
+      expect(result.value.event_details.allergies).toBeNull();
+    }
   });
 
   it("reports required fields, phone, email, and date errors", () => {
@@ -217,6 +221,22 @@ describe("quote request validation", () => {
     expect(result.errors.requested_services).toContain("incohérents");
   });
 
+  it("accepts a catering request without catalog items", () => {
+    const result = validateQuoteRequest({
+      ...validQuote,
+      requested_services: ["traiteur"],
+      event_details: {
+        ...validQuote.event_details,
+        request_type: "traiteur",
+        guest_count: 80,
+        allergies: "Noix",
+      },
+      items: [],
+    });
+
+    expect(result.valid).toBe(true);
+  });
+
   it("rejects a fractional requested item quantity", () => {
     const result = validateQuoteRequest({
       ...validQuote,
@@ -235,5 +255,22 @@ describe("quote request validation", () => {
     });
 
     expect(result.errors["items.0.requested_quantity"]).toContain("entier positif");
+  });
+
+  it("rejects an item without a supported catalog category", () => {
+    const result = validateQuoteRequest({
+      ...validQuote,
+      items: [
+        {
+          offering_id: "decor-1",
+          name: "Arche romantique",
+          requested_quantity: 1,
+          configuration: {},
+          note: null,
+        },
+      ],
+    });
+
+    expect(result.errors["items.0.configuration"]).toContain("catégorie catalogue");
   });
 });

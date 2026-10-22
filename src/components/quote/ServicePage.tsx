@@ -1,6 +1,7 @@
 import { Check, ClipboardList, Send } from "lucide-react";
 import { useState } from "react";
 import { submitQuoteRequest } from "../../application/commerce";
+import { getRequestedServices } from "../../domain/quote";
 import { BreadcrumbHero } from "../layout/BreadcrumbHero";
 import { Button } from "../ui/button";
 
@@ -23,12 +24,6 @@ const requestTypes = [
   { value: "organisation", label: "Organisation d'évènement" },
   { value: "decoration-organisation", label: "Décoration + organisation" },
 ];
-
-const requestedServices = {
-  decoration: ["decoration"],
-  organisation: ["organisation"],
-  "decoration-organisation": ["decoration", "organisation"],
-};
 
 const eventTypes = ["Anniversaire", "Mariage", "Baptême", "Baby shower", "Corporatif", "Autre"];
 
@@ -75,7 +70,7 @@ export function ServicePage({ title, heroImage, images, heading, text }) {
           allergies: null,
           note: form.note || null,
         },
-        requested_services: requestedServices[form.request_type] || [],
+        requested_services: getRequestedServices(form.request_type),
         items: [],
       });
       setForm(initialForm);

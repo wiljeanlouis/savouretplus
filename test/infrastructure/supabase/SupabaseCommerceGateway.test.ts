@@ -265,4 +265,18 @@ describe("SupabaseCommerceGateway", () => {
     await expect(gateway.submitQuoteRequest(payload)).resolves.toEqual({ id: "quote-1" });
     expect(supabaseMock.rpc).toHaveBeenCalledWith("submit_quote_request", { payload });
   });
+
+  it("surfaces an RPC error without retrying or changing the payload", async () => {
+    const rpcError = new Error("Supabase unavailable");
+    supabaseMock.rpc.mockResolvedValue({ data: null, error: rpcError });
+    const { SupabaseCommerceGateway } = await import(
+      "../../../src/infrastructure/supabase/SupabaseCommerceGateway"
+    );
+    const gateway = new SupabaseCommerceGateway("https://example.supabase.co", "anon-key");
+    const payload = { eventType: "mariage", offering_id: "decor-42" };
+
+    await expect(gateway.submitQuoteRequest(payload)).rejects.toBe(rpcError);
+    expect(supabaseMock.rpc).toHaveBeenCalledOnce();
+    expect(supabaseMock.rpc).toHaveBeenCalledWith("submit_quote_request", { payload });
+  });
 });
