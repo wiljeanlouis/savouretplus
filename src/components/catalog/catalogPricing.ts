@@ -65,3 +65,8 @@ export function calculateUnitPrice(ingredients, purchaseMode) {
 
   return (purchaseMode?.price_cents ?? 0) + extrasTotal;
 }
+
+export function isValidOrderQuantity(value) {
+  const quantity = Number(value);
+  return Number.isInteger(quantity) && quantity > 0;
+}

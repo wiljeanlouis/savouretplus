@@ -116,6 +116,7 @@ describe("SupabaseCommerceGateway", () => {
                   bom_id: "bom-invalid",
                   slug: "invalid-product",
                   name: "Invalid product",
+                  category: "tasting",
                   purchase_modes: [],
                 },
                 {
@@ -123,6 +124,7 @@ describe("SupabaseCommerceGateway", () => {
                   bom_id: "bom-valid",
                   slug: "valid-product",
                   name: "Valid product",
+                  category: "tasting",
                   purchase_modes: [
                     {
                       id: "unit",
@@ -152,6 +154,43 @@ describe("SupabaseCommerceGateway", () => {
     ]);
   });
 
+  it("keeps decoration products that require a custom quote instead of a price", async () => {
+    supabaseMock.from.mockReturnValue({
+      select: () => ({
+        eq: () => ({
+          order: () =>
+            Promise.resolve({
+              data: [
+                {
+                  id: "decor-custom",
+                  bom_id: "decor-custom",
+                  slug: "decor-sur-mesure",
+                  name: "Décor sur mesure",
+                  category: "decoration",
+                  subcategory: "not-a-known-subcategory",
+                  purchase_modes: [],
+                },
+              ],
+              error: null,
+            }),
+        }),
+      }),
+    });
+    const { SupabaseCommerceGateway } = await import(
+      "../../../src/infrastructure/supabase/SupabaseCommerceGateway"
+    );
+    const gateway = new SupabaseCommerceGateway("https://example.supabase.co", "anon-key");
+
+    await expect(gateway.fetchCatalogProducts()).resolves.toMatchObject([
+      {
+        id: "decor-custom",
+        category: "decoration",
+        subcategory: null,
+        purchase_modes: [],
+      },
+    ]);
+  });
+
   it("falls back to the local catalog when Supabase returns an error", async () => {
     vi.spyOn(console, "warn").mockImplementation(() => undefined);
     supabaseMock.from.mockReturnValue({
@@ -167,6 +206,22 @@ describe("SupabaseCommerceGateway", () => {
     const gateway = new SupabaseCommerceGateway("https://example.supabase.co", "anon-key");
 
     await expect(gateway.fetchCatalogProducts()).resolves.toBe(fallbackCatalog);
+  });
+
+  it("keeps a successful empty catalog empty instead of showing unpublished fallback items", async () => {
+    supabaseMock.from.mockReturnValue({
+      select: () => ({
+        eq: () => ({
+          order: () => Promise.resolve({ data: [], error: null }),
+        }),
+      }),
+    });
+    const { SupabaseCommerceGateway } = await import(
+      "../../../src/infrastructure/supabase/SupabaseCommerceGateway"
+    );
+    const gateway = new SupabaseCommerceGateway("https://example.supabase.co", "anon-key");
+
+    await expect(gateway.fetchCatalogProducts()).resolves.toEqual([]);
   });
 
   it("inserts customer orders into Supabase", async () => {

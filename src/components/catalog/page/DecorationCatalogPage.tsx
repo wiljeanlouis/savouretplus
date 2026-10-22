@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import {
   decorationCategories,
-  getDecorationCategoryFromHash,
+  getDecorationCatalogTarget,
   groupDecorationProducts,
 } from "../../../domain/decoration";
 import { Button } from "../../ui/button";
@@ -21,10 +21,7 @@ export function DecorationCatalogPage() {
     if (loading) return;
 
     function scrollToRequestedCategory() {
-      const requestedCategory = getDecorationCategoryFromHash(window.location.hash);
-      const targetId = requestedCategory
-        ? `decoration-${requestedCategory.slug}`
-        : "decoration-catalogue";
+      const targetId = getDecorationCatalogTarget(window.location.hash, products);
 
       window.requestAnimationFrame(() => {
         document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -34,7 +31,11 @@ export function DecorationCatalogPage() {
     scrollToRequestedCategory();
     window.addEventListener("hashchange", scrollToRequestedCategory);
     return () => window.removeEventListener("hashchange", scrollToRequestedCategory);
-  }, [loading]);
+  }, [loading, products]);
+
+  const populatedCategories = decorationCategories.filter(
+    (category) => productGroups.groups.get(category.id)?.length,
+  );
 
   return (
     <>
@@ -57,7 +58,8 @@ export function DecorationCatalogPage() {
             <CatalogLoadingState />
           ) : (
             <div className="grid gap-16">
-              {decorationCategories.map((category) => (
+              {products.length === 0 ? <DecorationCatalogEmptyState /> : null}
+              {populatedCategories.map((category) => (
                 <DecorationProductSection
                   category={category}
                   products={productGroups.groups.get(category.id) || []}
@@ -67,6 +69,7 @@ export function DecorationCatalogPage() {
               {productGroups.other.length ? (
                 <OtherDecorationProducts products={productGroups.other} />
               ) : null}
+              <CustomDecorationSection />
             </div>
           )}
         </div>
@@ -82,24 +85,48 @@ function DecorationProductSection({ category, products }) {
         <h2 className="mt-2 font-serif text-3xl font-bold">{category.label}</h2>
         <p className="mt-3 leading-7 text-zinc-600">{category.description}</p>
       </div>
-      {products.length ? (
-        <DecorationProductGrid products={products} />
-      ) : (
-        <div className="rounded-2xl border border-dashed border-rose-200 bg-rose-50/60 p-8">
-          <h3 className="font-serif text-xl font-bold text-zinc-950">
-            Un décor créé pour votre événement
-          </h3>
-          <p className="mt-2 max-w-2xl text-zinc-600">
-            Aucun modèle n’est publié dans cette catégorie pour le moment. Parlez-nous de votre
-            thème et nous préparerons une proposition personnalisée.
-          </p>
-          <Button className="mt-5" asChild>
-            <a href={`#/soumission?service=decoration&categorie=${category.slug}`}>
-              Demander une soumission
-            </a>
-          </Button>
-        </div>
-      )}
+      <DecorationProductGrid products={products} />
+    </section>
+  );
+}
+
+function DecorationCatalogEmptyState() {
+  return (
+    <div className="mx-auto max-w-2xl text-center">
+      <p className="eyebrow">Catalogue en préparation</p>
+      <h2 className="mt-3 font-serif text-3xl font-bold text-zinc-950">
+        Nos modèles seront bientôt présentés ici.
+      </h2>
+      <p className="mt-3 leading-7 text-zinc-600">
+        Notre service de décoration demeure disponible. Décrivez-nous votre événement pour recevoir
+        une proposition personnalisée.
+      </p>
+    </div>
+  );
+}
+
+function CustomDecorationSection() {
+  return (
+    <section
+      className="scroll-mt-24 rounded-3xl border border-rose-200 bg-rose-50/60 p-6 sm:p-8"
+      id="decoration-sur-mesure"
+    >
+      <div className="max-w-2xl">
+        <p className="eyebrow">Une idée différente?</p>
+        <h2 className="mt-2 font-serif text-3xl font-bold text-zinc-950">
+          Décoration sur mesure
+        </h2>
+        <p className="mt-3 leading-7 text-zinc-600">
+          Vous ne trouvez pas encore le modèle recherché? Parlez-nous de votre thème, de votre lieu
+          et de votre budget. Nous préparerons une proposition adaptée à votre événement.
+        </p>
+        <Button className="mt-5" asChild>
+          <a href="#/soumission?service=decoration">
+            <ClipboardList className="h-4 w-4" />
+            Demander une soumission
+          </a>
+        </Button>
+      </div>
     </section>
   );
 }

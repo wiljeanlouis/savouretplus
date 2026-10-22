@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   decorationCategories,
+  getDecorationCatalogTarget,
   getDecorationCategoryFromHash,
   groupDecorationProducts,
 } from "../../src/domain/decoration";
@@ -68,5 +69,28 @@ describe("decoration categories", () => {
     expect(result.groups.get("balloon-arch")).toEqual([balloonArch]);
     expect(result.groups.get("wedding")).toEqual([]);
     expect(result.other).toEqual([unmapped]);
+  });
+
+  it("keeps empty categories out of the populated groups", () => {
+    const result = groupDecorationProducts([decorationProduct("wedding", "wedding")]);
+    const populatedCategoryIds = decorationCategories
+      .filter((category) => result.groups.get(category.id)?.length)
+      .map((category) => category.id);
+
+    expect(populatedCategoryIds).toEqual(["wedding"]);
+  });
+
+  it("targets a populated category and redirects an empty category to custom decoration", () => {
+    const products = [decorationProduct("arch", "balloon-arch")];
+
+    expect(
+      getDecorationCatalogTarget("#/decoration?categorie=arche-de-ballon", products),
+    ).toBe("decoration-arche-de-ballon");
+    expect(
+      getDecorationCatalogTarget("#/decoration?categorie=mariage", products),
+    ).toBe("decoration-sur-mesure");
+    expect(getDecorationCatalogTarget("#/decoration", products)).toBe(
+      "decoration-catalogue",
+    );
   });
 });

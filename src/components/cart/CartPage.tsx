@@ -1,29 +1,74 @@
 import { ArrowLeft, Send, ShoppingBag, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { createCustomerOrder } from "../../application/commerce";
+import {
+  CommercialValidationError,
+  formatPhoneInput,
+  type ValidationErrors,
+  validateCustomerContact,
+  validateCustomerOrder,
+} from "../../domain/commercialValidation";
 import { formatCurrency } from "../../shared/format";
+import { focusFirstInvalidField, ValidatedField } from "../forms/ValidatedField";
 import { BreadcrumbHero } from "../layout/BreadcrumbHero";
 import { Button } from "../ui/button";
 
 export function CartPage({ cart }) {
   const [customer, setCustomer] = useState({ name: "", phone: "", email: "", note: "" });
   const [status, setStatus] = useState("idle");
+  const [errors, setErrors] = useState<ValidationErrors>({});
+
+  function updateCustomer(field, value) {
+    const nextCustomer = { ...customer, [field]: value };
+    setCustomer(nextCustomer);
+    setStatus("idle");
+
+    const path = `customer.${field}`;
+    if (!errors[path]) return;
+
+    const result = validateCustomerContact(nextCustomer);
+    setErrors((current) => updateFieldError(current, path, result.errors[path]));
+  }
+
+  function updateItemQuantity(item, index, value) {
+    cart.updateQuantity(item.key, value);
+    const path = `items.${index}.quantity`;
+    const quantity = Number(value);
+    const error =
+      Number.isInteger(quantity) && quantity > 0
+        ? undefined
+        : "La quantité doit être un entier positif.";
+    setErrors((current) => updateFieldError(current, path, error));
+  }
 
   async function submitOrder(event) {
     event.preventDefault();
-    if (!cart.items.length) return;
+    const order = {
+      customer,
+      items: cart.items,
+      totalCents: cart.totalCents,
+    };
+    const validation = validateCustomerOrder(order);
+    if (!validation.valid) {
+      setErrors(validation.errors);
+      focusFirstInvalidField();
+      return;
+    }
 
+    setErrors({});
     setStatus("saving");
     try {
-      await createCustomerOrder({
-        customer,
-        items: cart.items,
-        totalCents: cart.totalCents,
-      });
+      await createCustomerOrder(validation.value);
       cart.clear();
       setCustomer({ name: "", phone: "", email: "", note: "" });
       setStatus("success");
     } catch (error) {
+      if (error instanceof CommercialValidationError) {
+        setErrors(error.errors);
+        setStatus("idle");
+        focusFirstInvalidField();
+        return;
+      }
       console.error(error);
       setStatus("error");
     }
@@ -68,8 +113,15 @@ export function CartPage({ cart }) {
                 </div>
 
                 <div className="grid gap-4">
-                  {cart.items.map((item) => (
-                    <CartItem cart={cart} item={item} key={item.key} />
+                  {cart.items.map((item, index) => (
+                    <CartItem
+                      cart={cart}
+                      item={item}
+                      index={index}
+                      errors={errors}
+                      onQuantityChange={updateItemQuantity}
+                      key={item.key}
+                    />
                   ))}
                 </div>
               </div>
@@ -77,7 +129,8 @@ export function CartPage({ cart }) {
               <OrderForm
                 cart={cart}
                 customer={customer}
-                onCustomerChange={setCustomer}
+                errors={errors}
+                onCustomerChange={updateCustomer}
                 onSubmit={submitOrder}
                 status={status}
               />
@@ -91,11 +144,20 @@ export function CartPage({ cart }) {
   );
 }
 
-function CartItem({ cart, item }) {
+function CartItem({ cart, item, index, errors, onQuantityChange }) {
   const unitPrice = item.unit_price_cents ?? item.price_cents ?? 0;
+  const quantityError = errors[`items.${index}.quantity`];
+  const configurationError = Object.entries(errors).find(
+    ([path]) => path.startsWith(`items.${index}.`) && path !== `items.${index}.quantity`,
+  )?.[1] as string | undefined;
 
   return (
-    <article className="grid gap-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:grid-cols-[7rem_minmax(0,1fr)_auto] sm:p-5">
+    <article
+      className="grid gap-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:grid-cols-[7rem_minmax(0,1fr)_auto] sm:p-5"
+      aria-invalid={Boolean(configurationError)}
+      aria-describedby={configurationError ? `cart-item-${index}-configuration-error` : undefined}
+      tabIndex={configurationError ? -1 : undefined}
+    >
       <img
         className="h-28 w-full rounded-xl bg-rose-50 object-contain sm:w-28"
         src={item.image_url}
@@ -108,13 +170,30 @@ function CartItem({ cart, item }) {
         <label className="mt-4 flex w-fit items-center gap-3 text-sm font-semibold text-zinc-700">
           Quantité
           <input
-            className="h-10 w-20 rounded-md border border-zinc-200 px-2 text-center font-bold"
+            className="h-10 w-20 rounded-md border border-zinc-200 px-2 text-center font-bold aria-invalid:border-red-500 aria-invalid:ring-1 aria-invalid:ring-red-200"
             min="1"
+            step="1"
             type="number"
             value={item.quantity}
-            onChange={(event) => cart.updateQuantity(item.key, event.target.value)}
+            aria-invalid={Boolean(quantityError)}
+            aria-describedby={quantityError ? `cart-item-${index}-quantity-error` : undefined}
+            onChange={(event) => onQuantityChange(item, index, event.target.value)}
           />
         </label>
+        {quantityError ? (
+          <p className="mt-2 text-sm font-medium text-red-700" id={`cart-item-${index}-quantity-error`} role="alert">
+            {quantityError}
+          </p>
+        ) : null}
+        {configurationError ? (
+          <p
+            className="mt-2 text-sm font-medium text-red-700"
+            id={`cart-item-${index}-configuration-error`}
+            role="alert"
+          >
+            {configurationError}
+          </p>
+        ) : null}
       </div>
       <div className="flex items-start justify-between gap-3 sm:block sm:text-right">
         <strong className="text-lg text-zinc-950">{formatCurrency(unitPrice * item.quantity)}</strong>
@@ -133,7 +212,7 @@ function CartItem({ cart, item }) {
   );
 }
 
-function OrderForm({ cart, customer, onCustomerChange, onSubmit, status }) {
+function OrderForm({ cart, customer, errors, onCustomerChange, onSubmit, status }) {
   return (
     <aside className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm lg:sticky lg:top-28">
       <p className="eyebrow">Finaliser</p>
@@ -144,39 +223,57 @@ function OrderForm({ cart, customer, onCustomerChange, onSubmit, status }) {
         <strong className="text-2xl text-zinc-950">{formatCurrency(cart.totalCents)}</strong>
       </div>
 
-      <form className="grid gap-4" onSubmit={onSubmit}>
-        <Field label="Nom">
+      <form className="grid gap-4" onSubmit={onSubmit} noValidate>
+        <ValidatedField id="order-name" label="Nom" required error={errors["customer.name"]}>
           <input
-            required
             autoComplete="name"
             value={customer.name}
-            onChange={(event) => onCustomerChange({ ...customer, name: event.target.value })}
+            onChange={(event) => onCustomerChange("name", event.target.value)}
           />
-        </Field>
-        <Field label="Téléphone">
+        </ValidatedField>
+        <ValidatedField
+          id="order-phone"
+          label="Téléphone"
+          required
+          error={errors["customer.phone"]}
+        >
           <input
-            required
             autoComplete="tel"
+            inputMode="tel"
+            placeholder="(514) 555-1234"
             type="tel"
             value={customer.phone}
-            onChange={(event) => onCustomerChange({ ...customer, phone: event.target.value })}
+            onChange={(event) =>
+              onCustomerChange("phone", formatPhoneInput(event.target.value))
+            }
           />
-        </Field>
-        <Field label="Courriel">
+        </ValidatedField>
+        <ValidatedField id="order-email" label="Courriel" error={errors["customer.email"]}>
           <input
             autoComplete="email"
             type="email"
             value={customer.email}
-            onChange={(event) => onCustomerChange({ ...customer, email: event.target.value })}
+            onChange={(event) => onCustomerChange("email", event.target.value)}
           />
-        </Field>
-        <Field label="Note">
+        </ValidatedField>
+        <ValidatedField id="order-note" label="Note">
           <textarea
             rows={4}
             value={customer.note}
-            onChange={(event) => onCustomerChange({ ...customer, note: event.target.value })}
+            onChange={(event) => onCustomerChange("note", event.target.value)}
           />
-        </Field>
+        </ValidatedField>
+
+        {errors.items ? (
+          <p className="text-sm font-medium text-red-700" role="alert">
+            {errors.items}
+          </p>
+        ) : null}
+        {errors.totalCents ? (
+          <p className="text-sm font-medium text-red-700" role="alert">
+            {errors.totalCents}
+          </p>
+        ) : null}
 
         <Button className="mt-2 w-full" size="lg" type="submit" disabled={status === "saving"}>
           <Send className="h-5 w-5" />
@@ -245,13 +342,9 @@ function CartItemConfiguration({ item }) {
   );
 }
 
-function Field({ label, children }) {
-  return (
-    <label className="grid gap-2 text-sm font-semibold text-zinc-700">
-      {label}
-      <div className="[&>input]:h-11 [&>input]:w-full [&>input]:rounded-md [&>input]:border [&>input]:border-zinc-200 [&>input]:px-3 [&>textarea]:w-full [&>textarea]:rounded-md [&>textarea]:border [&>textarea]:border-zinc-200 [&>textarea]:px-3 [&>textarea]:py-2">
-        {children}
-      </div>
-    </label>
-  );
+function updateFieldError(errors: ValidationErrors, path: string, error?: string) {
+  const next = { ...errors };
+  if (error) next[path] = error;
+  else delete next[path];
+  return next;
 }

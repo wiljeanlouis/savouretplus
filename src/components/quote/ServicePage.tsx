@@ -24,6 +24,12 @@ const requestTypes = [
   { value: "decoration-organisation", label: "Décoration + organisation" },
 ];
 
+const requestedServices = {
+  decoration: ["decoration"],
+  organisation: ["organisation"],
+  "decoration-organisation": ["decoration", "organisation"],
+};
+
 const eventTypes = ["Anniversaire", "Mariage", "Baptême", "Baby shower", "Corporatif", "Autre"];
 
 const budgetOptions = ["300$ - 500$", "500$ - 1000$", "1000$ et plus", "À discuter"];
@@ -52,7 +58,7 @@ export function ServicePage({ title, heroImage, images, heading, text }) {
     setStatus("saving");
     try {
       await submitQuoteRequest({
-        type: "EVENT_SERVICE_QUOTE_REQUEST",
+        type: "QUOTE_REQUEST",
         customer: {
           name: form.name,
           phone: form.phone,
@@ -66,8 +72,11 @@ export function ServicePage({ title, heroImage, images, heading, text }) {
           event_address: form.event_address,
           guest_count: form.guest_count ? Number(form.guest_count) : null,
           budget: form.budget,
+          allergies: null,
           note: form.note || null,
         },
+        requested_services: requestedServices[form.request_type] || [],
+        items: [],
       });
       setForm(initialForm);
       setStatus("success");

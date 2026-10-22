@@ -43,7 +43,10 @@ export function HeroSlideshow() {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
-      onBlur={() => setPaused(false)}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false);
+      }}
+      role="region"
       aria-roledescription="carrousel"
       aria-label="Aperçu des services Savour Et Plus"
     >

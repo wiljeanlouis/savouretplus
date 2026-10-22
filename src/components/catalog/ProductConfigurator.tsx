@@ -1,7 +1,8 @@
 import { Minus, Plus, ShoppingBag, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatCurrency } from "../../shared/format";
 import { Button } from "../ui/button";
+import { ProductGallery } from "./ProductGallery";
 import {
   calculateUnitPrice,
   getConfiguredAllocation,
@@ -9,9 +10,11 @@ import {
   getConfiguredSelection,
   getDefaultChoiceAllocation,
   getDefaultIngredientQuantities,
+  isValidOrderQuantity,
 } from "./catalogPricing";
 
 export function ProductConfigurator({ product, open, onClose, onAdd }) {
+  const panelRef = useRef(null);
   const [selectedPurchaseModeId, setSelectedPurchaseModeId] = useState("");
   const [selectedChoiceId, setSelectedChoiceId] = useState("");
   const [choiceAllocation, setChoiceAllocation] = useState({});
@@ -28,6 +31,47 @@ export function ProductConfigurator({ product, open, onClose, onAdd }) {
     setQuantity(1);
   }, [product]);
 
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const previouslyFocused = document.activeElement;
+    const panel = panelRef.current;
+    const focusableSelector =
+      'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+    panel?.querySelector("button:not([disabled])")?.focus();
+    document.body.style.overflow = "hidden";
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+
+      if (event.key !== "Tab" || !panel) return;
+      const focusable = [...panel.querySelectorAll(focusableSelector)];
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+      if (previouslyFocused instanceof HTMLElement) previouslyFocused.focus();
+    };
+  }, [open, onClose]);
+
   if (!product) return null;
 
   const selectedPurchaseMode =
@@ -37,8 +81,11 @@ export function ProductConfigurator({ product, open, onClose, onAdd }) {
   const allocationTotal = configuredAllocation.reduce((sum, choice) => sum + choice.quantity, 0);
   const configuredIngredients = getConfiguredIngredients(product, ingredientQuantities);
   const unitPriceCents = calculateUnitPrice(configuredIngredients, selectedPurchaseMode);
+  const numericQuantity = Number(quantity);
+  const hasValidQuantity = isValidOrderQuantity(quantity);
   const canAdd =
     Boolean(selectedPurchaseMode) &&
+    hasValidQuantity &&
     (product.product_type === "single_choice_bundle"
       ? selectedPurchaseMode?.allocation_type === "choice_allocation"
         ? allocationTotal === selectedPurchaseMode.quantity
@@ -68,7 +115,7 @@ export function ProductConfigurator({ product, open, onClose, onAdd }) {
     if (!canAdd) return;
 
     onAdd(product, {
-      quantity,
+      quantity: numericQuantity,
       unitPriceCents,
       purchaseMode: selectedPurchaseMode
         ? {
@@ -98,30 +145,40 @@ export function ProductConfigurator({ product, open, onClose, onAdd }) {
         aria-label="Fermer"
       />
       <div
-        className={`absolute right-0 top-0 flex h-full w-full max-w-lg flex-col bg-white shadow-2xl transition-transform duration-300 ${
+        ref={panelRef}
+        className={`absolute right-0 top-0 flex h-full w-full max-w-xl flex-col bg-white shadow-2xl transition-transform duration-300 ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="product-configurator-title"
       >
-        <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-5">
+        <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-4 sm:px-6 sm:py-5">
           <div>
             <p className="eyebrow">Personnaliser</p>
-            <h2 className="text-2xl font-extrabold text-zinc-950">{product.name}</h2>
+            <h2 className="font-serif text-2xl font-extrabold text-zinc-950" id="product-configurator-title">{product.name}</h2>
           </div>
-          <Button variant="ghost" size="icon" type="button" onClick={onClose}>
-            <X className="h-5 w-5" />
+          <Button variant="ghost" size="icon" type="button" onClick={onClose} aria-label="Fermer le configurateur">
+            <X className="h-5 w-5" aria-hidden="true" />
           </Button>
         </div>
 
-        <div className="flex-1 overflow-auto px-6 py-5">
-          <img className="h-56 w-full rounded-2xl bg-rose-50 object-contain p-4" src={product.image_url} alt="" />
+        <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6">
+          <ProductGallery
+            className="h-60 rounded-2xl p-3 sm:h-72"
+            images={product.gallery}
+            fallbackImage={product.image_url}
+            productName={product.name}
+          />
+
+          <PurchaseModeSelector
+            modes={product.purchase_modes}
+            selectedModeId={selectedPurchaseModeId}
+            onSelect={setSelectedPurchaseModeId}
+          />
 
           {product.product_type === "single_choice_bundle" ? (
             <>
-              <PurchaseModeSelector
-                modes={product.purchase_modes}
-                selectedModeId={selectedPurchaseModeId}
-                onSelect={setSelectedPurchaseModeId}
-              />
               {selectedPurchaseMode?.allocation_type === "single_choice" ? (
                 <ChoiceGroup
                   group={product.choice_group}
@@ -156,23 +213,39 @@ export function ProductConfigurator({ product, open, onClose, onAdd }) {
             />
           ) : null}
 
-          <div className="mt-6 rounded-2xl bg-zinc-50 p-4">
+          <div className="mt-6 rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
             <div className="flex items-center justify-between gap-3">
               <span className="font-semibold text-zinc-600">Quantité</span>
               <QuantityStepper quantity={quantity} onChange={setQuantity} />
             </div>
+            {!hasValidQuantity ? (
+              <p className="mt-2 text-sm font-semibold text-red-700" role="alert">
+                Saisissez une quantité entière supérieure à zéro.
+              </p>
+            ) : null}
             <div className="mt-4 flex items-center justify-between border-t border-zinc-200 pt-4">
               <span className="font-semibold text-zinc-600">Prix unitaire</span>
               <strong className="text-2xl text-zinc-950">{formatCurrency(unitPriceCents)}</strong>
             </div>
+            <div className="mt-2 flex items-center justify-between gap-3 text-sm">
+              <span className="font-semibold text-zinc-600">Total pour cette sélection</span>
+              <strong className="text-lg text-zinc-950">
+                {formatCurrency(hasValidQuantity ? unitPriceCents * numericQuantity : 0)}
+              </strong>
+            </div>
           </div>
         </div>
 
-        <div className="border-t border-zinc-200 p-6">
+        <div className="border-t border-zinc-200 bg-white p-4 shadow-[0_-8px_24px_rgba(0,0,0,0.04)] sm:p-6">
           <Button className="w-full" size="lg" type="button" disabled={!canAdd} onClick={addToCart}>
-            <ShoppingBag className="h-5 w-5" />
-            Ajouter au panier
+            <ShoppingBag className="h-5 w-5" aria-hidden="true" />
+            Ajouter {hasValidQuantity ? numericQuantity : ""} au panier
           </Button>
+          {!canAdd && hasValidQuantity ? (
+            <p className="mt-2 text-center text-xs font-semibold text-rose-700">
+              Complétez les choix demandés avant l’ajout au panier.
+            </p>
+          ) : null}
         </div>
       </div>
     </aside>
@@ -196,11 +269,13 @@ function PurchaseModeSelector({ modes, selectedModeId, onSelect }) {
             key={mode.id}
             type="button"
             onClick={() => onSelect(mode.id)}
+            aria-pressed={selectedModeId === mode.id}
           >
             <span className="block text-sm font-bold">{mode.label}</span>
-            <span className="mt-1 block text-xs font-semibold">
-              {mode.quantity} pâté{mode.quantity > 1 ? "s" : ""} · {formatCurrency(mode.price_cents)}
-            </span>
+            <span className="mt-1 block text-xs font-semibold">{formatCurrency(mode.price_cents)}</span>
+            {mode.quantity > 1 ? (
+              <span className="mt-1 block text-xs text-zinc-500">Comprend {mode.quantity} unités</span>
+            ) : null}
           </button>
         ))}
       </div>
@@ -225,6 +300,7 @@ function ChoiceGroup({ group, selectedChoiceId, onSelect }) {
             key={option.id}
             type="button"
             onClick={() => onSelect(option.id)}
+            aria-pressed={selectedChoiceId === option.id}
           >
             {option.name}
           </button>
@@ -241,22 +317,26 @@ function QuantityStepper({ quantity, onChange }) {
         className="grid h-11 w-10 place-items-center text-zinc-500 hover:text-zinc-950"
         type="button"
         onClick={() => onChange(Math.max(1, Number(quantity) - 1))}
+        aria-label="Réduire la quantité"
       >
-        <Minus className="h-4 w-4" />
+        <Minus className="h-4 w-4" aria-hidden="true" />
       </button>
       <input
         className="h-11 w-12 border-0 bg-transparent text-center font-bold outline-none"
         min="1"
+        step="1"
         type="number"
         value={quantity}
         onChange={(event) => onChange(event.target.value)}
+        aria-label="Quantité à ajouter"
       />
       <button
         className="grid h-11 w-10 place-items-center text-zinc-500 hover:text-zinc-950"
         type="button"
         onClick={() => onChange(Number(quantity) + 1)}
+        aria-label="Augmenter la quantité"
       >
-        <Plus className="h-4 w-4" />
+        <Plus className="h-4 w-4" aria-hidden="true" />
       </button>
     </div>
   );
@@ -293,16 +373,18 @@ function ChoiceAllocation({ group, targetQuantity, allocation, total, onChange }
                   className="grid h-9 w-8 place-items-center text-zinc-500 hover:text-zinc-950"
                   type="button"
                   onClick={() => onChange(option.id, quantity - 1)}
+                  aria-label={`Réduire ${option.name}`}
                 >
-                  <Minus className="h-3.5 w-3.5" />
+                  <Minus className="h-3.5 w-3.5" aria-hidden="true" />
                 </button>
                 <span className="w-8 text-center text-sm font-bold text-zinc-900">{quantity}</span>
                 <button
                   className="grid h-9 w-8 place-items-center text-zinc-500 hover:text-zinc-950"
                   type="button"
                   onClick={() => onChange(option.id, quantity + 1)}
+                  aria-label={`Augmenter ${option.name}`}
                 >
-                  <Plus className="h-3.5 w-3.5" />
+                  <Plus className="h-3.5 w-3.5" aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -342,16 +424,18 @@ function IngredientCustomizer({ ingredients, quantities, onChange }) {
                   className="grid h-9 w-8 place-items-center text-zinc-500 hover:text-zinc-950"
                   type="button"
                   onClick={() => onChange(ingredient, quantity - 1)}
+                  aria-label={`Réduire ${ingredient.name}`}
                 >
-                  <Minus className="h-3.5 w-3.5" />
+                  <Minus className="h-3.5 w-3.5" aria-hidden="true" />
                 </button>
                 <span className="w-8 text-center text-sm font-bold text-zinc-900">{quantity}</span>
                 <button
                   className="grid h-9 w-8 place-items-center text-zinc-500 hover:text-zinc-950"
                   type="button"
                   onClick={() => onChange(ingredient, quantity + 1)}
+                  aria-label={`Augmenter ${ingredient.name}`}
                 >
-                  <Plus className="h-3.5 w-3.5" />
+                  <Plus className="h-3.5 w-3.5" aria-hidden="true" />
                 </button>
               </div>
             </div>

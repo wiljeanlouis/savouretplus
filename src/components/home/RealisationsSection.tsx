@@ -1,11 +1,13 @@
 import { ArrowRight, ChevronLeft, ChevronRight, Maximize2, PlayCircle, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
 import { realizationPhotos, youtubeChannelUrl, youtubeEmbedUrl } from "./homeContent";
 
 export function RealisationsSection() {
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const galleryTriggerRef = useRef<HTMLButtonElement>(null);
+  const lightboxCloseRef = useRef<HTMLButtonElement>(null);
   const activePhoto = realizationPhotos[activePhotoIndex];
 
   function showPreviousPhoto() {
@@ -19,6 +21,8 @@ export function RealisationsSection() {
   useEffect(() => {
     if (!lightboxOpen) return;
 
+    lightboxCloseRef.current?.focus();
+
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") setLightboxOpen(false);
       if (event.key === "ArrowLeft") showPreviousPhoto();
@@ -26,7 +30,10 @@ export function RealisationsSection() {
     }
 
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      galleryTriggerRef.current?.focus();
+    };
   }, [lightboxOpen]);
 
   return (
@@ -38,14 +45,15 @@ export function RealisationsSection() {
             Voyez quelques ambiances que nous avons déjà créées.
           </h2>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-zinc-300">
-            Parcourez quelques de nos réalisations et
-            découvrez nos vidéos directement depuis YouTube.
+            Parcourez quelques-unes de nos réalisations et découvrez nos vidéos directement depuis
+            YouTube.
           </p>
 
           <div className="mt-8 overflow-hidden rounded-3xl border border-white/10 bg-white/10 p-3">
             <button
               className="group relative block w-full overflow-hidden rounded-2xl bg-zinc-900 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300"
               type="button"
+              ref={galleryTriggerRef}
               onClick={() => setLightboxOpen(true)}
               aria-label={`Voir ${activePhoto.label} en grand`}
             >
@@ -115,6 +123,7 @@ export function RealisationsSection() {
           onPrevious={showPreviousPhoto}
           onNext={showNextPhoto}
           onSelect={setActivePhotoIndex}
+          closeButtonRef={lightboxCloseRef}
         />
       ) : null}
     </section>
@@ -155,15 +164,25 @@ function YoutubeFeature() {
   );
 }
 
-function GalleryLightbox({ photo, photoIndex, onClose, onPrevious, onNext, onSelect }) {
+function GalleryLightbox({
+  photo,
+  photoIndex,
+  onClose,
+  onPrevious,
+  onNext,
+  onSelect,
+  closeButtonRef,
+}) {
   return (
     <div
       className="fixed inset-0 z-50 grid place-items-center bg-zinc-950/92 p-4"
       role="dialog"
       aria-modal="true"
       aria-label="Galerie de réalisations"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
     >
-      <button className="absolute inset-0 cursor-default" type="button" onClick={onClose} aria-label="Fermer" />
       <div className="relative z-10 w-full max-w-5xl">
         <div className="mb-3 flex items-center justify-between gap-3 text-white">
           <div>
@@ -172,9 +191,15 @@ function GalleryLightbox({ photo, photoIndex, onClose, onPrevious, onNext, onSel
               {photoIndex + 1} / {realizationPhotos.length}
             </p>
           </div>
-          <Button variant="ghost" size="icon" type="button" onClick={onClose}>
+          <button
+            ref={closeButtonRef}
+            className="grid h-10 w-10 place-items-center rounded-md text-zinc-200 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300"
+            type="button"
+            onClick={onClose}
+            aria-label="Fermer la galerie"
+          >
             <X className="h-5 w-5" />
-          </Button>
+          </button>
         </div>
 
         <div className="relative overflow-hidden rounded-3xl bg-black shadow-2xl">

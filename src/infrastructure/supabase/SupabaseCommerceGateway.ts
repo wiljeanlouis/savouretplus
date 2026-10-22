@@ -55,7 +55,7 @@ export class SupabaseCommerceGateway implements CommerceGateway {
 
     const products = data?.map(normalizeCatalogProduct).filter(isCatalogProduct) ?? [];
 
-    return products.length ? products : getFallbackCatalog(category);
+    return products;
   }
 
   async createCustomerOrder(order: CustomerOrder) {
@@ -90,7 +90,9 @@ function getFallbackCatalog(category?: CatalogCategory): CatalogProduct[] {
 
 function normalizeCatalogProduct(product: SupabaseCatalogProduct): CatalogProduct | null {
   const purchaseModes = normalizePurchaseModes(product);
-  if (!purchaseModes.length) return null;
+  const category = normalizeCategory(product.category);
+  if (category === "tasting" && !purchaseModes.length) return null;
+  if (!product.id || !product.slug || !product.name) return null;
 
   const imageUrl = product.image_url || "./images/home/offer-1-340x243.png";
 
@@ -99,7 +101,7 @@ function normalizeCatalogProduct(product: SupabaseCatalogProduct): CatalogProduc
     bom_id: product.bom_id || product.id,
     slug: product.slug,
     name: product.name,
-    category: normalizeCategory(product.category),
+    category,
     subcategory: normalizeProductSubcategory(product.subcategory),
     description: product.description || "",
     product_type: product.product_type || inferProductType(product),

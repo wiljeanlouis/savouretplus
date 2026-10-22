@@ -41,6 +41,12 @@ export function getDecorationCategoryFromHash(hash: string) {
   return decorationCategories.find((category) => category.slug === slug) ?? null;
 }
 
+export function getDecorationCategory(
+  subcategory: ProductSubcategory | null,
+): DecorationCategoryDefinition | null {
+  return decorationCategories.find((category) => category.id === subcategory) ?? null;
+}
+
 export function groupDecorationProducts(products: CatalogProduct[]) {
   const groups = new Map<ProductSubcategory, CatalogProduct[]>(
     decorationCategories.map((category) => [category.id, []]),
@@ -56,4 +62,16 @@ export function groupDecorationProducts(products: CatalogProduct[]) {
   });
 
   return { groups, other };
+}
+
+
+export function getDecorationCatalogTarget(hash: string, products: CatalogProduct[]) {
+  const requestedCategory = getDecorationCategoryFromHash(hash);
+
+  if (!requestedCategory) return "decoration-catalogue";
+
+  const { groups } = groupDecorationProducts(products);
+  return groups.get(requestedCategory.id)?.length
+    ? `decoration-${requestedCategory.slug}`
+    : "decoration-sur-mesure";
 }

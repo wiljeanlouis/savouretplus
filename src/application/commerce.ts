@@ -4,6 +4,11 @@ import type {
   QuoteRequest,
 } from "./ports/CommerceGateway";
 import type { CatalogCategory } from "../domain/catalog";
+import {
+  CommercialValidationError,
+  validateCustomerOrder,
+  validateQuoteRequest,
+} from "../domain/commercialValidation";
 
 let gateway: CommerceGateway | null = null;
 
@@ -24,9 +29,13 @@ export function fetchCatalogProducts(category?: CatalogCategory) {
 }
 
 export function createCustomerOrder(order: CustomerOrder) {
-  return getGateway().createCustomerOrder(order);
+  const result = validateCustomerOrder(order);
+  if (!result.valid) throw new CommercialValidationError(result.errors);
+  return getGateway().createCustomerOrder(result.value);
 }
 
 export function submitQuoteRequest(payload: QuoteRequest) {
-  return getGateway().submitQuoteRequest(payload);
+  const result = validateQuoteRequest(payload);
+  if (!result.valid) throw new CommercialValidationError(result.errors);
+  return getGateway().submitQuoteRequest(result.value);
 }

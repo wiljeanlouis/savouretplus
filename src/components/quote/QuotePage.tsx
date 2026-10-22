@@ -2,7 +2,23 @@ import { CalendarDays, Check, ClipboardList, HeartHandshake, Send, Sparkles } fr
 import { useEffect, useMemo, useState } from "react";
 import { fetchCatalogProducts, submitQuoteRequest } from "../../application/commerce";
 import type { CatalogProduct } from "../../domain/catalog";
+import {
+  CommercialValidationError,
+  formatDateForDisplay,
+  formatPhoneInput,
+  type QuoteRequest,
+  type ValidationErrors,
+  validateQuoteRequest,
+} from "../../domain/commercialValidation";
+import { getDecorationCategory } from "../../domain/decoration";
+import {
+  createDecorationQuoteItem,
+  findSelectedDecoration,
+  getQuoteQueryFromHash,
+  type QuoteQuery,
+} from "../../domain/quote";
 import { BreadcrumbHero } from "../layout/BreadcrumbHero";
+import { focusFirstInvalidField, ValidatedField } from "../forms/ValidatedField";
 import { Button } from "../ui/button";
 
 type QuoteItemDraft = {
@@ -14,7 +30,7 @@ type QuoteItemDraft = {
 };
 
 const initialForm = {
-  request_type: "",
+  request_type: "" as QuoteQuery["service"],
   event_type: "",
   event_date: "",
   event_time: "",
@@ -66,32 +82,32 @@ const requestTypes = [
   },
 ];
 
-const serviceQueryMap = {
-  traiteur: "traiteur",
-  decoration: "decoration",
-  organisation: "organisation",
-  "decoration-organisation": "decoration-organisation",
-  "traiteur-decoration-organisation": "traiteur-decoration-organisation",
-};
-
 const eventTypes = ["Anniversaire", "Mariage", "Baptême", "Baby shower", "Corporatif", "Autre"];
 
 const budgetOptions = ["300$ - 500$", "500$ - 1000$", "1000$ et plus", "À discuter"];
 
 export function QuotePage() {
+  const initialQuery = getQuoteQueryFromHash(window.location.hash);
   const [form, setForm] = useState(() => ({
     ...initialForm,
-    request_type: getSelectedServiceFromHash(),
+    request_type: initialQuery.service,
   }));
-  const [products, setProducts] = useState([]);
+  const [selectedItemSlug, setSelectedItemSlug] = useState(initialQuery.itemSlug);
+  const [products, setProducts] = useState<CatalogProduct[]>([]);
+  const [decorationProducts, setDecorationProducts] = useState<CatalogProduct[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [items, setItems] = useState<Record<string, QuoteItemDraft>>({});
   const [status, setStatus] = useState("idle");
+  const [errors, setErrors] = useState<ValidationErrors>({});
 
   const selectedRequest = requestTypes.find((type) => type.value === form.request_type) || null;
   const includesCatering = Boolean(selectedRequest?.services.includes("traiteur"));
+  const includesDecoration = Boolean(selectedRequest?.services.includes("decoration"));
+  const selectedDecoration = includesDecoration
+    ? findSelectedDecoration(decorationProducts, selectedItemSlug)
+    : null;
 
-  const selectedItems = useMemo(
+  const selectedCateringItems = useMemo(
     () =>
       Object.values(items)
         .filter((item) => Number(item.requested_quantity) > 0)
@@ -104,6 +120,13 @@ export function QuotePage() {
         })),
     [items],
   );
+  const quoteItems = useMemo(
+    () => [
+      ...(selectedDecoration ? [createDecorationQuoteItem(selectedDecoration)] : []),
+      ...(includesCatering ? selectedCateringItems : []),
+    ],
+    [includesCatering, selectedCateringItems, selectedDecoration],
+  );
 
   const canSubmit =
     form.request_type &&
@@ -113,13 +136,20 @@ export function QuotePage() {
     form.name &&
     form.phone &&
     form.budget &&
-    (!includesCatering || selectedItems.length > 0);
+    (!includesCatering || selectedCateringItems.length > 0);
 
   useEffect(() => {
     let mounted = true;
-    fetchCatalogProducts("tasting")
-      .then((data) => {
-        if (mounted) setProducts(data);
+    Promise.allSettled([
+      fetchCatalogProducts("tasting"),
+      fetchCatalogProducts("decoration"),
+    ])
+      .then(([tastingResult, decorationResult]) => {
+        if (!mounted) return;
+        setProducts(tastingResult.status === "fulfilled" ? tastingResult.value : []);
+        setDecorationProducts(
+          decorationResult.status === "fulfilled" ? decorationResult.value : [],
+        );
       })
       .finally(() => {
         if (mounted) setLoadingProducts(false);
@@ -132,8 +162,12 @@ export function QuotePage() {
 
   useEffect(() => {
     const onHashChange = () => {
-      const requestType = getSelectedServiceFromHash();
-      setForm((current) => ({ ...current, request_type: requestType || current.request_type }));
+      const query = getQuoteQueryFromHash(window.location.hash);
+      setSelectedItemSlug(query.itemSlug);
+      setForm((current) => ({
+        ...current,
+        request_type: query.service || current.request_type,
+      }));
     };
 
     window.addEventListener("hashchange", onHashChange);
@@ -141,8 +175,21 @@ export function QuotePage() {
   }, []);
 
   function updateForm(patch) {
-    setForm((current) => ({ ...current, ...patch }));
+    const nextForm = { ...form, ...patch };
+    setForm(nextForm);
     if (status !== "idle") setStatus("idle");
+
+    const validation = validateQuoteRequest(buildQuoteRequest(nextForm, quoteItems));
+    const paths = Object.keys(patch).flatMap((field) => formFieldPaths[field] || []);
+    if (!paths.some((path) => errors[path])) return;
+
+    setErrors((current) => {
+      let next = current;
+      paths.forEach((path) => {
+        next = updateFieldError(next, path, validation.errors[path]);
+      });
+      return next;
+    });
   }
 
   function updateItem(product: CatalogProduct, patch: Partial<QuoteItemDraft>) {
@@ -152,45 +199,55 @@ export function QuotePage() {
         offering_id: product.id,
         name: product.name,
         requested_quantity: current[product.id]?.requested_quantity || 0,
-        configuration: current[product.id]?.configuration || {},
+        configuration: current[product.id]?.configuration || {
+          catalog_slug: product.slug,
+          category: product.category,
+          subcategory: product.subcategory,
+        },
         note: current[product.id]?.note || "",
         ...patch,
       },
     }));
+    if (patch.requested_quantity !== undefined) {
+      const requestedQuantity = Number(patch.requested_quantity);
+      if (Number.isInteger(requestedQuantity) && requestedQuantity > 0) {
+        setErrors((current) => {
+          const next = { ...current };
+          delete next.items;
+          Object.keys(next)
+            .filter((path) => path.startsWith("items."))
+            .forEach((path) => delete next[path]);
+          return next;
+        });
+      }
+    }
     if (status !== "idle") setStatus("idle");
   }
 
   async function submitQuote(event) {
     event.preventDefault();
-    if (!canSubmit || !selectedRequest) return;
+    const payload = buildQuoteRequest(form, quoteItems);
+    const validation = validateQuoteRequest(payload);
+    if (!validation.valid) {
+      setErrors(validation.errors);
+      focusFirstInvalidField();
+      return;
+    }
 
+    setErrors({});
     setStatus("saving");
     try {
-      await submitQuoteRequest({
-        type: "QUOTE_REQUEST",
-        customer: {
-          name: form.name,
-          phone: form.phone,
-          email: form.email || null,
-        },
-        requested_services: selectedRequest.services,
-        event_details: {
-          request_type: form.request_type,
-          event_type: form.event_type,
-          event_date: form.event_date,
-          event_time: form.event_time || null,
-          event_address: form.event_address,
-          guest_count: form.guest_count ? Number(form.guest_count) : null,
-          budget: form.budget,
-          allergies: form.allergies || null,
-          note: form.note || null,
-        },
-        items: includesCatering ? selectedItems : [],
-      });
+      await submitQuoteRequest(validation.value);
       setForm(initialForm);
       setItems({});
       setStatus("success");
     } catch (error) {
+      if (error instanceof CommercialValidationError) {
+        setErrors(error.errors);
+        setStatus("idle");
+        focusFirstInvalidField();
+        return;
+      }
       console.error(error);
       setStatus("error");
     }
@@ -226,13 +283,24 @@ export function QuotePage() {
             </div>
           </div>
 
-          <form className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm" onSubmit={submitQuote}>
+          <form
+            className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm"
+            onSubmit={submitQuote}
+            noValidate
+          >
             <section>
               <p className="mb-3 flex items-center gap-2 text-sm font-extrabold text-zinc-950">
                 <ClipboardList className="h-5 w-5 text-rose-700" />
                 Type de demande
               </p>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div
+                className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
+                aria-invalid={Boolean(errors["event_details.request_type"])}
+                aria-describedby={
+                  errors["event_details.request_type"] ? "quote-request-type-error" : undefined
+                }
+                tabIndex={errors["event_details.request_type"] ? -1 : undefined}
+              >
                 {requestTypes.map((option) => {
                   const selected = form.request_type === option.value;
 
@@ -270,7 +338,23 @@ export function QuotePage() {
                   );
                 })}
               </div>
+              {errors["event_details.request_type"] ? (
+                <p
+                  className="mt-2 text-sm font-medium text-red-700"
+                  id="quote-request-type-error"
+                  role="alert"
+                >
+                  {errors["event_details.request_type"]}
+                </p>
+              ) : null}
             </section>
+
+            {includesDecoration && selectedItemSlug ? (
+              <SelectedDecorationSection
+                loading={loadingProducts}
+                product={selectedDecoration}
+              />
+            ) : null}
 
             <section className="mt-8 grid gap-4">
               <h3 className="flex items-center gap-2 text-lg font-bold text-zinc-950">
@@ -278,17 +362,49 @@ export function QuotePage() {
                 Informations de l'événement
               </h3>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Nom" required>
-                  <input required value={form.name} onChange={(event) => updateForm({ name: event.target.value })} />
-                </Field>
-                <Field label="Téléphone" required>
-                  <input required type="tel" value={form.phone} onChange={(event) => updateForm({ phone: event.target.value })} />
-                </Field>
-                <Field label="Courriel">
+                <ValidatedField
+                  id="quote-name"
+                  label="Nom"
+                  required
+                  error={errors["customer.name"]}
+                >
+                  <input
+                    autoComplete="name"
+                    value={form.name}
+                    onChange={(event) => updateForm({ name: event.target.value })}
+                  />
+                </ValidatedField>
+                <ValidatedField
+                  id="quote-phone"
+                  label="Téléphone"
+                  required
+                  error={errors["customer.phone"]}
+                >
+                  <input
+                    autoComplete="tel"
+                    inputMode="tel"
+                    placeholder="(514) 555-1234"
+                    type="tel"
+                    value={form.phone}
+                    onChange={(event) =>
+                      updateForm({ phone: formatPhoneInput(event.target.value) })
+                    }
+                  />
+                </ValidatedField>
+                <ValidatedField
+                  id="quote-email"
+                  label="Courriel"
+                  error={errors["customer.email"]}
+                >
                   <input type="email" value={form.email} onChange={(event) => updateForm({ email: event.target.value })} />
-                </Field>
-                <Field label="Type d'événement" required>
-                  <select required value={form.event_type} onChange={(event) => updateForm({ event_type: event.target.value })}>
+                </ValidatedField>
+                <ValidatedField
+                  id="quote-event-type"
+                  label="Type d'événement"
+                  required
+                  error={errors["event_details.event_type"]}
+                >
+                  <select value={form.event_type} onChange={(event) => updateForm({ event_type: event.target.value })}>
                     <option value="">Sélectionner</option>
                     {eventTypes.map((type) => (
                       <option key={type} value={type}>
@@ -296,18 +412,46 @@ export function QuotePage() {
                       </option>
                     ))}
                   </select>
-                </Field>
-                <Field label="Date" required>
-                  <input required type="date" value={form.event_date} onChange={(event) => updateForm({ event_date: event.target.value })} />
-                </Field>
-                <Field label="Heure">
+                </ValidatedField>
+                <ValidatedField
+                  id="quote-event-date"
+                  label="Date"
+                  required
+                  error={errors["event_details.event_date"]}
+                  hint={
+                    formatDateForDisplay(form.event_date)
+                      ? `Date sélectionnée : ${formatDateForDisplay(form.event_date)}`
+                      : undefined
+                  }
+                >
+                  <input
+                    type="date"
+                    lang="fr-CA"
+                    value={form.event_date}
+                    onChange={(event) => updateForm({ event_date: event.target.value })}
+                  />
+                </ValidatedField>
+                <ValidatedField
+                  id="quote-event-time"
+                  label="Heure"
+                  error={errors["event_details.event_time"]}
+                >
                   <input type="time" value={form.event_time} onChange={(event) => updateForm({ event_time: event.target.value })} />
-                </Field>
-                <Field label="Nombre d'invités">
-                  <input min="1" type="number" value={form.guest_count} onChange={(event) => updateForm({ guest_count: event.target.value })} />
-                </Field>
-                <Field label="Budget" required>
-                  <select required value={form.budget} onChange={(event) => updateForm({ budget: event.target.value })}>
+                </ValidatedField>
+                <ValidatedField
+                  id="quote-guest-count"
+                  label="Nombre d'invités"
+                  error={errors["event_details.guest_count"]}
+                >
+                  <input min="1" step="1" type="number" value={form.guest_count} onChange={(event) => updateForm({ guest_count: event.target.value })} />
+                </ValidatedField>
+                <ValidatedField
+                  id="quote-budget"
+                  label="Budget"
+                  required
+                  error={errors["event_details.budget"]}
+                >
+                  <select value={form.budget} onChange={(event) => updateForm({ budget: event.target.value })}>
                     <option value="">Sélectionner</option>
                     {budgetOptions.map((budget) => (
                       <option key={budget} value={budget}>
@@ -315,27 +459,37 @@ export function QuotePage() {
                       </option>
                     ))}
                   </select>
-                </Field>
+                </ValidatedField>
               </div>
-              <Field label="Adresse de l'événement" required>
-                <input required value={form.event_address} onChange={(event) => updateForm({ event_address: event.target.value })} />
-              </Field>
+              <ValidatedField
+                id="quote-event-address"
+                label="Adresse de l'événement"
+                required
+                error={errors["event_details.event_address"]}
+              >
+                <input value={form.event_address} onChange={(event) => updateForm({ event_address: event.target.value })} />
+              </ValidatedField>
               {includesCatering ? (
-                <Field label="Allergies ou restrictions alimentaires">
+                <ValidatedField
+                  id="quote-allergies"
+                  label="Allergies ou restrictions alimentaires"
+                >
                   <textarea rows={2} value={form.allergies} onChange={(event) => updateForm({ allergies: event.target.value })}></textarea>
-                </Field>
+                </ValidatedField>
               ) : null}
-              <Field label="Détails, thème ou besoins particuliers">
+              <ValidatedField id="quote-note" label="Détails, thème ou besoins particuliers">
                 <textarea rows={4} value={form.note} onChange={(event) => updateForm({ note: event.target.value })}></textarea>
-              </Field>
+              </ValidatedField>
             </section>
 
             {includesCatering ? (
               <CateringItemsSection
                 loading={loadingProducts}
                 products={products}
-                selectedItemsCount={selectedItems.length}
+                selectedItemsCount={selectedCateringItems.length}
                 items={items}
+                quoteItems={quoteItems}
+                errors={errors}
                 onUpdateItem={updateItem}
               />
             ) : null}
@@ -349,7 +503,7 @@ export function QuotePage() {
               </div>
             </div>
 
-            <Button className="mt-6 w-full" size="lg" type="submit" disabled={!canSubmit || status === "saving"}>
+            <Button className="mt-6 w-full" size="lg" type="submit" disabled={status === "saving"}>
               <Send className="h-5 w-5" />
               {status === "saving" ? "Envoi..." : "Envoyer la demande"}
             </Button>
@@ -367,9 +521,74 @@ export function QuotePage() {
   );
 }
 
-function CateringItemsSection({ loading, products, selectedItemsCount, items, onUpdateItem }) {
+function SelectedDecorationSection({ loading, product }) {
+  if (loading) {
+    return (
+      <section className="mt-8" aria-live="polite">
+        <p className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-5 text-sm text-zinc-500">
+          Chargement du modèle sélectionné...
+        </p>
+      </section>
+    );
+  }
+
+  if (!product) {
+    return (
+      <section className="mt-8 rounded-xl border border-amber-200 bg-amber-50 p-5">
+        <h3 className="font-bold text-amber-950">Modèle non disponible</h3>
+        <p className="mt-1 text-sm leading-6 text-amber-900">
+          Le modèle demandé est introuvable ou n’est plus publié. Vous pouvez tout de même décrire
+          le décor souhaité ci-dessous.
+        </p>
+      </section>
+    );
+  }
+
+  const category = getDecorationCategory(product.subcategory);
+
   return (
-    <section className="mt-8">
+    <section className="mt-8" aria-labelledby="selected-decoration-title">
+      <p className="mb-3 text-sm font-extrabold text-zinc-950">Modèle sélectionné</p>
+      <div className="grid gap-4 rounded-xl border border-rose-200 bg-rose-50/60 p-4 sm:grid-cols-[7rem_1fr] sm:items-center">
+        <img
+          className="aspect-[4/3] w-full rounded-lg bg-white object-cover"
+          src={product.image_url}
+          alt=""
+        />
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-rose-700">
+            {category?.label || "Autres décorations"}
+          </p>
+          <h3 className="mt-1 text-lg font-extrabold text-zinc-950" id="selected-decoration-title">
+            {product.name}
+          </h3>
+          {product.description ? (
+            <p className="mt-1 text-sm leading-6 text-zinc-600">{product.description}</p>
+          ) : null}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CateringItemsSection({
+  loading,
+  products,
+  selectedItemsCount,
+  items,
+  quoteItems,
+  errors,
+  onUpdateItem,
+}) {
+  const sectionError = errors.items;
+
+  return (
+    <section
+      className="mt-8"
+      aria-invalid={Boolean(sectionError)}
+      aria-describedby={sectionError ? "catering-items-error" : undefined}
+      tabIndex={sectionError ? -1 : undefined}
+    >
       <div className="flex items-end justify-between gap-4">
         <div>
           <h3 className="flex items-center gap-2 text-lg font-bold text-zinc-950">
@@ -392,6 +611,13 @@ function CateringItemsSection({ loading, products, selectedItemsCount, items, on
           {products.map((product) => {
             const item = items[product.id] || {};
             const requestedQuantity = Number(item.requested_quantity || 0);
+            const quoteItemIndex = quoteItems.findIndex(
+              (quoteItem) => quoteItem.offering_id === product.id,
+            );
+            const quantityError =
+              quoteItemIndex >= 0
+                ? errors[`items.${quoteItemIndex}.requested_quantity`]
+                : undefined;
 
             return (
               <div className="rounded-xl border border-zinc-200 bg-white p-4" key={product.id}>
@@ -416,10 +642,15 @@ function CateringItemsSection({ loading, products, selectedItemsCount, items, on
                       -
                     </button>
                     <input
-                      className="h-10 w-12 border-0 bg-transparent text-center text-sm font-bold outline-none"
+                      className="h-10 w-12 border-0 bg-transparent text-center text-sm font-bold outline-none aria-invalid:ring-2 aria-invalid:ring-red-400"
                       min="0"
+                      step="1"
                       type="number"
                       value={requestedQuantity}
+                      aria-invalid={Boolean(quantityError)}
+                      aria-describedby={
+                        quantityError ? `quote-item-${product.id}-quantity-error` : undefined
+                      }
                       onChange={(event) => onUpdateItem(product, { requested_quantity: event.target.value })}
                     />
                     <button
@@ -431,31 +662,75 @@ function CateringItemsSection({ loading, products, selectedItemsCount, items, on
                     </button>
                   </div>
                 </div>
+                {quantityError ? (
+                  <p
+                    className="mt-2 text-sm font-medium text-red-700"
+                    id={`quote-item-${product.id}-quantity-error`}
+                    role="alert"
+                  >
+                    {quantityError}
+                  </p>
+                ) : null}
               </div>
             );
           })}
         </div>
       )}
+      {sectionError ? (
+        <p
+          className="mt-3 text-sm font-medium text-red-700"
+          id="catering-items-error"
+          role="alert"
+        >
+          {sectionError}
+        </p>
+      ) : null}
     </section>
   );
 }
 
-function Field({ label, required = false, children }) {
-  return (
-    <label className="grid gap-2 text-sm font-semibold text-zinc-700">
-      <span>
-        {label}
-        {required ? <span className="ml-1 text-rose-600">*</span> : null}
-      </span>
-      <div className="[&>input]:h-11 [&>input]:w-full [&>input]:rounded-md [&>input]:border [&>input]:border-zinc-200 [&>input]:bg-white [&>input]:px-3 [&>select]:h-11 [&>select]:w-full [&>select]:rounded-md [&>select]:border [&>select]:border-zinc-200 [&>select]:bg-white [&>select]:px-3 [&>textarea]:w-full [&>textarea]:rounded-md [&>textarea]:border [&>textarea]:border-zinc-200 [&>textarea]:bg-white [&>textarea]:px-3 [&>textarea]:py-2">
-        {children}
-      </div>
-    </label>
-  );
+const formFieldPaths = {
+  request_type: ["event_details.request_type", "requested_services"],
+  event_type: ["event_details.event_type"],
+  event_date: ["event_details.event_date"],
+  event_time: ["event_details.event_time"],
+  event_address: ["event_details.event_address"],
+  guest_count: ["event_details.guest_count"],
+  budget: ["event_details.budget"],
+  name: ["customer.name"],
+  phone: ["customer.phone"],
+  email: ["customer.email"],
+};
+
+function buildQuoteRequest(form, items): QuoteRequest {
+  const request = requestTypes.find((type) => type.value === form.request_type) || null;
+
+  return {
+    type: "QUOTE_REQUEST",
+    customer: {
+      name: form.name,
+      phone: form.phone,
+      email: form.email,
+    },
+    requested_services: request ? [...request.services] : [],
+    event_details: {
+      request_type: form.request_type,
+      event_type: form.event_type,
+      event_date: form.event_date,
+      event_time: form.event_time || null,
+      event_address: form.event_address,
+      guest_count: form.guest_count ? Number(form.guest_count) : null,
+      budget: form.budget,
+      allergies: form.allergies || null,
+      note: form.note || null,
+    },
+    items,
+  };
 }
 
-function getSelectedServiceFromHash() {
-  const hashQuery = window.location.hash.split("?")[1] || "";
-  const params = new URLSearchParams(hashQuery);
-  return serviceQueryMap[params.get("service")] || "";
+function updateFieldError(errors: ValidationErrors, path: string, error?: string) {
+  const next = { ...errors };
+  if (error) next[path] = error;
+  else delete next[path];
+  return next;
 }

@@ -48,6 +48,7 @@ export function Header({ activeRoute, cartCount }) {
               activeRoute === "accueil" && "bg-rose-50 text-rose-700",
             )}
             href="#/accueil"
+            aria-current={activeRoute === "accueil" ? "page" : undefined}
           >
             Accueil
           </a>
@@ -64,6 +65,7 @@ export function Header({ activeRoute, cartCount }) {
                   activeRoute === "decoration" && "bg-rose-50 text-rose-700",
                 )}
                 href="#/decoration"
+                aria-current={activeRoute === "decoration" ? "page" : undefined}
               >
                 Décoration
               </a>
@@ -113,6 +115,7 @@ export function Header({ activeRoute, cartCount }) {
               )}
               href={`#/${route}`}
               key={route}
+              aria-current={activeRoute === route ? "page" : undefined}
             >
               {label}
             </a>
@@ -141,14 +144,23 @@ export function Header({ activeRoute, cartCount }) {
               </span>
             </a>
           </Button>
-          <Button className="md:hidden" variant="ghost" size="icon" type="button" onClick={() => setOpen(!open)}>
+          <Button
+            className="md:hidden"
+            variant="ghost"
+            size="icon"
+            type="button"
+            onClick={() => setOpen(!open)}
+            aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
+            aria-expanded={open}
+            aria-controls="mobile-navigation"
+          >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>
       </div>
 
       {open ? (
-        <nav className="border-t border-zinc-200 bg-white md:hidden">
+        <nav className="border-t border-zinc-200 bg-white md:hidden" id="mobile-navigation">
           <div className="container-page grid py-3">
             <a
               className={cn(
@@ -156,6 +168,7 @@ export function Header({ activeRoute, cartCount }) {
                 activeRoute === "accueil" && "bg-rose-50 text-rose-700",
               )}
               href="#/accueil"
+              aria-current={activeRoute === "accueil" ? "page" : undefined}
               onClick={() => setOpen(false)}
             >
               Accueil
@@ -168,6 +181,7 @@ export function Header({ activeRoute, cartCount }) {
                     activeRoute === "decoration" && "bg-rose-50 text-rose-700",
                   )}
                   href="#/decoration"
+                  aria-current={activeRoute === "decoration" ? "page" : undefined}
                   onClick={() => setOpen(false)}
                 >
                   Décoration
@@ -215,6 +229,7 @@ export function Header({ activeRoute, cartCount }) {
                 )}
                 href={`#/${route}`}
                 key={route}
+                aria-current={activeRoute === route ? "page" : undefined}
                 onClick={() => setOpen(false)}
               >
                 {label}
