@@ -63,29 +63,9 @@ export const realizationPhotos = [
     label: "Mise en place",
   },
   {
-    src: "./images/catalog/tasting/traiteur-1.png",
-    alt: "Présentation traiteur pour réception",
-    label: "Présentation traiteur",
-  },
-  {
-    src: "./images/catalog/tasting/plateau-sucre-1.png",
-    alt: "Plateau sucré pour événement",
-    label: "Plateau sucré",
-  },
-  {
-    src: "./images/catalog/tasting/shareable-pates.png",
-    alt: "Spécialités Savour Et Plus à partager",
-    label: "À partager",
-  },
-  {
-    src: "./images/catalog/tasting/pate-au-four-1-530x480.png",
-    alt: "Pâté cuit au four",
-    label: "Pâté au four",
-  },
-  {
-    src: "./images/catalog/tasting/pate-kode-2-530x480.png",
-    alt: "Pâté kòde",
-    label: "Pâté kòde",
+    src: "./images/home/offer-2-340x243.png",
+    alt: "Table de réception garnie de bouchées et de boissons",
+    label: "Table de réception",
   },
 ];
 

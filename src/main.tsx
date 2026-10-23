@@ -24,22 +24,34 @@ const pages = {
   contact: ContactPage,
 };
 
-function normalizeRoute() {
+function getLocationState() {
   const hash = window.location.hash.replace(/^#\/?/, "");
-  const route = hash.split("?")[0];
-  return pages[route] ? route : "accueil";
+  const [routeName, query = ""] = hash.split("?");
+  const route = pages[routeName] ? routeName : "accueil";
+  const requestedSection = new URLSearchParams(query).get("section");
+  const section = route === "accueil" && requestedSection === "realisations" ? requestedSection : null;
+  return { route, section, hash };
 }
 
 function App() {
-  const [route, setRoute] = useState(normalizeRoute);
+  const [location, setLocation] = useState(getLocationState);
+  const { route, section } = location;
   const cart = useCart();
   const Page = useMemo(() => pages[route] || HomePage, [route]);
 
   useEffect(() => {
-    const onHashChange = () => setRoute(normalizeRoute());
+    const onHashChange = () => setLocation(getLocationState());
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
+
+  useEffect(() => {
+    if (!section) return;
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById(section)?.scrollIntoView({ block: "start" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [location.hash, section]);
 
   return (
     <div className="min-h-svh">

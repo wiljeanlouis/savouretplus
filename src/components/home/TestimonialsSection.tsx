@@ -1,42 +1,57 @@
-import { Quote, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
+import { useState } from "react";
 import { testimonials } from "./homeContent";
 
 export function TestimonialsSection() {
-  return (
-    <section className="bg-rose-50/60 py-20">
-      <div className="container-page">
-        <div className="max-w-2xl">
-          <p className="eyebrow">Témoignages</p>
-          <h2 className="mt-3 font-serif text-4xl font-extrabold tracking-tight text-zinc-950 sm:text-5xl">
-            Des événements préparés avec attention.
-          </h2>
-        </div>
+  const [activeIndex, setActiveIndex] = useState(0);
+  const testimonial = testimonials[activeIndex];
 
-        <div className="mt-10 grid gap-5 lg:grid-cols-3">
-          {testimonials.map((testimonial) => (
-            <article
-              className="rounded-2xl border border-rose-100 bg-white p-6 shadow-sm"
-              key={`${testimonial.name}-${testimonial.event}`}
-            >
-              <div className="mb-5 flex items-center justify-between gap-4">
-                <span className="grid h-11 w-11 place-items-center rounded-xl bg-rose-600 text-white">
-                  <Quote className="h-5 w-5" />
-                </span>
-                <div className="flex gap-1 text-rose-600" aria-label="5 étoiles">
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <Star className="h-4 w-4 fill-current" key={index} />
-                  ))}
-                </div>
-              </div>
-              <p className="text-lg font-semibold leading-8 text-zinc-800">“{testimonial.quote}”</p>
-              <div className="mt-6 border-t border-zinc-100 pt-4">
-                <p className="font-extrabold text-zinc-950">{testimonial.name}</p>
-                <p className="mt-1 text-sm font-semibold text-zinc-500">{testimonial.event}</p>
-              </div>
-            </article>
+  function selectRelative(offset) {
+    setActiveIndex((current) => (current + offset + testimonials.length) % testimonials.length);
+  }
+
+  return (
+    <aside className="surface-card flex min-h-72 flex-col justify-between bg-blush/20 p-7 sm:p-9" aria-label="Témoignages">
+      <div>
+        <Quote className="h-8 w-8 fill-wine text-wine" aria-hidden="true" />
+        <blockquote className="mt-5 text-sm leading-7 text-espresso/75" aria-live="polite">
+          « {testimonial.quote} »
+        </blockquote>
+        <p className="mt-5 text-sm font-bold text-wine">{testimonial.name}</p>
+        <p className="mt-1 text-xs text-espresso/55">{testimonial.event}</p>
+      </div>
+      <div className="mt-8 flex items-center justify-between">
+        <div className="flex gap-1.5" aria-label="Choisir un témoignage">
+          {testimonials.map((item, index) => (
+            <button
+              className={`h-1.5 rounded-full transition-all ${index === activeIndex ? "w-6 bg-wine" : "w-1.5 bg-wine/25 hover:bg-wine/50"}`}
+              type="button"
+              aria-label={`Afficher le témoignage de ${item.name}`}
+              aria-current={index === activeIndex ? "true" : undefined}
+              onClick={() => setActiveIndex(index)}
+              key={item.name}
+            />
           ))}
         </div>
+        <div className="flex gap-2">
+          <button
+            className="grid h-9 w-9 place-items-center rounded-full border border-blush bg-white/70 text-wine transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine"
+            type="button"
+            onClick={() => selectRelative(-1)}
+            aria-label="Témoignage précédent"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            className="grid h-9 w-9 place-items-center rounded-full border border-blush bg-white/70 text-wine transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine"
+            type="button"
+            onClick={() => selectRelative(1)}
+            aria-label="Témoignage suivant"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
       </div>
-    </section>
+    </aside>
   );
 }
