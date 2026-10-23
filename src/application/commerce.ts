@@ -13,6 +13,7 @@ import {
   completeCustomerOrderRequest,
   prepareCustomerOrderRequest,
 } from "./customerOrderRequest";
+import { completeQuoteRequest, prepareQuoteRequest } from "./quoteRequest";
 
 let gateway: CommerceGateway | null = null;
 
@@ -45,5 +46,9 @@ export async function createCustomerOrder(order: CustomerOrder) {
 export function submitQuoteRequest(payload: QuoteRequest) {
   const result = validateQuoteRequest(payload);
   if (!result.valid) throw new CommercialValidationError(result.errors);
-  return getGateway().submitQuoteRequest(result.value);
+  return prepareQuoteRequest(result.value).then(async (request) => {
+    const receptionId = await getGateway().submitQuoteRequest(request);
+    completeQuoteRequest(request.request_id);
+    return receptionId;
+  });
 }

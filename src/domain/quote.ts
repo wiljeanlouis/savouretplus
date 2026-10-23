@@ -7,6 +7,7 @@ export const quoteRequestServices = {
   decoration: ["decoration"],
   organisation: ["organisation"],
   "decoration-organisation": ["decoration", "organisation"],
+  "traiteur-decoration": ["traiteur", "decoration"],
   "traiteur-decoration-organisation": ["traiteur", "decoration", "organisation"],
 } as const;
 
@@ -116,6 +117,9 @@ export function createDecorationQuoteItem(product: CatalogProduct) {
 
 export function getSelectionQuoteService(items: CartItem[]): QuoteService | null {
   const categories = new Set(items.map((item) => item.category));
+  if (categories.size === 2 && categories.has("decoration") && categories.has("tasting")) {
+    return "traiteur-decoration";
+  }
   if (categories.size !== 1) return null;
   if (categories.has("decoration")) return "decoration";
   if (categories.has("tasting")) return "traiteur";

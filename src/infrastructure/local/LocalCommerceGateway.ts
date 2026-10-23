@@ -1,12 +1,10 @@
-import type {
-  CommerceGateway,
-  QuoteRequest,
-} from "../../application/ports/CommerceGateway";
+import type { CommerceGateway } from "../../application/ports/CommerceGateway";
 import type { CatalogCategory } from "../../domain/catalog";
 import {
   CustomerOrderReceptionError,
   type ReceiveCustomerOrderPayload,
 } from "../../domain/customerOrderReception";
+import type { ReceiveQuoteRequestPayload } from "../../domain/quoteReception";
 import { fallbackCatalog } from "./fallbackCatalog";
 
 export class LocalCommerceGateway implements CommerceGateway {
@@ -21,7 +19,7 @@ export class LocalCommerceGateway implements CommerceGateway {
     throw new CustomerOrderReceptionError("technical");
   }
 
-  async submitQuoteRequest(_payload: QuoteRequest) {
+  async submitQuoteRequest(_payload: ReceiveQuoteRequestPayload): Promise<string> {
     throw new Error("Le service de soumission n’est pas configuré.");
   }
 }

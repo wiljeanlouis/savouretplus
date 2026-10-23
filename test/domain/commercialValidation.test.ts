@@ -320,4 +320,38 @@ describe("quote request validation", () => {
 
     expect(result.errors["items.0.configuration"]).toContain("catégorie catalogue");
   });
+
+  it("accepts mixed catering and decoration services without organisation", () => {
+    const result = validateQuoteRequest({
+      ...validQuote,
+      requested_services: ["traiteur", "decoration"],
+      event_details: {
+        ...validQuote.event_details,
+        request_type: "traiteur-decoration",
+        guest_count: 80,
+      },
+      items: [
+        {
+          offering_id: "91000000-0000-4000-8000-000000000001",
+          name: "Arche décorative",
+          requested_quantity: 1,
+          configuration: { category: "decoration", catalog_slug: "arche" },
+          note: null,
+        },
+        {
+          offering_id: "91000000-0000-4000-8000-000000000002",
+          name: "Pâté au four",
+          requested_quantity: 4,
+          configuration: { category: "tasting", catalog_slug: "pate" },
+          note: "Poulet",
+        },
+      ],
+    });
+
+    expect(result.valid).toBe(true);
+    if (result.valid) {
+      expect(result.value.requested_services).toEqual(["traiteur", "decoration"]);
+      expect(result.value.requested_services).not.toContain("organisation");
+    }
+  });
 });

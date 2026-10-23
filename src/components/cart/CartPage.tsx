@@ -301,7 +301,7 @@ export function SelectionCommercialActions({ cart, orderEligible, quoteHash }) {
           <a href={quoteHash}><ClipboardList className="h-4 w-4" />Demander une soumission</a>
         </Button>
       ) : null}
-      {isMixed ? (
+      {isMixed && !quoteHash ? (
         <div className="mt-5 border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950" role="status">
           La sélection mixte est conservée, mais son envoi est temporairement indisponible : le contrat SAVIS ne confirme pas encore une demande Traiteur + Décoration sans Organisation.
         </div>

@@ -83,6 +83,12 @@ const requestTypes: Array<{
     image: "./images/catalog/decoration/decoration-3-530x480.png",
   },
   {
+    value: "traiteur-decoration",
+    label: "Traiteur + décoration",
+    description: "Une demande commune sans service d’organisation.",
+    image: "./images/catalog/decoration/decoration-3-530x480.png",
+  },
+  {
     value: "traiteur",
     label: "Traiteur",
     description: "Repas, plateaux et items pour votre événement.",

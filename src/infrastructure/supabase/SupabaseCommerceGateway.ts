@@ -1,7 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type {
   CommerceGateway,
-  QuoteRequest,
 } from "../../application/ports/CommerceGateway";
 import type {
   CatalogCategory,
@@ -16,6 +15,10 @@ import {
   CustomerOrderReceptionError,
   type ReceiveCustomerOrderPayload,
 } from "../../domain/customerOrderReception";
+import {
+  QuoteRequestReceptionError,
+  type ReceiveQuoteRequestPayload,
+} from "../../domain/quoteReception";
 
 const receptionValidationErrors = new Set([
   "ORDER_INVALID_PAYLOAD",
@@ -27,6 +30,17 @@ const receptionValidationErrors = new Set([
   "ORDER_ESTIMATE_MISMATCH",
 ]);
 const maximumReceptionAttempts = 3;
+const quoteValidationErrors = new Set([
+  "QUOTE_INVALID_PAYLOAD",
+  "QUOTE_INVALID_REQUEST_ID",
+  "QUOTE_INVALID_CUSTOMER",
+  "QUOTE_INVALID_EVENT",
+  "QUOTE_INVALID_ITEM",
+  "QUOTE_INVALID_CONFIGURATION",
+  "QUOTE_INCOHERENT_SERVICES",
+  "QUOTE_UNKNOWN_OFFERING",
+  "QUOTE_LIMIT_EXCEEDED",
+]);
 
 type SupabaseCatalogProduct = Partial<CatalogProduct> & {
   bom_id?: string;
@@ -108,14 +122,55 @@ export class SupabaseCommerceGateway implements CommerceGateway {
     throw new CustomerOrderReceptionError("network");
   }
 
-  async submitQuoteRequest(payload: QuoteRequest) {
-    const { data, error } = await this.client.rpc("submit_quote_request", {
-      payload,
-    });
+  async submitQuoteRequest(payload: ReceiveQuoteRequestPayload): Promise<string> {
+    for (let attempt = 0; attempt < maximumReceptionAttempts; attempt += 1) {
+      try {
+        const { data, error, status } = await this.client.rpc("submit_quote_request", {
+          payload,
+        });
 
-    if (error) throw error;
-    return data;
+        if (!error) {
+          if (typeof data !== "string") throw new QuoteRequestReceptionError("technical");
+          return data;
+        }
+
+        const mappedError = mapQuoteReceptionError(error);
+        if (
+          (mappedError.kind === "network" || status >= 500) &&
+          attempt < maximumReceptionAttempts - 1
+        ) {
+          await waitBeforeRetry(attempt);
+          continue;
+        }
+        throw status >= 500
+          ? new QuoteRequestReceptionError("network", error.code || null)
+          : mappedError;
+      } catch (error) {
+        if (error instanceof QuoteRequestReceptionError) throw error;
+        if (attempt < maximumReceptionAttempts - 1) {
+          await waitBeforeRetry(attempt);
+          continue;
+        }
+        throw new QuoteRequestReceptionError("network");
+      }
+    }
+
+    throw new QuoteRequestReceptionError("network");
   }
+}
+
+function mapQuoteReceptionError(error: { code?: string; message?: string }) {
+  const code = error.code || null;
+  const message = error.message || "";
+
+  if (code === "23505" && message === "QUOTE_IDEMPOTENCY_CONFLICT") {
+    return new QuoteRequestReceptionError("idempotency", code);
+  }
+  if (code === "22023" && quoteValidationErrors.has(message)) {
+    return new QuoteRequestReceptionError("validation", code);
+  }
+  if (!code) return new QuoteRequestReceptionError("network");
+  return new QuoteRequestReceptionError("technical", code);
 }
 
 function mapReceptionError(error: { code?: string; message?: string }) {

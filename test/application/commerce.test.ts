@@ -63,7 +63,9 @@ describe("commerce application facade", () => {
       receiveCustomerOrder: vi
         .fn()
         .mockResolvedValue("30000000-0000-4000-8000-000000000001"),
-      submitQuoteRequest: vi.fn().mockResolvedValue({ id: "quote-1" }),
+      submitQuoteRequest: vi
+        .fn()
+        .mockResolvedValue("40000000-0000-4000-8000-000000000001"),
     };
 
     commerce.configureCommerceGateway(gateway);
@@ -72,7 +74,9 @@ describe("commerce application facade", () => {
     await expect(commerce.createCustomerOrder(order)).resolves.toBe(
       "30000000-0000-4000-8000-000000000001",
     );
-    await expect(commerce.submitQuoteRequest(quote)).resolves.toEqual({ id: "quote-1" });
+    await expect(commerce.submitQuoteRequest(quote)).resolves.toBe(
+      "40000000-0000-4000-8000-000000000001",
+    );
     expect(gateway.fetchCatalogProducts).toHaveBeenCalledOnce();
     expect(gateway.receiveCustomerOrder).toHaveBeenCalledWith({
       request_id: expect.stringMatching(/^[0-9a-f-]{36}$/),
@@ -105,6 +109,7 @@ describe("commerce application facade", () => {
       ],
     });
     expect(gateway.submitQuoteRequest).toHaveBeenCalledWith({
+      request_id: expect.stringMatching(/^[0-9a-f-]{36}$/),
       ...quote,
       customer: { ...quote.customer, email: null, phone: "+15145551234" },
     });

@@ -52,7 +52,7 @@ describe("selection commercial actions", () => {
     expect(html).not.toContain("0,00");
   });
 
-  it("blocks unsupported mixed submission without adding organisation", () => {
+  it("explains when a mixed submission has no compatible route", () => {
     const html = renderToStaticMarkup(
       <SelectionCommercialActions
         cart={{ items: [decoration, tasting], totalCents: 300 }}
@@ -85,6 +85,9 @@ describe("selection commercial actions", () => {
     expect(html).toContain("Décoration");
     expect(html).toContain("Dégustation");
     expect(html).toContain("Tarification sur soumission");
+    expect(html).toContain("Demander une soumission");
+    expect(html).toContain("service=traiteur-decoration&amp;source=selection");
+    expect(html).not.toContain("temporairement indisponible");
     expect(html).not.toContain("Transmettre la demande");
   });
 });

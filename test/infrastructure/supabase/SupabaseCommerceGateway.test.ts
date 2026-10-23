@@ -40,6 +40,25 @@ const orderPayload = {
   ],
 };
 
+const quotePayload = {
+  request_id: "40000000-0000-4000-8000-000000000001",
+  type: "QUOTE_REQUEST" as const,
+  customer: { name: "Ada", phone: "+15145551234", email: null },
+  requested_services: ["traiteur", "decoration"],
+  event_details: {
+    request_type: "traiteur-decoration",
+    event_type: "Mariage",
+    event_date: "2027-06-12",
+    event_time: null,
+    event_address: "Montréal",
+    guest_count: 80,
+    budget: "À discuter",
+    allergies: null,
+    note: null,
+  },
+  items: [],
+};
+
 vi.mock("@supabase/supabase-js", () => ({
   createClient: supabaseMock.createClient,
 }));
@@ -313,28 +332,63 @@ describe("SupabaseCommerceGateway", () => {
   });
 
   it("submits quote requests through the Supabase RPC", async () => {
-    supabaseMock.rpc.mockResolvedValue({ data: { id: "quote-1" }, error: null });
+    supabaseMock.rpc.mockResolvedValue({
+      data: "50000000-0000-4000-8000-000000000001",
+      error: null,
+      status: 200,
+    });
     const { SupabaseCommerceGateway } = await import(
       "../../../src/infrastructure/supabase/SupabaseCommerceGateway"
     );
     const gateway = new SupabaseCommerceGateway("https://example.supabase.co", "anon-key");
-    const payload = { eventType: "anniversaire" };
-
-    await expect(gateway.submitQuoteRequest(payload)).resolves.toEqual({ id: "quote-1" });
-    expect(supabaseMock.rpc).toHaveBeenCalledWith("submit_quote_request", { payload });
+    await expect(gateway.submitQuoteRequest(quotePayload)).resolves.toBe(
+      "50000000-0000-4000-8000-000000000001",
+    );
+    expect(supabaseMock.rpc).toHaveBeenCalledWith("submit_quote_request", {
+      payload: quotePayload,
+    });
   });
 
-  it("surfaces an RPC error without retrying or changing the payload", async () => {
-    const rpcError = new Error("Supabase unavailable");
-    supabaseMock.rpc.mockResolvedValue({ data: null, error: rpcError });
+  it("maps a controlled quote validation error without retrying", async () => {
+    supabaseMock.rpc.mockResolvedValue({
+      data: null,
+      error: { code: "22023", message: "QUOTE_INVALID_ITEM" },
+      status: 400,
+    });
     const { SupabaseCommerceGateway } = await import(
       "../../../src/infrastructure/supabase/SupabaseCommerceGateway"
     );
     const gateway = new SupabaseCommerceGateway("https://example.supabase.co", "anon-key");
-    const payload = { eventType: "mariage", offering_id: "decor-42" };
-
-    await expect(gateway.submitQuoteRequest(payload)).rejects.toBe(rpcError);
+    await expect(gateway.submitQuoteRequest(quotePayload)).rejects.toMatchObject({
+      kind: "validation",
+      code: "22023",
+    });
     expect(supabaseMock.rpc).toHaveBeenCalledOnce();
-    expect(supabaseMock.rpc).toHaveBeenCalledWith("submit_quote_request", { payload });
+    expect(supabaseMock.rpc).toHaveBeenCalledWith("submit_quote_request", {
+      payload: quotePayload,
+    });
+  });
+
+  it("retries a quote network failure with the same request id and payload", async () => {
+    vi.useFakeTimers();
+    supabaseMock.rpc
+      .mockResolvedValueOnce({ data: null, error: { code: "", message: "Failed to fetch" }, status: 0 })
+      .mockResolvedValueOnce({
+        data: "50000000-0000-4000-8000-000000000001",
+        error: null,
+        status: 200,
+      });
+    const { SupabaseCommerceGateway } = await import(
+      "../../../src/infrastructure/supabase/SupabaseCommerceGateway"
+    );
+    const gateway = new SupabaseCommerceGateway("https://example.supabase.co", "anon-key");
+
+    const reception = gateway.submitQuoteRequest(quotePayload);
+    await vi.runAllTimersAsync();
+
+    await expect(reception).resolves.toBe("50000000-0000-4000-8000-000000000001");
+    expect(supabaseMock.rpc).toHaveBeenCalledTimes(2);
+    expect(supabaseMock.rpc.mock.calls.every(([, args]) => args.payload === quotePayload)).toBe(true);
+    vi.useRealTimers();
   });
 });

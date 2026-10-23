@@ -74,6 +74,7 @@ describe("quote model selection", () => {
       "decoration",
       "organisation",
       "decoration-organisation",
+      "traiteur-decoration",
       "traiteur-decoration-organisation",
     ]) {
       expect(getQuoteQueryFromHash(`#/soumission?service=${service}`).service).toBe(service);
@@ -115,7 +116,7 @@ describe("quote model selection", () => {
     expect(buildSelectionQuoteHash([
       decorationItem,
       { ...decorationItem, key: "food", product_id: "food", category: "tasting" as const },
-    ])).toBeNull();
+    ])).toBe("#/soumission?service=traiteur-decoration&source=selection");
   });
 
   it("builds a canonical URL and keeps an item only for a decoration service", () => {
@@ -208,6 +209,25 @@ describe("quote service adaptation", () => {
 
     expect(payload.requested_services).toEqual(["traiteur", "decoration", "organisation"]);
     expect(payload.event_details).toMatchObject({ guest_count: 80, allergies: "Noix" });
+    expect(payload.items).toEqual([decorationItem, cateringItem]);
+  });
+
+  it("builds a mixed catering and decoration payload without organisation", () => {
+    const decorationItem = createDecorationQuoteItem(decoration);
+    const cateringItem = {
+      offering_id: "pate-1",
+      name: "Pâté au four",
+      requested_quantity: 4,
+      configuration: { category: "tasting", catalog_slug: "pate-au-four" },
+      note: "Poulet",
+    };
+    const payload = buildQuoteRequest(
+      { ...form, request_type: "traiteur-decoration" },
+      [decorationItem, cateringItem],
+    );
+
+    expect(payload.requested_services).toEqual(["traiteur", "decoration"]);
+    expect(payload.requested_services).not.toContain("organisation");
     expect(payload.items).toEqual([decorationItem, cateringItem]);
   });
 });
