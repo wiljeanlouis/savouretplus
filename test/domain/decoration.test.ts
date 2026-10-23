@@ -3,6 +3,8 @@ import {
   decorationCategories,
   getDecorationCatalogTarget,
   getDecorationCategoryFromHash,
+  findPublishedDecoration,
+  getDecorationDetailHash,
   groupDecorationProducts,
 } from "../../src/domain/decoration";
 import type { CatalogProduct, ProductSubcategory } from "../../src/domain/catalog";
@@ -45,7 +47,7 @@ describe("decoration categories", () => {
         href: `#/decoration?categorie=${slug}`,
       })),
     ).toEqual([
-      { label: "Arche de ballon", href: "#/decoration?categorie=arche-de-ballon" },
+      { label: "Arche décorative", href: "#/decoration?categorie=arche-de-ballon" },
       { label: "Centre de table", href: "#/decoration?categorie=centre-de-table" },
       { label: "Anniversaire", href: "#/decoration?categorie=anniversaire" },
       { label: "Mariage", href: "#/decoration?categorie=mariage" },
@@ -55,18 +57,18 @@ describe("decoration categories", () => {
   it("resolves a valid deep link and rejects an unknown category", () => {
     expect(
       getDecorationCategoryFromHash("#/decoration?categorie=arche-de-ballon")?.id,
-    ).toBe("balloon-arch");
+    ).toBe("decorative-arch");
     expect(getDecorationCategoryFromHash("#/decoration?categorie=inconnue")).toBeNull();
     expect(getDecorationCategoryFromHash("#/decoration")).toBeNull();
   });
 
   it("groups mapped products and preserves unmapped products", () => {
-    const balloonArch = decorationProduct("arch", "balloon-arch");
+    const balloonArch = decorationProduct("arch", "decorative-arch");
     const unmapped = decorationProduct("legacy", null);
 
     const result = groupDecorationProducts([balloonArch, unmapped]);
 
-    expect(result.groups.get("balloon-arch")).toEqual([balloonArch]);
+    expect(result.groups.get("decorative-arch")).toEqual([balloonArch]);
     expect(result.groups.get("wedding")).toEqual([]);
     expect(result.other).toEqual([unmapped]);
   });
@@ -81,7 +83,7 @@ describe("decoration categories", () => {
   });
 
   it("targets a populated category and redirects an empty category to custom decoration", () => {
-    const products = [decorationProduct("arch", "balloon-arch")];
+    const products = [decorationProduct("arch", "decorative-arch")];
 
     expect(
       getDecorationCatalogTarget("#/decoration?categorie=arche-de-ballon", products),
@@ -92,5 +94,21 @@ describe("decoration categories", () => {
     expect(getDecorationCatalogTarget("#/decoration", products)).toBe(
       "decoration-catalogue",
     );
+  });
+
+  it("targets preserved products with an unknown category", () => {
+    const product = decorationProduct("legacy", null);
+    expect(getDecorationCatalogTarget("#/decoration?section=autres", [product])).toBe(
+      "decoration-autres",
+    );
+  });
+
+  it("resolves details by published slug while preserving the business id", () => {
+    const product = decorationProduct("offering-42", "wedding");
+
+    expect(getDecorationDetailHash(product)).toBe("#/decoration/offering-42");
+    expect(findPublishedDecoration([product], "offering-42")?.id).toBe("offering-42");
+    expect(findPublishedDecoration([product], "unknown")).toBeNull();
+    expect(findPublishedDecoration([{ ...product, category: "tasting" }], "offering-42")).toBeNull();
   });
 });

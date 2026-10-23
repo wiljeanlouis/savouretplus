@@ -9,9 +9,9 @@ export type DecorationCategoryDefinition = {
 
 export const decorationCategories: DecorationCategoryDefinition[] = [
   {
-    id: "balloon-arch",
+    id: "decorative-arch",
     slug: "arche-de-ballon",
-    label: "Arche de ballon",
+    label: "Arche décorative",
     description: "Des arches personnalisées pour encadrer et mettre en valeur votre célébration.",
   },
   {
@@ -66,6 +66,12 @@ export function groupDecorationProducts(products: CatalogProduct[]) {
 
 
 export function getDecorationCatalogTarget(hash: string, products: CatalogProduct[]) {
+  const query = hash.split("?")[1] || "";
+  const section = new URLSearchParams(query).get("section");
+  if (section === "autres" && groupDecorationProducts(products).other.length) {
+    return "decoration-autres";
+  }
+
   const requestedCategory = getDecorationCategoryFromHash(hash);
 
   if (!requestedCategory) return "decoration-catalogue";
@@ -74,4 +80,18 @@ export function getDecorationCatalogTarget(hash: string, products: CatalogProduc
   return groups.get(requestedCategory.id)?.length
     ? `decoration-${requestedCategory.slug}`
     : "decoration-sur-mesure";
+}
+
+export function findPublishedDecoration(products: CatalogProduct[], slug: string | null) {
+  if (!slug) return null;
+
+  return (
+    products.find(
+      (product) => product.category === "decoration" && product.slug === slug,
+    ) ?? null
+  );
+}
+
+export function getDecorationDetailHash(product: CatalogProduct) {
+  return `#/decoration/${encodeURIComponent(product.slug)}`;
 }

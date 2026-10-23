@@ -114,7 +114,7 @@ export const fallbackCatalog: CatalogProduct[] = [
         "slug": "arche-de-ballon",
         "name": "Arche de ballon",
         "category": "decoration",
-        "subcategory": "balloon-arch",
+        "subcategory": "decorative-arch",
         "description": "",
         "product_type": "standard",
         "purchase_modes": [

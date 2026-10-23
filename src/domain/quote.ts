@@ -1,4 +1,4 @@
-import type { CatalogProduct } from "./catalog";
+import { isCatalogSlug, type CatalogProduct } from "./catalog";
 import type { QuoteItem, QuoteRequest } from "./commercialValidation";
 
 export const quoteRequestServices = {
@@ -8,8 +8,6 @@ export const quoteRequestServices = {
   "decoration-organisation": ["decoration", "organisation"],
   "traiteur-decoration-organisation": ["traiteur", "decoration", "organisation"],
 } as const;
-
-const productSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export type QuoteService = keyof typeof quoteRequestServices;
 export type RequestedService = (typeof quoteRequestServices)[QuoteService][number];
@@ -67,8 +65,7 @@ export function getQuoteQueryFromHash(hash: string): QuoteQuery {
     itemSlug:
       includesDecoration &&
       itemSlug &&
-      itemSlug.length <= 120 &&
-      productSlugPattern.test(itemSlug)
+      isCatalogSlug(itemSlug)
         ? itemSlug
         : null,
   };
@@ -81,8 +78,7 @@ export function buildQuoteHash(service: QuoteService | "", itemSlug: string | nu
   if (
     quoteIncludesService(service, "decoration") &&
     itemSlug &&
-    itemSlug.length <= 120 &&
-    productSlugPattern.test(itemSlug)
+    isCatalogSlug(itemSlug)
   ) {
     params.set("item", itemSlug);
   }

@@ -6,7 +6,7 @@ export type ProductType =
 
 export type CatalogCategory = "tasting" | "decoration";
 
-export type ProductSubcategory = "balloon-arch" | "centerpiece" | "birthday" | "wedding";
+export type ProductSubcategory = "decorative-arch" | "centerpiece" | "birthday" | "wedding";
 
 export type ChoiceOption = {
   id: string;
@@ -52,3 +52,9 @@ export type CatalogProduct = {
   gallery: string[];
   availability_note: string;
 };
+
+const catalogSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+export function isCatalogSlug(value: string): boolean {
+  return value.length <= 120 && catalogSlugPattern.test(value);
+}

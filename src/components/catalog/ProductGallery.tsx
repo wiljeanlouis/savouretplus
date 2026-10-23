@@ -8,6 +8,7 @@ type ProductGalleryProps = {
   fit?: "contain" | "cover";
   priority?: boolean;
   className?: string;
+  rounded?: boolean;
 };
 
 export function ProductGallery({
@@ -17,6 +18,7 @@ export function ProductGallery({
   fit = "contain",
   priority = false,
   className = "",
+  rounded = true,
 }: ProductGalleryProps) {
   const gallery = uniqueImages(images, fallbackImage);
   const [activeImage, setActiveImage] = useState(0);
@@ -45,7 +47,11 @@ export function ProductGallery({
 
   return (
     <div className={`relative overflow-hidden bg-gradient-to-br from-rose-50 via-white to-amber-50 ${className}`}>
-      <div className="grid h-full min-h-52 place-items-center overflow-hidden rounded-xl bg-white/70">
+      <div
+        className={`grid h-full min-h-52 place-items-center overflow-hidden bg-white/70 ${
+          rounded ? "rounded-xl" : "rounded-none"
+        }`}
+      >
         {currentImage ? (
           <img
             className={`h-full w-full transition duration-500 group-hover:scale-[1.025] ${

@@ -71,7 +71,7 @@ describe("SupabaseCommerceGateway", () => {
           slug: "pate-four",
           name: "Pate four",
           category: "decoration",
-          subcategory: "balloon-arch",
+          subcategory: "decorative-arch",
           purchase_modes: [
             {
               id: "unit",
@@ -108,9 +108,9 @@ describe("SupabaseCommerceGateway", () => {
       id: "pate-four",
       bom_id: "bom-1",
       category: "decoration",
-      subcategory: "balloon-arch",
+      subcategory: "decorative-arch",
       product_type: "single_choice_bundle",
-      availability_note: "Disponible sur commande",
+      availability_note: "",
     });
     expect(products[0]).not.toHaveProperty("unit_label");
     expect(products[0]).not.toHaveProperty("price_cents");

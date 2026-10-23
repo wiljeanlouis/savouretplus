@@ -142,7 +142,8 @@ function normalizeCatalogProduct(product: SupabaseCatalogProduct): CatalogProduc
   if (category === "tasting" && !purchaseModes.length) return null;
   if (!product.id || !product.slug || !product.name) return null;
 
-  const imageUrl = product.image_url || "./images/home/offer-1-340x243.png";
+  const imageUrl =
+    product.image_url || (category === "tasting" ? "./images/home/offer-1-340x243.png" : "");
 
   return {
     id: product.id,
@@ -158,7 +159,8 @@ function normalizeCatalogProduct(product: SupabaseCatalogProduct): CatalogProduc
     ingredient_options: normalizeIngredientOptions(product.ingredient_options),
     image_url: imageUrl,
     gallery: product.gallery?.length ? product.gallery : [imageUrl],
-    availability_note: product.availability_note || "Disponible sur commande",
+    availability_note:
+      product.availability_note || (category === "tasting" ? "Disponible sur commande" : ""),
   };
 }
 
@@ -166,7 +168,7 @@ function normalizeProductSubcategory(
   subcategory?: ProductSubcategory | null,
 ): ProductSubcategory | null {
   if (
-    subcategory === "balloon-arch" ||
+    subcategory === "decorative-arch" ||
     subcategory === "centerpiece" ||
     subcategory === "birthday" ||
     subcategory === "wedding"
