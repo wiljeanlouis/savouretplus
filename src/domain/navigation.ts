@@ -4,6 +4,7 @@ const staticRoutes = new Set([
   "accueil",
   "decoration",
   "degustation",
+  "services",
   "panier",
   "soumission",
   "contact",

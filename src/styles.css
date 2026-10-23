@@ -66,6 +66,12 @@
   .surface-card {
     @apply border border-blush/50 bg-white shadow-[0_18px_50px_rgba(53,42,43,0.06)];
   }
+
+  .quote-form input,
+  .quote-form select,
+  .quote-form textarea {
+    @apply rounded-none border-blush text-espresso transition focus:border-wine focus:outline-none focus:ring-1 focus:ring-wine/25;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

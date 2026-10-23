@@ -18,7 +18,7 @@ describe("UI-1 home page", () => {
     expect(html).toContain('href="#/decoration"');
     expect(html).toContain('href="#/degustation"');
     expect(html).toContain('href="#/soumission"');
-    expect(html).not.toContain('href="#/services"');
+    expect(html).toContain('href="#/services"');
     expect(html).not.toContain('href="#/realisations"');
   });
 
@@ -51,8 +51,17 @@ describe("UI-1 header", () => {
     expect(html).toContain('href="#/panier"');
     expect(html).toContain("Voir ma sélection, 2 articles");
     expect(html).toContain('href="#/soumission"');
+    expect(html).toContain('href="#/services"');
     expect(html).toContain("Demander une soumission");
     expect(html).toContain('aria-current="page"');
     expect(html).toContain("section=realisations");
+  });
+
+  it("separates service discovery from the direct quote action", () => {
+    const html = renderToStaticMarkup(<Header activeRoute="services" cartCount={0} />);
+
+    expect(html).toContain('href="#/services" aria-current="page"');
+    expect(html).toContain('href="#/soumission"');
+    expect(html).toContain("Demander une soumission");
   });
 });

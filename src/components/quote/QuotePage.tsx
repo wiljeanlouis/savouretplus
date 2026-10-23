@@ -25,7 +25,6 @@ import {
   type QuoteQuery,
   type QuoteService,
 } from "../../domain/quote";
-import { BreadcrumbHero } from "../layout/BreadcrumbHero";
 import { focusFirstInvalidField, ValidatedField } from "../forms/ValidatedField";
 import { Button } from "../ui/button";
 
@@ -99,6 +98,48 @@ const requestTypes: Array<{
 const eventTypes = ["Anniversaire", "Mariage", "Baptême", "Baby shower", "Corporatif", "Autre"];
 
 const budgetOptions = ["300$ - 500$", "500$ - 1000$", "1000$ et plus", "À discuter"];
+
+export function QuoteHero() {
+  return (
+    <section className="overflow-hidden border-b border-blush/45 bg-white" aria-labelledby="quote-hero-title">
+      <div className="grid min-h-[30rem] lg:grid-cols-[1fr_1fr]">
+        <div className="relative z-10 flex items-center px-5 py-14 sm:px-8 sm:py-16 lg:px-[max(3rem,calc((100vw-90rem)/2+3rem))] lg:py-20">
+          <div className="max-w-xl">
+            <p className="eyebrow">Demander une soumission</p>
+            <h1
+              className="mt-5 font-serif text-5xl font-semibold leading-[0.92] tracking-[-0.035em] text-espresso sm:text-6xl"
+              id="quote-hero-title"
+            >
+              Parlons de votre événement.
+            </h1>
+            <p className="mt-6 max-w-lg text-base leading-7 text-espresso/70 sm:text-lg">
+              Présentez-nous votre projet, les services souhaités et les détails utiles. Notre équipe pourra ensuite préparer une réponse adaptée à votre demande.
+            </p>
+          </div>
+        </div>
+
+        <div className="relative min-h-[22rem] overflow-hidden lg:min-h-full">
+          <img
+            className="absolute inset-0 h-full w-full object-cover object-center"
+            src="./images/home/ambient-elegant-reception.jpg"
+            alt="Photographie d'ambiance d'une réception élégante"
+            width="1600"
+            height="900"
+            fetchPriority="high"
+          />
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white to-transparent lg:inset-y-0 lg:left-0 lg:right-auto lg:h-auto lg:w-32 lg:bg-gradient-to-r"
+            aria-hidden="true"
+          />
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-espresso/30 to-transparent" aria-hidden="true" />
+          <span className="absolute bottom-4 right-5 rounded-full bg-espresso/70 px-3 py-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-white/90 backdrop-blur-sm">
+            Photographie d'ambiance
+          </span>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export function QuotePage({ cart = null }) {
   const initialQuery = getQuoteQueryFromHash(window.location.hash);
@@ -300,43 +341,39 @@ export function QuotePage({ cart = null }) {
 
   return (
     <>
-      <BreadcrumbHero
-        title="Soumission"
-        image="./images/catalog/decoration/breadcrumbs-bg-decoration.png"
-        subtitle="Une seule demande pour la décoration, l'organisation et le traiteur de votre événement."
-      />
-      <section className="py-20">
-        <div className="container-page grid gap-10 lg:grid-cols-[0.72fr_1.28fr]">
-          <div>
+      <QuoteHero />
+      <section className="bg-ivory py-16 sm:py-20 lg:py-24">
+        <div className="container-page grid gap-10 lg:grid-cols-[0.68fr_1.32fr] lg:items-start lg:gap-14">
+          <aside className="lg:sticky lg:top-28">
             <p className="eyebrow">Demande personnalisée</p>
-            <h2 className="mt-3 font-serif text-4xl font-extrabold tracking-tight text-zinc-950">
+            <h2 className="mt-4 font-serif text-4xl font-semibold leading-[0.95] tracking-[-0.025em] text-espresso sm:text-5xl">
               Dites-nous l'ambiance que vous imaginez.
             </h2>
-            <p className="mt-5 text-lg leading-8 text-zinc-600">
+            <p className="mt-5 text-base leading-7 text-espresso/65 sm:text-lg">
               Choisissez votre besoin de décoration ou d'organisation, ajoutez les informations de l'événement et, au
               besoin, les items traiteur qui vous intéressent.
             </p>
-            <div className="mt-7 grid gap-3 text-sm font-semibold text-zinc-700">
+            <div className="mt-7 grid gap-3 text-sm font-semibold text-espresso/75">
               {["Décoration et événement d'abord", "Traiteur disponible au besoin", "Réponse adaptée à votre budget"].map((item) => (
                 <div className="flex items-center gap-3" key={item}>
-                  <span className="grid h-7 w-7 place-items-center rounded-full bg-rose-100 text-rose-700">
-                    <Check className="h-4 w-4" />
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-champagne/70 bg-white text-wine">
+                    <Check className="h-4 w-4" aria-hidden="true" />
                   </span>
                   {item}
                 </div>
               ))}
             </div>
-          </div>
+          </aside>
 
           <form
-            className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm"
+            className="quote-form border border-blush/60 bg-white p-5 shadow-[0_18px_50px_rgba(53,42,43,0.07)] sm:p-8 lg:p-10"
             onSubmit={submitQuote}
             noValidate
             aria-busy={status === "saving"}
           >
             <section>
-              <p className="mb-3 flex items-center gap-2 text-sm font-extrabold text-zinc-950">
-                <ClipboardList className="h-5 w-5 text-rose-700" />
+              <p className="mb-4 flex items-center gap-2 font-serif text-2xl font-semibold text-espresso">
+                <ClipboardList className="h-5 w-5 text-wine" aria-hidden="true" />
                 Type de demande
               </p>
               <div
@@ -352,10 +389,10 @@ export function QuotePage({ cart = null }) {
 
                   return (
                     <button
-                      className={`group overflow-hidden rounded-xl border bg-white text-left transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                      className={`group overflow-hidden border bg-white text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 ${
                         selected
-                          ? "border-rose-600 text-rose-900 shadow-md ring-2 ring-rose-100"
-                          : "border-zinc-200 text-zinc-700 hover:border-rose-300 hover:shadow-sm"
+                          ? "border-wine text-wine shadow-md ring-1 ring-wine"
+                          : "border-blush/70 text-espresso/75 hover:border-wine/45 hover:shadow-sm"
                       }`}
                       key={option.value}
                       type="button"
@@ -363,23 +400,23 @@ export function QuotePage({ cart = null }) {
                       onClick={() => selectRequestType(option.value)}
                       aria-pressed={selected}
                     >
-                      <span className="relative block h-36 overflow-hidden bg-zinc-100">
+                      <span className="relative block h-32 overflow-hidden bg-blush/20">
                         <img
-                          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                          className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.025]"
                           src={option.image}
                           alt=""
                         />
                         <span
                           className={`absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full shadow-sm ${
-                            selected ? "bg-rose-600 text-white" : "bg-white/90 text-zinc-500"
+                            selected ? "bg-wine text-white" : "bg-white/90 text-espresso/55"
                           }`}
                         >
                           {selected ? <Check className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
                         </span>
                       </span>
-                      <span className={`block min-h-28 p-4 ${selected ? "bg-rose-50" : "bg-white"}`}>
-                        <span className="block text-sm font-extrabold">{option.label}</span>
-                        <span className="mt-1 block text-xs leading-5 text-zinc-500">{option.description}</span>
+                      <span className={`block min-h-28 p-4 ${selected ? "bg-blush/20" : "bg-white"}`}>
+                        <span className="block text-sm font-bold">{option.label}</span>
+                        <span className="mt-1 block text-xs leading-5 text-espresso/55">{option.description}</span>
                       </span>
                     </button>
                   );
@@ -410,9 +447,9 @@ export function QuotePage({ cart = null }) {
               />
             ) : null}
 
-            <section className="mt-8 grid gap-4" aria-labelledby="quote-customer-title">
-              <h3 className="flex items-center gap-2 text-lg font-bold text-zinc-950" id="quote-customer-title">
-                <UserRound className="h-5 w-5 text-rose-700" aria-hidden="true" />
+            <section className="mt-10 grid gap-5 border-t border-blush/50 pt-8" aria-labelledby="quote-customer-title">
+              <h3 className="flex items-center gap-2 font-serif text-2xl font-semibold text-espresso" id="quote-customer-title">
+                <UserRound className="h-5 w-5 text-wine" aria-hidden="true" />
                 Vos coordonnées
               </h3>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -460,9 +497,9 @@ export function QuotePage({ cart = null }) {
               </div>
             </section>
 
-            <section className="mt-8 grid gap-4" aria-labelledby="quote-event-title">
-              <h3 className="flex items-center gap-2 text-lg font-bold text-zinc-950" id="quote-event-title">
-                <CalendarDays className="h-5 w-5 text-rose-700" aria-hidden="true" />
+            <section className="mt-10 grid gap-5 border-t border-blush/50 pt-8" aria-labelledby="quote-event-title">
+              <h3 className="flex items-center gap-2 font-serif text-2xl font-semibold text-espresso" id="quote-event-title">
+                <CalendarDays className="h-5 w-5 text-wine" aria-hidden="true" />
                 Informations de l'événement
               </h3>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -588,10 +625,10 @@ export function QuotePage({ cart = null }) {
               />
             ) : null}
 
-            <div className="mt-8 rounded-xl border border-rose-100 bg-rose-50 p-4">
+            <div className="mt-8 border-l-2 border-champagne bg-blush/20 p-4">
               <div className="flex gap-3">
-                <HeartHandshake className="mt-0.5 h-5 w-5 shrink-0 text-rose-700" />
-                <p className="text-sm leading-6 text-rose-950">
+                <HeartHandshake className="mt-0.5 h-5 w-5 shrink-0 text-wine" aria-hidden="true" />
+                <p className="text-sm leading-6 text-espresso/75">
                   Après l'envoi, l'équipe valide les détails, les quantités et les ajustements possibles avant de confirmer la soumission.
                 </p>
               </div>
@@ -602,17 +639,17 @@ export function QuotePage({ cart = null }) {
               {status === "saving" ? "Envoi..." : "Envoyer la demande"}
             </Button>
             {status === "success" ? (
-              <p className="mt-3 text-sm font-semibold text-emerald-700" role="status">
+              <p className="mt-4 border-l-2 border-emerald-500 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800" role="status">
                 Demande envoyée. Nous communiquerons avec vous pour confirmer les détails.
               </p>
             ) : null}
             {status === "error" ? (
-              <p className="mt-3 text-sm font-semibold text-red-700" role="alert">
+              <p className="mt-4 border-l-2 border-red-500 bg-red-50 p-4 text-sm font-semibold text-red-800" role="alert">
                 Impossible d'envoyer la demande. Vos informations sont conservées; vous pouvez réessayer.
               </p>
             ) : null}
             {!canSubmit ? (
-              <p className="mt-3 text-xs text-zinc-500">
+              <p className="mt-3 text-xs text-espresso/55">
                 Remplissez les champs requis pour envoyer la demande.
               </p>
             ) : null}
@@ -628,22 +665,22 @@ function SelectionQuoteItemsSection({ items, valid }) {
     <section className="mt-8" aria-labelledby="selection-quote-items-title">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h3 className="text-lg font-bold text-zinc-950" id="selection-quote-items-title">
+          <h3 className="font-serif text-2xl font-semibold text-espresso" id="selection-quote-items-title">
             Articles de ma sélection
           </h3>
-          <p className="mt-1 text-sm text-zinc-500">Les quantités, configurations et préférences seront jointes à la demande.</p>
+          <p className="mt-1 text-sm text-espresso/55">Les quantités, configurations et préférences seront jointes à la demande.</p>
         </div>
-        <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold text-zinc-600">{items.length}</span>
+        <span className="rounded-full bg-blush/30 px-3 py-1 text-xs font-bold text-wine">{items.length}</span>
       </div>
       <div className="mt-4 grid gap-3">
         {items.map((item) => (
-          <article className="grid grid-cols-[4.5rem_1fr] gap-4 border border-zinc-200 bg-white p-4" key={item.key}>
-            <img className={`h-18 w-18 bg-rose-50 ${item.category === "decoration" ? "object-cover" : "object-contain"}`} src={item.image_url} alt="" loading="lazy" />
+          <article className="grid grid-cols-[4.5rem_1fr] gap-4 border border-blush/60 bg-white p-4" key={item.key}>
+            <img className={`h-18 w-18 bg-blush/20 ${item.category === "decoration" ? "object-cover" : "object-contain"}`} src={item.image_url} alt="" loading="lazy" />
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-rose-700">{item.category === "decoration" ? "Décoration" : "Dégustation"}</p>
-              <p className="mt-1 font-bold text-zinc-950">{item.name}</p>
-              <p className="mt-1 text-sm text-zinc-500">Quantité : {item.quantity}</p>
-              {item.note ? <p className="mt-1 text-sm text-zinc-500">Préférences : {item.note}</p> : null}
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-wine">{item.category === "decoration" ? "Décoration" : "Dégustation"}</p>
+              <p className="mt-1 font-bold text-espresso">{item.name}</p>
+              <p className="mt-1 text-sm text-espresso/55">Quantité : {item.quantity}</p>
+              {item.note ? <p className="mt-1 text-sm text-espresso/55">Préférences : {item.note}</p> : null}
             </div>
           </article>
         ))}
@@ -661,7 +698,7 @@ function SelectedDecorationSection({ loading, product }) {
   if (loading) {
     return (
       <section className="mt-8" aria-live="polite">
-        <p className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-5 text-sm text-zinc-500">
+        <p className="border border-dashed border-blush bg-blush/15 p-5 text-sm text-espresso/55">
           Chargement du modèle sélectionné...
         </p>
       </section>
@@ -670,7 +707,7 @@ function SelectedDecorationSection({ loading, product }) {
 
   if (!product) {
     return (
-      <section className="mt-8 rounded-xl border border-amber-200 bg-amber-50 p-5">
+      <section className="mt-8 border border-amber-200 bg-amber-50 p-5">
         <h3 className="font-bold text-amber-950">Modèle non disponible</h3>
         <p className="mt-1 text-sm leading-6 text-amber-900">
           Le modèle demandé est introuvable ou n’est plus publié. Vous pouvez tout de même décrire
@@ -684,27 +721,27 @@ function SelectedDecorationSection({ loading, product }) {
 
   return (
     <section className="mt-8" aria-labelledby="selected-decoration-title">
-      <p className="mb-3 text-sm font-extrabold text-zinc-950">Modèle sélectionné</p>
-      <div className="grid gap-4 rounded-xl border border-rose-200 bg-rose-50/60 p-4 sm:grid-cols-[7rem_1fr] sm:items-center">
+      <p className="mb-3 font-serif text-2xl font-semibold text-espresso">Modèle sélectionné</p>
+      <div className="grid gap-4 border border-blush bg-blush/20 p-4 sm:grid-cols-[7rem_1fr] sm:items-center">
         <img
-          className="aspect-[4/3] w-full rounded-lg bg-white object-cover"
+          className="aspect-[4/3] w-full bg-white object-cover"
           src={product.image_url}
           alt={product.name}
           loading="lazy"
           decoding="async"
         />
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-rose-700">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-wine">
             {category?.label || "Autres décorations"}
           </p>
-          <h3 className="mt-1 text-lg font-extrabold text-zinc-950" id="selected-decoration-title">
+          <h3 className="mt-1 text-lg font-bold text-espresso" id="selected-decoration-title">
             {product.name}
           </h3>
-          <p className="mt-1 text-xs font-semibold text-zinc-500">
+          <p className="mt-1 text-xs font-semibold text-espresso/50">
             Référence du modèle : {product.slug}
           </p>
           {product.description ? (
-            <p className="mt-1 text-sm leading-6 text-zinc-600">{product.description}</p>
+            <p className="mt-1 text-sm leading-6 text-espresso/65">{product.description}</p>
           ) : null}
         </div>
       </div>
@@ -725,32 +762,32 @@ function CateringItemsSection({
 
   return (
     <section
-      className="mt-8"
+      className="mt-10 border-t border-blush/50 pt-8"
       aria-invalid={Boolean(sectionError)}
       aria-describedby={sectionError ? "catering-items-error" : undefined}
       tabIndex={sectionError ? -1 : undefined}
     >
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h3 className="flex items-center gap-2 text-lg font-bold text-zinc-950">
-            <Sparkles className="h-5 w-5 text-rose-700" />
-            Items traiteur souhaités <span className="font-medium text-zinc-500">(facultatif)</span>
+          <h3 className="flex items-center gap-2 font-serif text-2xl font-semibold text-espresso">
+            <Sparkles className="h-5 w-5 text-wine" aria-hidden="true" />
+            Items traiteur souhaités <span className="font-sans text-sm font-medium text-espresso/50">(facultatif)</span>
           </h3>
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-espresso/55">
             Sélectionnez des produits si vous en avez déjà repéré; vous pouvez aussi décrire un besoin personnalisé.
           </p>
         </div>
-        <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold text-zinc-600">
+        <span className="rounded-full bg-blush/30 px-3 py-1 text-xs font-bold text-wine">
           {selectedItemsCount} sélectionné{selectedItemsCount > 1 ? "s" : ""}
         </span>
       </div>
 
       {loading ? (
-        <div className="mt-4 rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-center text-sm text-zinc-500">
+        <div className="mt-4 border border-dashed border-blush bg-blush/15 p-6 text-center text-sm text-espresso/55">
           Chargement des items...
         </div>
       ) : products.length === 0 ? (
-        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-900">
+        <div className="mt-4 border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-900">
           Aucun item traiteur publié n’est disponible pour le moment. Vous pouvez choisir un autre
           type de demande ou nous contacter.
         </div>
@@ -768,28 +805,28 @@ function CateringItemsSection({
                 : undefined;
 
             return (
-              <div className="rounded-xl border border-zinc-200 bg-white p-4" key={product.id}>
+              <div className="border border-blush/60 bg-white p-4" key={product.id}>
                 <div className="grid gap-3 sm:grid-cols-[4.5rem_1fr_auto] sm:items-start">
                   <img
-                    className="h-18 w-18 rounded-lg bg-rose-50 object-contain p-2"
+                    className="h-18 w-18 bg-blush/15 object-contain p-2"
                     src={product.image_url}
                     alt={product.name}
                     loading="lazy"
                     decoding="async"
                   />
                   <div>
-                    <p className="font-bold text-zinc-950">{product.name}</p>
-                    <p className="mt-1 line-clamp-2 text-sm text-zinc-500">{product.description}</p>
+                    <p className="font-bold text-espresso">{product.name}</p>
+                    <p className="mt-1 line-clamp-2 text-sm text-espresso/55">{product.description}</p>
                     <input
-                      className="mt-3 h-10 w-full rounded-md border border-zinc-200 px-3 text-sm"
+                      className="mt-3 h-10 w-full border border-blush px-3 text-sm"
                       placeholder="Note pour cet item"
                       value={item.note || ""}
                       onChange={(event) => onUpdateItem(product, { note: event.target.value })}
                     />
                   </div>
-                  <div className="inline-flex h-10 items-center rounded-md border border-zinc-200 bg-zinc-50">
+                  <div className="inline-flex h-10 items-center border border-blush bg-ivory">
                     <button
-                      className="grid h-10 w-9 place-items-center text-zinc-500 hover:text-zinc-950"
+                      className="grid h-10 w-9 place-items-center text-espresso/55 hover:text-wine"
                       type="button"
                       onClick={() => onUpdateItem(product, { requested_quantity: Math.max(0, requestedQuantity - 1) })}
                       disabled={requestedQuantity <= 0}
@@ -811,7 +848,7 @@ function CateringItemsSection({
                       aria-label={`Quantité souhaitée pour ${product.name}`}
                     />
                     <button
-                      className="grid h-10 w-9 place-items-center text-zinc-500 hover:text-zinc-950"
+                      className="grid h-10 w-9 place-items-center text-espresso/55 hover:text-wine"
                       type="button"
                       onClick={() => onUpdateItem(product, { requested_quantity: requestedQuantity + 1 })}
                       aria-label={`Augmenter la quantité de ${product.name}`}
@@ -858,8 +895,8 @@ export function QuoteSummary({
   const formattedDate = formatDateForDisplay(form.event_date);
 
   return (
-    <section className="mt-8 rounded-xl border border-zinc-200 bg-zinc-50 p-4" aria-labelledby="quote-summary-title">
-      <h3 className="font-bold text-zinc-950" id="quote-summary-title">
+    <section className="mt-10 border border-blush/60 bg-ivory p-5" aria-labelledby="quote-summary-title">
+      <h3 className="font-serif text-2xl font-semibold text-espresso" id="quote-summary-title">
         Résumé de la demande
       </h3>
       <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
@@ -893,9 +930,9 @@ export function QuoteSummary({
 
 function SummaryEntry({ label, value }) {
   return (
-    <div className="flex justify-between gap-3 rounded-lg bg-white px-3 py-2">
-      <dt className="font-semibold text-zinc-500">{label}</dt>
-      <dd className="text-right font-semibold text-zinc-900">{value}</dd>
+    <div className="flex justify-between gap-3 border-b border-blush/40 bg-white px-3 py-2 last:border-b-0">
+      <dt className="font-semibold text-espresso/55">{label}</dt>
+      <dd className="text-right font-semibold text-espresso">{value}</dd>
     </div>
   );
 }

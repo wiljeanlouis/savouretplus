@@ -10,6 +10,7 @@ import { HomePage } from "./components/home/HomePage";
 import { Footer } from "./components/layout/Footer";
 import { Header } from "./components/layout/Header";
 import { QuotePage } from "./components/quote/QuotePage";
+import { ServicesPage } from "./components/services/ServicesPage";
 import { useCart } from "./application/cart/useCart";
 import { configureCommerceGateway } from "./application/commerce";
 import { createCommerceGateway } from "./infrastructure/createCommerceGateway";
@@ -22,6 +23,7 @@ const pages = {
   decoration: DecorationCatalogPage,
   "decoration-detail": DecorationDetailPage,
   degustation: TastingCatalogPage,
+  services: ServicesPage,
   panier: CartPage,
   soumission: QuotePage,
   contact: ContactPage,

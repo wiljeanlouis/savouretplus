@@ -22,4 +22,11 @@ describe("application hash navigation", () => {
       decorationSlug: null,
     });
   });
+
+  it("keeps services and the quote form as distinct routes", () => {
+    expect(parseAppHash("#/services")).toMatchObject({ route: "services" });
+    expect(parseAppHash("#/soumission?service=organisation")).toMatchObject({
+      route: "soumission",
+    });
+  });
 });

@@ -49,7 +49,7 @@ const expertiseCards = [
     description: "Une organisation personnalisée pour des événements sans souci.",
     image: "./images/home/ambient-elegant-reception.jpg",
     alt: "Photographie d'ambiance d'une salle de réception élégante et fleurie",
-    href: "#/soumission",
+    href: "#/services",
     action: "En savoir plus",
     icon: UsersRound,
     ambiance: true,

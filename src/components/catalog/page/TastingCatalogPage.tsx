@@ -26,7 +26,7 @@ const cateringHighlights = [
   },
   {
     label: "Spécialités maison",
-    image: "./images/catalog/tasting/shareable-pates.png",
+    image: "./images/catalog/tasting/specialites-maison.png",
   },
 ];
 

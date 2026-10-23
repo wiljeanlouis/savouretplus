@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { QuoteSummary } from "../../../src/components/quote/QuotePage";
+import { QuoteHero, QuoteSummary } from "../../../src/components/quote/QuotePage";
 import type { CatalogProduct } from "../../../src/domain/catalog";
 
 const form = {
@@ -29,6 +29,14 @@ const decoration: CatalogProduct = {
 };
 
 describe("QuoteSummary", () => {
+  it("uses the light C2 quote hero without changing the form route", () => {
+    const html = renderToStaticMarkup(<QuoteHero />);
+
+    expect(html).toContain("Parlons de votre événement.");
+    expect(html).toContain("bg-white");
+    expect(html).not.toContain("BreadcrumbHero");
+  });
+
   it("presents the selected service, model reference, event, and catering count", () => {
     const html = renderToStaticMarkup(
       <QuoteSummary
