@@ -47,6 +47,9 @@ describe("ProductCard commercial modes", () => {
     expect(html).toContain("object-contain");
     expect(html).toContain("123,45");
     expect(html).toContain("Commander");
+    expect(html).toContain("Spécialité SavouretPlus");
+    expect(html).toContain("rounded-none");
+    expect(html).toContain("border-blush/50");
   });
 
   it("presents every real sales format and its price", () => {
