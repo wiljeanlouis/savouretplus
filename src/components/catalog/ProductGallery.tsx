@@ -9,6 +9,8 @@ type ProductGalleryProps = {
   priority?: boolean;
   className?: string;
   rounded?: boolean;
+  imageHref?: string;
+  intrinsicHeight?: boolean;
 };
 
 export function ProductGallery({
@@ -19,6 +21,8 @@ export function ProductGallery({
   priority = false,
   className = "",
   rounded = true,
+  imageHref,
+  intrinsicHeight = false,
 }: ProductGalleryProps) {
   const gallery = uniqueImages(images, fallbackImage);
   const [activeImage, setActiveImage] = useState(0);
@@ -48,22 +52,42 @@ export function ProductGallery({
   return (
     <div className={`relative overflow-hidden bg-gradient-to-br from-rose-50 via-white to-amber-50 ${className}`}>
       <div
-        className={`grid h-full min-h-52 place-items-center overflow-hidden bg-white/70 ${
+        className={`grid min-h-52 place-items-center overflow-hidden bg-white/70 ${
+          intrinsicHeight ? "h-auto" : "h-full"
+        } ${
           rounded ? "rounded-xl" : "rounded-none"
         }`}
       >
         {currentImage ? (
-          <img
-            className={`h-full w-full transition duration-500 group-hover:scale-[1.025] ${
-              fit === "cover" ? "object-cover" : "object-contain drop-shadow-sm"
-            }`}
-            src={currentImage}
-            alt={`${productName} — image ${safeIndex + 1} sur ${availableImages.length}`}
-            loading={priority ? "eager" : "lazy"}
-            fetchPriority={priority ? "high" : "auto"}
-            decoding="async"
-            onError={() => setFailedImages((current) => [...current, currentImage])}
-          />
+          imageHref ? (
+            <a
+              className="block h-full w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-wine"
+              href={imageHref}
+              aria-label={`Consulter la fiche de ${productName}`}
+            >
+              <GalleryImage
+                currentImage={currentImage}
+                fit={fit}
+                productName={productName}
+                safeIndex={safeIndex}
+                imageCount={availableImages.length}
+                priority={priority}
+                intrinsicHeight={intrinsicHeight}
+                onError={() => setFailedImages((current) => [...current, currentImage])}
+              />
+            </a>
+          ) : (
+            <GalleryImage
+              currentImage={currentImage}
+              fit={fit}
+              productName={productName}
+              safeIndex={safeIndex}
+              imageCount={availableImages.length}
+              priority={priority}
+              intrinsicHeight={intrinsicHeight}
+              onError={() => setFailedImages((current) => [...current, currentImage])}
+            />
+          )
         ) : (
           <div className="grid place-items-center gap-2 px-5 py-12 text-center text-zinc-500" role="img" aria-label={`Photographie de ${productName} non disponible`}>
             <ImageOff className="h-8 w-8 text-rose-300" aria-hidden="true" />
@@ -107,6 +131,44 @@ export function ProductGallery({
         </>
       ) : null}
     </div>
+  );
+}
+
+function GalleryImage({
+  currentImage,
+  fit,
+  productName,
+  safeIndex,
+  imageCount,
+  priority,
+  intrinsicHeight,
+  onError,
+}: {
+  currentImage: string;
+  fit: "contain" | "cover";
+  productName: string;
+  safeIndex: number;
+  imageCount: number;
+  priority: boolean;
+  intrinsicHeight: boolean;
+  onError: () => void;
+}) {
+  return (
+    <img
+      className={
+        fit === "cover"
+          ? "h-full w-full object-cover transition duration-500 group-hover:scale-[1.025]"
+          : intrinsicHeight
+            ? "h-auto w-full object-contain drop-shadow-sm"
+          : "h-auto w-auto max-h-full max-w-full object-contain drop-shadow-sm"
+      }
+      src={currentImage}
+      alt={`${productName} — image ${safeIndex + 1} sur ${imageCount}`}
+      loading={priority ? "eager" : "lazy"}
+      fetchPriority={priority ? "high" : "auto"}
+      decoding="async"
+      onError={onError}
+    />
   );
 }
 

@@ -56,6 +56,7 @@ describe("UI-2.1A decoration catalogue", () => {
     expect(html).toContain("lg:grid-cols-[1.15fr_0.85fr]");
     expect(html).toContain("#/decoration/modele-one");
     expect(html).toContain("Voir le détail");
+    expect(html).toContain("object-cover");
     expect(html).not.toContain("125,00");
   });
 
@@ -68,6 +69,32 @@ describe("UI-2.1A decoration catalogue", () => {
 
     expect(html).toContain("xl:grid-cols-3");
     expect(html.match(/Voir le détail/g)).toHaveLength(3);
+  });
+
+  it("offers selection without inventing a decoration price", () => {
+    const html = renderToStaticMarkup(
+      <DecorationProductCollection products={[decorationProduct("one")]} onSelect={vi.fn()} />,
+    );
+
+    expect(html).toContain("Ajouter à ma sélection");
+    expect(html).toContain("editorial-link");
+    expect(html).toContain('aria-label="Consulter la fiche de Modèle one"');
+    expect(html.match(/href="#\/decoration\/modele-one"/g)).toHaveLength(3);
+    expect(html).not.toContain("Demander une soumission");
+    expect(html).not.toContain("125,00");
+  });
+
+  it("aligns compact card actions at the bottom", () => {
+    const html = renderToStaticMarkup(
+      <DecorationProductCollection
+        products={[decorationProduct("one"), decorationProduct("two")]}
+        onSelect={vi.fn()}
+      />,
+    );
+
+    expect(html.match(/mt-auto pt-7/g)).toHaveLength(2);
+    expect(html.match(/Ajouter à ma sélection/g)).toHaveLength(2);
+    expect(html.match(/<button/g)).toHaveLength(2);
   });
 
   it("distinguishes a catalogue error from an empty catalogue", () => {

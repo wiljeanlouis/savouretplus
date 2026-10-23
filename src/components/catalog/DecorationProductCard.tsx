@@ -1,4 +1,4 @@
-import { ArrowRight, ClipboardList } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 import type { CatalogProduct } from "../../domain/catalog";
 import { getDecorationCategory, getDecorationDetailHash } from "../../domain/decoration";
 import { Button } from "../ui/button";
@@ -8,12 +8,14 @@ type DecorationProductCardProps = {
   product: CatalogProduct;
   featured?: boolean;
   anchorId?: string;
+  onSelect?: (product: CatalogProduct) => void;
 };
 
 export function DecorationProductCard({
   product,
   featured = false,
   anchorId,
+  onSelect,
 }: DecorationProductCardProps) {
   const detailHref = getDecorationDetailHash(product);
   const category = getDecorationCategory(product.subcategory);
@@ -29,6 +31,7 @@ export function DecorationProductCard({
         className={`${featured ? "min-h-[22rem] lg:min-h-[30rem]" : "aspect-[4/3]"} rounded-none`}
         images={product.gallery}
         fallbackImage={product.image_url}
+        imageHref={detailHref}
         productName={product.name}
         fit="cover"
         rounded={false}
@@ -52,19 +55,21 @@ export function DecorationProductCard({
           </p>
         ) : null}
 
-        <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <Button asChild variant="outline">
-            <a href={detailHref}>
-              Voir le détail
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </a>
-          </Button>
-          <Button asChild variant="ghost">
-            <a href={`#/soumission?service=decoration&item=${encodeURIComponent(product.slug)}`}>
-              <ClipboardList className="h-4 w-4" aria-hidden="true" />
-              Demander une soumission
-            </a>
-          </Button>
+        <div
+          className={`flex flex-col items-start gap-4 sm:flex-row sm:flex-wrap sm:items-center ${
+            featured ? "mt-7" : "mt-auto pt-7"
+          }`}
+        >
+          <a className="editorial-link" href={detailHref}>
+            Voir le détail
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </a>
+          {onSelect ? (
+            <Button type="button" onClick={() => onSelect(product)}>
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Ajouter à ma sélection
+            </Button>
+          ) : null}
         </div>
       </div>
     </article>

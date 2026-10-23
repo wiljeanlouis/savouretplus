@@ -140,7 +140,7 @@ export function AddedToCartNotice({ item, onDismiss }) {
           <Check className="h-5 w-5" aria-hidden="true" />
         </span>
         <div>
-          <p className="font-extrabold">Ajouté au panier</p>
+          <p className="font-extrabold">Ajouté à ma sélection</p>
           <p className="mt-0.5 text-sm text-emerald-800">
             {item.quantity} × {item.name}. Vous pouvez continuer vos achats ou finaliser la commande.
           </p>
@@ -150,7 +150,7 @@ export function AddedToCartNotice({ item, onDismiss }) {
         <Button asChild size="sm">
           <a href="#/panier">
             <ShoppingBag className="h-4 w-4" aria-hidden="true" />
-            Voir le panier
+            Voir ma sélection
           </a>
         </Button>
         <Button variant="ghost" size="icon" type="button" onClick={onDismiss} aria-label="Fermer la confirmation">

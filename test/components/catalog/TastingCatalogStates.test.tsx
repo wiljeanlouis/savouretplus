@@ -23,6 +23,8 @@ describe("Tasting catalog states", () => {
     );
 
     expect(html).toContain("2 × Pâté kòde");
+    expect(html).toContain("Ajouté à ma sélection");
+    expect(html).toContain("Voir ma sélection");
     expect(html).toContain("#/panier");
     expect(html).toContain('role="status"');
   });

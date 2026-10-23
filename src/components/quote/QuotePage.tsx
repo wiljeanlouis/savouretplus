@@ -14,10 +14,12 @@ import {
   buildQuoteRequest,
   buildQuoteHash,
   createDecorationQuoteItem,
+  createSelectionQuoteItem,
   createQuoteSubmitter,
   findSelectedDecoration,
   getQuoteQueryFromHash,
   getRequestedServices,
+  getSelectionQuoteService,
   quoteIncludesService,
   shouldRequestGuestCount,
   type QuoteQuery,
@@ -92,13 +94,14 @@ const eventTypes = ["Anniversaire", "Mariage", "Baptême", "Baby shower", "Corpo
 
 const budgetOptions = ["300$ - 500$", "500$ - 1000$", "1000$ et plus", "À discuter"];
 
-export function QuotePage() {
+export function QuotePage({ cart = null }) {
   const initialQuery = getQuoteQueryFromHash(window.location.hash);
   const [form, setForm] = useState(() => ({
     ...initialForm,
     request_type: initialQuery.service,
   }));
   const [selectedItemSlug, setSelectedItemSlug] = useState(initialQuery.itemSlug);
+  const [fromSelection, setFromSelection] = useState(initialQuery.fromSelection);
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [decorationProducts, setDecorationProducts] = useState<CatalogProduct[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -120,6 +123,12 @@ export function QuotePage() {
   const selectedDecoration = includesDecoration
     ? findSelectedDecoration(decorationProducts, selectedItemSlug)
     : null;
+  const selectionService = getSelectionQuoteService(cart?.items || []);
+  const selectionMatchesRequest = !fromSelection || selectionService === form.request_type;
+  const selectionQuoteItems = useMemo(
+    () => (fromSelection ? (cart?.items || []).map(createSelectionQuoteItem) : []),
+    [cart?.items, fromSelection],
+  );
 
   const selectedCateringItems = useMemo(
     () =>
@@ -135,11 +144,14 @@ export function QuotePage() {
     [items],
   );
   const quoteItems = useMemo(
-    () => [
-      ...(selectedDecoration ? [createDecorationQuoteItem(selectedDecoration)] : []),
-      ...(includesCatering ? selectedCateringItems : []),
-    ],
-    [includesCatering, selectedCateringItems, selectedDecoration],
+    () =>
+      fromSelection
+        ? selectionQuoteItems
+        : [
+            ...(selectedDecoration ? [createDecorationQuoteItem(selectedDecoration)] : []),
+            ...(includesCatering ? selectedCateringItems : []),
+          ],
+    [fromSelection, includesCatering, selectedCateringItems, selectedDecoration, selectionQuoteItems],
   );
 
   const canSubmit =
@@ -177,6 +189,7 @@ export function QuotePage() {
     const onHashChange = () => {
       const query = getQuoteQueryFromHash(window.location.hash);
       setSelectedItemSlug(query.itemSlug);
+      setFromSelection(query.fromSelection);
       setForm((current) => ({
         ...current,
         request_type: query.service,
@@ -264,6 +277,8 @@ export function QuotePage() {
       setForm(initialForm);
       setItems({});
       setSelectedItemSlug(null);
+      if (fromSelection) cart?.clear();
+      setFromSelection(false);
       window.history.replaceState(null, "", "#/soumission");
       setStatus("success");
     } catch (error) {
@@ -331,13 +346,14 @@ export function QuotePage() {
 
                   return (
                     <button
-                      className={`group overflow-hidden rounded-xl border bg-white text-left transition ${
+                      className={`group overflow-hidden rounded-xl border bg-white text-left transition disabled:cursor-not-allowed disabled:opacity-60 ${
                         selected
                           ? "border-rose-600 text-rose-900 shadow-md ring-2 ring-rose-100"
                           : "border-zinc-200 text-zinc-700 hover:border-rose-300 hover:shadow-sm"
                       }`}
                       key={option.value}
                       type="button"
+                      disabled={fromSelection}
                       onClick={() => selectRequestType(option.value)}
                       aria-pressed={selected}
                     >
@@ -378,6 +394,13 @@ export function QuotePage() {
               <SelectedDecorationSection
                 loading={loadingProducts}
                 product={selectedDecoration}
+              />
+            ) : null}
+
+            {fromSelection ? (
+              <SelectionQuoteItemsSection
+                items={cart?.items || []}
+                valid={selectionMatchesRequest}
               />
             ) : null}
 
@@ -536,7 +559,7 @@ export function QuotePage() {
               </ValidatedField>
             </section>
 
-            {includesCatering ? (
+            {includesCatering && !fromSelection ? (
               <CateringItemsSection
                 loading={loadingProducts}
                 products={products}
@@ -554,6 +577,7 @@ export function QuotePage() {
                 form={form}
                 selectedDecoration={selectedDecoration}
                 selectedCateringItemsCount={includesCatering ? selectedCateringItems.length : 0}
+                selectionItemsCount={fromSelection ? selectionQuoteItems.length : 0}
                 includesGuestCount={includesGuestCount}
               />
             ) : null}
@@ -567,7 +591,7 @@ export function QuotePage() {
               </div>
             </div>
 
-            <Button className="mt-6 w-full" size="lg" type="submit" disabled={status === "saving"}>
+            <Button className="mt-6 w-full" size="lg" type="submit" disabled={status === "saving" || !selectionMatchesRequest}>
               <Send className="h-5 w-5" />
               {status === "saving" ? "Envoi..." : "Envoyer la demande"}
             </Button>
@@ -590,6 +614,40 @@ export function QuotePage() {
         </div>
       </section>
     </>
+  );
+}
+
+function SelectionQuoteItemsSection({ items, valid }) {
+  return (
+    <section className="mt-8" aria-labelledby="selection-quote-items-title">
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <h3 className="text-lg font-bold text-zinc-950" id="selection-quote-items-title">
+            Articles de ma sélection
+          </h3>
+          <p className="mt-1 text-sm text-zinc-500">Les quantités, configurations et préférences seront jointes à la demande.</p>
+        </div>
+        <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold text-zinc-600">{items.length}</span>
+      </div>
+      <div className="mt-4 grid gap-3">
+        {items.map((item) => (
+          <article className="grid grid-cols-[4.5rem_1fr] gap-4 border border-zinc-200 bg-white p-4" key={item.key}>
+            <img className={`h-18 w-18 bg-rose-50 ${item.category === "decoration" ? "object-cover" : "object-contain"}`} src={item.image_url} alt="" loading="lazy" />
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-rose-700">{item.category === "decoration" ? "Décoration" : "Dégustation"}</p>
+              <p className="mt-1 font-bold text-zinc-950">{item.name}</p>
+              <p className="mt-1 text-sm text-zinc-500">Quantité : {item.quantity}</p>
+              {item.note ? <p className="mt-1 text-sm text-zinc-500">Préférences : {item.note}</p> : null}
+            </div>
+          </article>
+        ))}
+      </div>
+      {!valid ? (
+        <p className="mt-3 border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950" role="alert">
+          Cette sélection ne correspond pas au type de demande. Revenez à « Ma sélection » pour choisir un parcours compatible.
+        </p>
+      ) : null}
+    </section>
   );
 }
 
@@ -788,6 +846,7 @@ export function QuoteSummary({
   form,
   selectedDecoration,
   selectedCateringItemsCount,
+  selectionItemsCount = 0,
   includesGuestCount,
 }) {
   const formattedDate = formatDateForDisplay(form.event_date);
@@ -812,6 +871,12 @@ export function QuoteSummary({
           <SummaryEntry
             label="Items traiteur"
             value={`${selectedCateringItemsCount} sélectionné${selectedCateringItemsCount > 1 ? "s" : ""}`}
+          />
+        ) : null}
+        {selectionItemsCount > 0 ? (
+          <SummaryEntry
+            label="Ma sélection"
+            value={`${selectionItemsCount} article${selectionItemsCount > 1 ? "s" : ""}`}
           />
         ) : null}
         <SummaryEntry label="Budget" value={form.budget || "À préciser"} />

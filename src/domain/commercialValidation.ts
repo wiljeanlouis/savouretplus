@@ -131,9 +131,9 @@ export function validateCustomerOrder(order: CustomerOrder): ValidationResult<Cu
   Object.assign(errors, customerResult.errors);
 
   if (!Array.isArray(order?.items) || order.items.length === 0) {
-    errors.items = "Le panier doit contenir au moins un article.";
+    errors.items = "La sélection doit contenir au moins un article.";
   } else if (order.items.length > 100) {
-    errors.items = "Le panier ne peut pas contenir plus de 100 articles distincts.";
+    errors.items = "La sélection ne peut pas contenir plus de 100 articles distincts.";
   } else {
     order.items.forEach((item, index) => validateCartItem(item, index, errors));
   }
@@ -152,7 +152,7 @@ export function validateCustomerOrder(order: CustomerOrder): ValidationResult<Cu
     order.items.reduce((sum, item) => sum + item.quantity * item.unit_price_cents, 0) !==
       order.totalCents
   ) {
-    errors.totalCents = "Le total estimé ne correspond pas aux articles du panier.";
+    errors.totalCents = "Le total estimé ne correspond pas aux articles de la sélection.";
   }
 
   if ((order?.customer?.note?.length ?? 0) > 2000) {
@@ -256,13 +256,13 @@ function validateCartItem(item: CartItem, index: number, errors: ValidationError
     !hasText(item?.name) ||
     item.name.trim().length > 300
   ) {
-    errors[prefix] = "Un article du panier est incomplet.";
+    errors[prefix] = "Un article de la sélection est incomplet.";
   }
   if (!isPositiveInteger(item?.quantity) || item.quantity > maximumItemQuantity) {
     errors[`${prefix}.quantity`] = `La quantité doit être un entier entre 1 et ${maximumItemQuantity}.`;
   }
-  if (item?.category !== "tasting" && item?.category !== "decoration") {
-    errors[`${prefix}.category`] = "La catégorie de cet article est invalide.";
+  if (item?.category !== "tasting") {
+    errors[`${prefix}.category`] = "La commande directe est réservée aux produits Dégustation.";
   }
   if (
     !isNonNegativeInteger(item?.unit_price_cents) ||
@@ -345,8 +345,8 @@ function validateQuoteItem(
   if (!hasText(item?.name)) {
     errors[`${prefix}.name`] = "Le nom du modèle ou du produit est requis.";
   }
-  if (!isPositiveInteger(item?.requested_quantity)) {
-    errors[`${prefix}.requested_quantity`] = "La quantité demandée doit être un entier positif.";
+  if (!isPositiveInteger(item?.requested_quantity) || item.requested_quantity > maximumItemQuantity) {
+    errors[`${prefix}.requested_quantity`] = `La quantité demandée doit être un entier entre 1 et ${maximumItemQuantity}.`;
   }
   if (
     !item?.configuration ||
@@ -378,6 +378,8 @@ function validateQuoteItem(
   }
   if (item?.note !== null && typeof item?.note !== "string") {
     errors[`${prefix}.note`] = "La note de cet item est invalide.";
+  } else if ((item?.note?.length ?? 0) > 2000) {
+    errors[`${prefix}.note`] = "La note de cet item est trop longue.";
   }
 }
 

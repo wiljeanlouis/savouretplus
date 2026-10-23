@@ -239,11 +239,11 @@ export function ProductConfigurator({ product, open, onClose, onAdd }) {
         <div className="border-t border-zinc-200 bg-white p-4 shadow-[0_-8px_24px_rgba(0,0,0,0.04)] sm:p-6">
           <Button className="w-full" size="lg" type="button" disabled={!canAdd} onClick={addToCart}>
             <ShoppingBag className="h-5 w-5" aria-hidden="true" />
-            Ajouter {hasValidQuantity ? numericQuantity : ""} au panier
+            Ajouter {hasValidQuantity ? numericQuantity : ""} à ma sélection
           </Button>
           {!canAdd && hasValidQuantity ? (
             <p className="mt-2 text-center text-xs font-semibold text-rose-700">
-              Complétez les choix demandés avant l’ajout au panier.
+              Complétez les choix demandés avant l’ajout à la sélection.
             </p>
           ) : null}
         </div>

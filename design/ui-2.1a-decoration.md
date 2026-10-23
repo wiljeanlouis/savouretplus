@@ -20,8 +20,8 @@ Le catalogue actuel ne publie pas de données structurées permettant de disting
 
 Ces informations devront être modélisées dans SAVIS et exposées par le catalogue publié avant leur ajout à l'interface. Aucun champ Supabase ni contrat RPC n'a été modifié dans cette phase.
 
-## Préparation UI-2.1B
+## Évolution UI-2.1B
 
-Les cartes restent indépendantes du formulaire et conservent `product.id` et `product.slug`. Une sélection multiple nécessitera un modèle de sélection séparé contenant au minimum les identifiants métier et les quantités. Le contrat actuel accepte déjà une liste `items`, mais il faudra confirmer côté SAVIS que plusieurs articles Décoration et leurs préférences sont autorisés avant d'ajouter une persistance ou une interface de sélection.
-
-Le panier Dégustation ne doit pas être réutilisé pour cette sélection sans décision métier explicite.
+La décision UI-2.1B est documentée dans [ui-2.1b-selection.md](ui-2.1b-selection.md).
+Le même état local accueille désormais Dégustation et Décoration, tout en conservant
+leurs règles commerciales distinctes et sans attribuer de prix aux décorations.

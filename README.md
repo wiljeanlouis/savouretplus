@@ -6,7 +6,7 @@ L'application permet de :
 
 - découvrir les spécialités et services;
 - commander des produits configurables;
-- conserver un panier local;
+- conserver une sélection locale commune aux produits et aux décorations;
 - demander une soumission centralisée pour le traiteur, la décoration et l'organisation d'événements;
 - transmettre les commandes et soumissions à SAVIS par Supabase.
 
@@ -76,8 +76,8 @@ VITE_SUPABASE_ANON_KEY=your-public-anon-key
 Sans configuration Supabase :
 
 - le catalogue utilise `src/infrastructure/local/fallbackCatalog.ts`;
-- les commandes et soumissions sont simulées dans la console;
-- l'interface demeure utilisable pour le développement.
+- les commandes et soumissions sont refusées sans faux succès;
+- l'interface demeure utilisable pour le développement et la vérification visuelle.
 
 ## Commandes
 
@@ -103,6 +103,8 @@ Le site utilise un routage par hash compatible avec GitHub Pages :
 ```text
 #/accueil
 #/degustation
+#/decoration
+#/panier
 #/soumission
 #/contact
 ```
@@ -138,20 +140,20 @@ src/
 ```text
 Dégustation
   -> configuration du produit
-  -> panier
+  -> Ma sélection
   -> coordonnées
-  -> customer_orders
+  -> RPC receive_customer_order
 ```
 
-Les formats, choix, répartitions et ingrédients sont conservés dans les items de commande. Le panier est persisté dans `localStorage`.
+Les formats, choix, répartitions et ingrédients sont conservés dans les items de commande. « Ma sélection » est persistée dans `localStorage` et peut aussi contenir des décorations sans prix artificiel.
 
 ### Demande de soumission
 
 ```text
 Soumission
-  -> choix du ou des services
+  -> sélection Décoration ou Dégustation, ou choix du service
   -> détails de l'événement
-  -> items si le traiteur est inclus
+  -> items et configurations
   -> RPC submit_quote_request
 ```
 
@@ -179,7 +181,7 @@ Types de produits :
 Chaque produit possède une catégorie et peut recevoir une sous-catégorie
 optionnelle. Les codes actuellement pris en charge sont :
 
-- `balloon-arch`;
+- `decorative-arch`;
 - `centerpiece`;
 - `birthday`;
 - `wedding`.
@@ -201,7 +203,7 @@ Le frontend utilise :
 | Ressource | Usage |
 | --- | --- |
 | `published_catalog_products` | Lecture des produits publiés, disponibles et de leur sous-catégorie optionnelle |
-| `customer_orders` | Création des commandes directes |
+| `receive_customer_order(payload jsonb)` | Réception idempotente des demandes de commande Dégustation |
 | `submit_quote_request(payload jsonb)` | Création des demandes de soumission |
 
 Supabase et SAVIS doivent effectuer les validations métier et de sécurité. Le frontend ne doit jamais être considéré comme la source de vérité pour les prix ou la disponibilité.

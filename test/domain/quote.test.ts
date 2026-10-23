@@ -5,6 +5,8 @@ import {
   buildQuoteHash,
   buildQuoteRequest,
   createDecorationQuoteItem,
+  createSelectionQuoteItem,
+  buildSelectionQuoteHash,
   createQuoteSubmitter,
   findSelectedDecoration,
   getQuoteQueryFromHash,
@@ -52,20 +54,20 @@ describe("quote model selection", () => {
       getQuoteQueryFromHash(
         "#/soumission?service=decoration&item=arche-romantique",
       ),
-    ).toEqual({ service: "decoration", itemSlug: "arche-romantique" });
+    ).toEqual({ service: "decoration", itemSlug: "arche-romantique", fromSelection: false });
     expect(
       getQuoteQueryFromHash("#/soumission?service=inconnu&item=arche-romantique"),
-    ).toEqual({ service: "", itemSlug: null });
+    ).toEqual({ service: "", itemSlug: null, fromSelection: false });
     expect(
       getQuoteQueryFromHash("#/soumission?service=decoration&item=../../secret"),
-    ).toEqual({ service: "decoration", itemSlug: null });
+    ).toEqual({ service: "decoration", itemSlug: null, fromSelection: false });
     expect(
       getQuoteQueryFromHash("#/soumission?service=traiteur&item=arche-romantique"),
-    ).toEqual({ service: "traiteur", itemSlug: null });
+    ).toEqual({ service: "traiteur", itemSlug: null, fromSelection: false });
   });
 
   it("supports direct access and every documented service link", () => {
-    expect(getQuoteQueryFromHash("#/soumission")).toEqual({ service: "", itemSlug: null });
+    expect(getQuoteQueryFromHash("#/soumission")).toEqual({ service: "", itemSlug: null, fromSelection: false });
 
     for (const service of [
       "traiteur",
@@ -76,6 +78,44 @@ describe("quote model selection", () => {
     ]) {
       expect(getQuoteQueryFromHash(`#/soumission?service=${service}`).service).toBe(service);
     }
+  });
+
+  it("builds safe quote routes and items from a mono-category selection", () => {
+    const decorationItem = {
+      key: "decor-42:quote:none",
+      product_id: "decor-42",
+      bom_id: "decor-42",
+      catalog_slug: "arche-romantique",
+      name: "Arche romantique",
+      category: "decoration" as const,
+      subcategory: "wedding" as const,
+      product_type: "standard" as const,
+      pricing: "quote" as const,
+      base_price_cents: null,
+      unit_price_cents: null,
+      purchase_mode: null,
+      selection: null,
+      allocation: [],
+      ingredients: [],
+      quantity: 2,
+      image_url: "/arche.png",
+      note: "Rose poudré",
+    };
+
+    expect(buildSelectionQuoteHash([decorationItem])).toBe(
+      "#/soumission?service=decoration&source=selection",
+    );
+    expect(getQuoteQueryFromHash("#/soumission?service=decoration&source=selection").fromSelection).toBe(true);
+    expect(createSelectionQuoteItem(decorationItem)).toMatchObject({
+      offering_id: "decor-42",
+      requested_quantity: 2,
+      configuration: { category: "decoration", catalog_slug: "arche-romantique" },
+      note: "Rose poudré",
+    });
+    expect(buildSelectionQuoteHash([
+      decorationItem,
+      { ...decorationItem, key: "food", product_id: "food", category: "tasting" as const },
+    ])).toBeNull();
   });
 
   it("builds a canonical URL and keeps an item only for a decoration service", () => {

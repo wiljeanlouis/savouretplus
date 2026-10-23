@@ -1,4 +1,4 @@
-import { ArrowLeft, Send, ShoppingBag, Trash2 } from "lucide-react";
+import { ArrowLeft, ClipboardList, Send, ShoppingBag, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { createCustomerOrder } from "../../application/commerce";
 import { createCustomerOrderSubmitter } from "../../application/customerOrderRequest";
@@ -10,6 +10,8 @@ import {
   validateCustomerOrder,
 } from "../../domain/commercialValidation";
 import { CustomerOrderReceptionError } from "../../domain/customerOrderReception";
+import { isSelectionOrderEligible } from "../../domain/cart";
+import { buildSelectionQuoteHash } from "../../domain/quote";
 import { formatCurrency } from "../../shared/format";
 import { focusFirstInvalidField, ValidatedField } from "../forms/ValidatedField";
 import { BreadcrumbHero } from "../layout/BreadcrumbHero";
@@ -23,6 +25,8 @@ export function CartPage({ cart }) {
   if (!orderSubmitterRef.current) {
     orderSubmitterRef.current = createCustomerOrderSubmitter(createCustomerOrder);
   }
+  const orderEligible = isSelectionOrderEligible(cart.items);
+  const quoteHash = buildSelectionQuoteHash(cart.items);
 
   function updateCustomer(field, value) {
     const nextCustomer = { ...customer, [field]: value };
@@ -49,6 +53,7 @@ export function CartPage({ cart }) {
 
   async function submitOrder(event) {
     event.preventDefault();
+    if (!orderEligible) return;
     const order = {
       customer,
       items: cart.items,
@@ -87,9 +92,9 @@ export function CartPage({ cart }) {
   return (
     <>
       <BreadcrumbHero
-        title="Votre panier"
+        title="Ma sélection"
         image="./images/catalog/tasting/breadcrumbs-bg-pates.png"
-        subtitle="Vérifiez vos articles, puis transmettez votre demande de commande pour validation."
+        subtitle="Regroupez vos gourmandises et vos inspirations décoratives, puis choisissez le parcours adapté."
       />
 
       <section className="py-16 sm:py-20">
@@ -112,41 +117,68 @@ export function CartPage({ cart }) {
               <div>
                 <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
                   <div>
-                    <p className="eyebrow">Votre sélection</p>
+                    <p className="eyebrow">Ma sélection</p>
                     <h2 className="mt-2 font-serif text-3xl font-bold text-zinc-950">
                       {cart.count} article{cart.count > 1 ? "s" : ""}
                     </h2>
                   </div>
-                  <Button asChild variant="outline" size="sm">
-                    <a href="#/degustation">
-                      <ArrowLeft className="h-4 w-4" />
-                      Continuer mes achats
-                    </a>
-                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button asChild variant="outline" size="sm">
+                      <a href="#/decoration"><ArrowLeft className="h-4 w-4" />Décoration</a>
+                    </Button>
+                    <Button asChild variant="outline" size="sm">
+                      <a href="#/degustation">Dégustation</a>
+                    </Button>
+                  </div>
                 </div>
 
-                <div className="grid gap-4">
-                  {cart.items.map((item, index) => (
-                    <CartItem
-                      cart={cart}
-                      item={item}
-                      index={index}
-                      errors={errors}
-                      onQuantityChange={updateItemQuantity}
-                      key={item.key}
-                    />
-                  ))}
+                <div className="grid gap-8">
+                  {["decoration", "tasting"].map((category) => {
+                    const categoryItems = cart.items
+                      .map((item, index) => ({ item, index }))
+                      .filter(({ item }) => item.category === category);
+                    if (!categoryItems.length) return null;
+
+                    return (
+                      <section key={category}>
+                        <h3 className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-wine">
+                          {category === "decoration" ? "Décoration" : "Dégustation"}
+                        </h3>
+                        <div className="grid gap-4">
+                          {categoryItems.map(({ item, index }) => (
+                            <CartItem
+                              cart={cart}
+                              item={item}
+                              index={index}
+                              errors={errors}
+                              onQuantityChange={updateItemQuantity}
+                              key={item.key}
+                            />
+                          ))}
+                        </div>
+                      </section>
+                    );
+                  })}
                 </div>
               </div>
 
-              <OrderForm
-                cart={cart}
-                customer={customer}
-                errors={errors}
-                onCustomerChange={updateCustomer}
-                onSubmit={submitOrder}
-                status={status}
-              />
+              <div className="grid gap-5 lg:sticky lg:top-28">
+                <SelectionCommercialActions
+                  cart={cart}
+                  orderEligible={orderEligible}
+                  quoteHash={quoteHash}
+                />
+                {orderEligible ? (
+                  <OrderForm
+                    cart={cart}
+                    customer={customer}
+                    errors={errors}
+                    onCustomerChange={updateCustomer}
+                    onSubmit={submitOrder}
+                    status={status}
+                  />
+                ) : null}
+              </div>
             </div>
           ) : (
             <EmptyCart hasSubmitted={status === "success"} />
@@ -158,7 +190,8 @@ export function CartPage({ cart }) {
 }
 
 function CartItem({ cart, item, index, errors, onQuantityChange }) {
-  const unitPrice = item.unit_price_cents ?? item.price_cents ?? 0;
+  const hasKnownPrice = item.pricing === "known" && typeof item.unit_price_cents === "number";
+  const unitPrice = hasKnownPrice ? item.unit_price_cents : null;
   const quantityError = errors[`items.${index}.quantity`];
   const configurationError = Object.entries(errors).find(
     ([path]) => path.startsWith(`items.${index}.`) && path !== `items.${index}.quantity`,
@@ -172,14 +205,16 @@ function CartItem({ cart, item, index, errors, onQuantityChange }) {
       tabIndex={configurationError ? -1 : undefined}
     >
       <img
-        className="h-28 w-full rounded-xl bg-rose-50 object-contain sm:w-28"
+        className={`h-28 w-full bg-rose-50 sm:w-28 ${item.category === "decoration" ? "object-cover" : "object-contain"}`}
         src={item.image_url}
         alt=""
       />
       <div>
         <h3 className="font-serif text-xl font-bold text-zinc-950">{item.name}</h3>
         <CartItemConfiguration item={item} />
-        <p className="mt-3 text-sm font-bold text-rose-700">{formatCurrency(unitPrice)} l’unité</p>
+        <p className="mt-3 text-sm font-bold text-wine">
+          {unitPrice === null ? "Tarification sur soumission" : `${formatCurrency(unitPrice)} l’unité`}
+        </p>
         <label className="mt-4 flex w-fit items-center gap-3 text-sm font-semibold text-zinc-700">
           Quantité
           <input
@@ -199,6 +234,18 @@ function CartItem({ cart, item, index, errors, onQuantityChange }) {
             {quantityError}
           </p>
         ) : null}
+        {item.category === "decoration" ? (
+          <label className="mt-4 grid gap-2 text-sm font-semibold text-zinc-700">
+            Préférences
+            <textarea
+              className="min-h-20 border border-blush bg-white px-3 py-2 font-normal"
+              maxLength={500}
+              placeholder="Couleurs, thème ou précision utile"
+              value={item.note || ""}
+              onChange={(event) => cart.updateNote(item.key, event.target.value)}
+            />
+          </label>
+        ) : null}
         {configurationError ? (
           <p
             className="mt-2 text-sm font-medium text-red-700"
@@ -210,14 +257,16 @@ function CartItem({ cart, item, index, errors, onQuantityChange }) {
         ) : null}
       </div>
       <div className="flex items-start justify-between gap-3 sm:block sm:text-right">
-        <strong className="text-lg text-zinc-950">{formatCurrency(unitPrice * item.quantity)}</strong>
+        <strong className="text-lg text-zinc-950">
+          {unitPrice === null ? "Sur soumission" : formatCurrency(unitPrice * item.quantity)}
+        </strong>
         <Button
           className="sm:ml-auto sm:mt-5"
           variant="ghost"
           size="icon"
           type="button"
           onClick={() => cart.remove(item.key)}
-          aria-label={`Retirer ${item.name} du panier`}
+          aria-label={`Retirer ${item.name} de ma sélection`}
         >
           <Trash2 className="h-4 w-4" />
         </Button>
@@ -226,16 +275,56 @@ function CartItem({ cart, item, index, errors, onQuantityChange }) {
   );
 }
 
+export function SelectionCommercialActions({ cart, orderEligible, quoteHash }) {
+  const hasQuotedItems = cart.items.some((item) => item.pricing === "quote");
+  const hasPricedItems = cart.items.some((item) => item.pricing === "known");
+  const isMixed = new Set(cart.items.map((item) => item.category)).size > 1;
+
+  return (
+    <aside className="border border-blush/60 bg-white p-5 shadow-sm">
+      <p className="eyebrow">Parcours disponibles</p>
+      <h2 className="mt-2 font-serif text-2xl font-semibold text-espresso">Comment poursuivre ?</h2>
+      <div className="mt-5 border-y border-blush/50 py-4">
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-sm font-semibold text-espresso/65">Sous-total indicatif tarifé</span>
+          <strong className="text-xl text-espresso">
+            {hasPricedItems ? formatCurrency(cart.totalCents) : "Aucun article tarifé"}
+          </strong>
+        </div>
+        {hasQuotedItems ? (
+          <p className="mt-2 text-xs leading-5 text-espresso/55">Les décorations sur soumission ne sont pas incluses dans ce sous-total.</p>
+        ) : null}
+      </div>
+
+      {quoteHash ? (
+        <Button className="mt-5 w-full" asChild>
+          <a href={quoteHash}><ClipboardList className="h-4 w-4" />Demander une soumission</a>
+        </Button>
+      ) : null}
+      {isMixed ? (
+        <div className="mt-5 border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950" role="status">
+          La sélection mixte est conservée, mais son envoi est temporairement indisponible : le contrat SAVIS ne confirme pas encore une demande Traiteur + Décoration sans Organisation.
+        </div>
+      ) : null}
+      {orderEligible ? (
+        <p className="mt-4 text-xs leading-5 text-espresso/55">Tous les articles sont aussi admissibles à la demande de commande ci-dessous.</p>
+      ) : (
+        <p className="mt-4 text-xs leading-5 text-espresso/55">La commande directe est réservée aux produits Dégustation tarifés.</p>
+      )}
+    </aside>
+  );
+}
+
 function OrderForm({ cart, customer, errors, onCustomerChange, onSubmit, status }) {
   return (
-    <aside className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm lg:sticky lg:top-28">
-      <p className="eyebrow">Finaliser</p>
+    <aside className="border border-blush/60 bg-white p-5 shadow-sm">
+      <p className="eyebrow">Demande de commande</p>
       <h2 className="mt-2 font-serif text-2xl font-bold text-zinc-950">
         Transmettre la demande
       </h2>
 
       <div className="my-6 flex items-center justify-between rounded-xl bg-zinc-100 px-4 py-4">
-        <span className="font-semibold text-zinc-600">Total estimé</span>
+        <span className="font-semibold text-zinc-600">Sous-total indicatif</span>
         <strong className="text-2xl text-zinc-950">{formatCurrency(cart.totalCents)}</strong>
       </div>
 
@@ -297,24 +386,24 @@ function OrderForm({ cart, customer, errors, onCustomerChange, onSubmit, status 
         </Button>
         {status === "validation-error" ? (
           <p className="text-sm font-semibold text-red-700" role="alert">
-            Certaines données ont été refusées. Votre panier est conservé; vérifiez-le avant de réessayer.
+            Certaines données ont été refusées. Votre sélection est conservée; vérifiez-la avant de réessayer.
           </p>
         ) : null}
         {status === "idempotency-error" ? (
           <p className="text-sm font-semibold text-red-700" role="alert">
-            Cette demande entre en conflit avec une tentative précédente. Votre panier est conservé; veuillez nous
+            Cette demande entre en conflit avec une tentative précédente. Votre sélection est conservée; veuillez nous
             contacter avant de la renvoyer.
           </p>
         ) : null}
         {status === "network-error" ? (
           <p className="text-sm font-semibold text-red-700" role="alert">
-            La réception n’a pas pu être confirmée. Votre panier et la référence de la demande sont conservés;
+            La réception n’a pas pu être confirmée. Votre sélection et la référence de la demande sont conservées;
             réessayez lorsque la connexion est rétablie.
           </p>
         ) : null}
         {status === "technical-error" ? (
           <p className="text-sm font-semibold text-red-700" role="alert">
-            Le service de réception est indisponible. Votre panier est conservé; veuillez réessayer plus tard.
+            Le service de réception est indisponible. Votre sélection est conservée; veuillez réessayer plus tard.
           </p>
         ) : null}
       </form>
@@ -329,15 +418,15 @@ function EmptyCart({ hasSubmitted }) {
         <ShoppingBag className="h-7 w-7" />
       </span>
       <h2 className="mt-5 font-serif text-3xl font-bold text-zinc-950">
-        {hasSubmitted ? "Demande reçue" : "Votre panier est vide"}
+        {hasSubmitted ? "Demande reçue" : "Votre sélection est vide"}
       </h2>
       <p className="mx-auto mt-3 max-w-md leading-7 text-zinc-600">
         {hasSubmitted
           ? "La réception technique est confirmée. La disponibilité, les prix et la commande restent à valider par notre équipe."
-          : "Ajoutez les produits qui vous intéressent, puis revenez ici pour envoyer votre commande."}
+          : "Ajoutez les produits ou les décorations qui vous intéressent, puis revenez ici pour choisir votre parcours."}
       </p>
       <Button asChild className="mt-6">
-        <a href="#/degustation">Voir les produits</a>
+        <a href="#/decoration">Explorer les catalogues</a>
       </Button>
     </div>
   );
@@ -371,6 +460,7 @@ function CartItemConfiguration({ item }) {
       {ingredientNotes.map((note) => (
         <span key={note}>{note}</span>
       ))}
+      {item.note ? <span>Préférences : {item.note}</span> : null}
     </div>
   );
 }

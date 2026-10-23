@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowRight, ClipboardList, RefreshCw, Sparkles } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CatalogProduct } from "../../../domain/catalog";
 import {
   decorationCategories,
@@ -14,8 +14,9 @@ import { useCatalogProducts } from "../useCatalogProducts";
 
 const DECORATION_CATEGORY = "decoration";
 
-export function DecorationCatalogPage() {
+export function DecorationCatalogPage({ cart = null }) {
   const { products, loading, error, retry } = useCatalogProducts(DECORATION_CATEGORY);
+  const [addedProductName, setAddedProductName] = useState("");
   const productGroups = useMemo(() => groupDecorationProducts(products), [products]);
 
   useEffect(() => {
@@ -43,6 +44,11 @@ export function DecorationCatalogPage() {
     ...productGroups.other,
   ];
 
+  function selectDecoration(product: CatalogProduct) {
+    cart?.addDecoration(product);
+    setAddedProductName(product.name);
+  }
+
   return (
     <>
       <DecorationHero />
@@ -63,6 +69,13 @@ export function DecorationCatalogPage() {
             />
           ) : null}
 
+          {addedProductName ? (
+            <div className="mx-auto mt-8 flex max-w-3xl flex-col gap-3 border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-950 sm:flex-row sm:items-center sm:justify-between" role="status">
+              <p className="text-sm font-semibold">{addedProductName} a été ajouté à votre sélection.</p>
+              <Button asChild size="sm"><a href="#/panier">Voir ma sélection</a></Button>
+            </div>
+          ) : null}
+
           <div className="mt-12">
             {loading ? (
               <DecorationCatalogLoadingState />
@@ -71,7 +84,10 @@ export function DecorationCatalogPage() {
             ) : products.length === 0 ? (
               <DecorationCatalogEmptyState />
             ) : (
-              <DecorationProductCollection products={orderedProducts} />
+              <DecorationProductCollection
+                products={orderedProducts}
+                onSelect={cart ? selectDecoration : undefined}
+              />
             )}
           </div>
         </div>
@@ -102,9 +118,9 @@ export function DecorationCatalogLoadingState() {
               <div className="h-4 w-full rounded bg-espresso/10" />
               <div className="h-4 w-5/6 rounded bg-espresso/10" />
             </div>
-            <div className="mt-7 flex gap-3">
-              <div className="h-11 w-36 rounded bg-wine/15" />
-              <div className="h-11 w-44 rounded bg-blush/35" />
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <div className="h-11 w-28 bg-wine/15" />
+              <div className="h-11 w-36 bg-blush/35" />
             </div>
           </div>
         </article>
@@ -307,11 +323,18 @@ function FloralGarland({ className = "", ...props }) {
   );
 }
 
-export function DecorationProductCollection({ products }: { products: CatalogProduct[] }) {
+export function DecorationProductCollection({
+  products,
+  onSelect,
+}: {
+  products: CatalogProduct[];
+  onSelect?: (product: CatalogProduct) => void;
+}) {
   if (products.length === 1) {
     return (
       <DecorationProductCard
         anchorId={getDecorationProductAnchor(products, 0)}
+        onSelect={onSelect}
         product={products[0]}
         featured
       />
@@ -326,6 +349,7 @@ export function DecorationProductCollection({ products }: { products: CatalogPro
         <DecorationProductCard
           anchorId={getDecorationProductAnchor(products, index)}
           key={product.id}
+          onSelect={onSelect}
           product={product}
         />
       ))}

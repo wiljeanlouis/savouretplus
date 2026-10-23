@@ -1,4 +1,5 @@
 import { isCatalogSlug, type CatalogProduct } from "./catalog";
+import type { CartItem } from "./cart";
 import type { QuoteItem, QuoteRequest } from "./commercialValidation";
 
 export const quoteRequestServices = {
@@ -15,6 +16,7 @@ export type RequestedService = (typeof quoteRequestServices)[QuoteService][numbe
 export type QuoteQuery = {
   service: QuoteService | "";
   itemSlug: string | null;
+  fromSelection: boolean;
 };
 
 export type QuoteFormValues = {
@@ -56,6 +58,7 @@ export function getQuoteQueryFromHash(hash: string): QuoteQuery {
   const params = new URLSearchParams(query);
   const service = params.get("service") || "";
   const itemSlug = params.get("item");
+  const fromSelection = params.get("source") === "selection";
 
   const validatedService = isQuoteService(service) ? service : "";
   const includesDecoration = quoteIncludesService(validatedService, "decoration");
@@ -68,6 +71,7 @@ export function getQuoteQueryFromHash(hash: string): QuoteQuery {
       isCatalogSlug(itemSlug)
         ? itemSlug
         : null,
+    fromSelection,
   };
 }
 
@@ -108,6 +112,48 @@ export function createDecorationQuoteItem(product: CatalogProduct) {
     },
     note: null,
   };
+}
+
+export function getSelectionQuoteService(items: CartItem[]): QuoteService | null {
+  const categories = new Set(items.map((item) => item.category));
+  if (categories.size !== 1) return null;
+  if (categories.has("decoration")) return "decoration";
+  if (categories.has("tasting")) return "traiteur";
+  return null;
+}
+
+export function createSelectionQuoteItem(item: CartItem) {
+  return {
+    offering_id: item.product_id,
+    name: item.name,
+    requested_quantity: item.quantity,
+    configuration: {
+      catalog_slug: item.catalog_slug,
+      category: item.category,
+      subcategory: item.subcategory,
+      product_type: item.product_type,
+      purchase_mode: item.purchase_mode
+        ? {
+            id: item.purchase_mode.id,
+            label: item.purchase_mode.label,
+            quantity: item.purchase_mode.quantity,
+            allocation_type: item.purchase_mode.allocation_type,
+          }
+        : null,
+      selection: item.selection,
+      allocation: item.allocation,
+      ingredients: item.ingredients,
+    },
+    note: item.note,
+  };
+}
+
+export function buildSelectionQuoteHash(items: CartItem[]) {
+  const service = getSelectionQuoteService(items);
+  if (!service) return null;
+
+  const params = new URLSearchParams({ service, source: "selection" });
+  return `#/soumission?${params.toString()}`;
 }
 
 export function buildQuoteRequest(

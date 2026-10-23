@@ -1,4 +1,5 @@
-import { ArrowLeft, ClipboardList, RefreshCw } from "lucide-react";
+import { ArrowLeft, Check, ClipboardList, Plus, RefreshCw } from "lucide-react";
+import { useState } from "react";
 import type { CatalogProduct } from "../../../domain/catalog";
 import { findPublishedDecoration, getDecorationCategory } from "../../../domain/decoration";
 import { Button } from "../../ui/button";
@@ -7,9 +8,10 @@ import { useCatalogProducts } from "../useCatalogProducts";
 
 type DecorationDetailPageProps = {
   slug: string | null;
+  cart?: { addDecoration: (product: CatalogProduct, options?: { quantity?: number; note?: string }) => void } | null;
 };
 
-export function DecorationDetailPage({ slug }: DecorationDetailPageProps) {
+export function DecorationDetailPage({ slug, cart = null }: DecorationDetailPageProps) {
   const { products, loading, error, retry } = useCatalogProducts("decoration");
   const product = findPublishedDecoration(products, slug);
 
@@ -20,7 +22,7 @@ export function DecorationDetailPage({ slug }: DecorationDetailPageProps) {
   if (error) return <DecorationDetailErrorState onRetry={retry} />;
   if (!product) return <DecorationDetailUnavailableState />;
 
-  return <DecorationDetailContent product={product} />;
+  return <DecorationDetailContent product={product} onSelect={cart?.addDecoration} />;
 }
 
 export function DecorationDetailLoadingState() {
@@ -43,7 +45,7 @@ export function DecorationDetailLoadingState() {
         <div className="h-4 w-40 rounded bg-blush/50" />
 
         <div className="mt-7 grid gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:items-start xl:gap-16">
-          <div className="aspect-[4/3] border border-blush/50 bg-blush/35 shadow-[0_18px_50px_rgba(53,42,43,0.05)]" />
+          <div className="h-[22rem] max-h-[38rem] border border-blush/50 bg-blush/35 shadow-[0_18px_50px_rgba(53,42,43,0.05)] sm:h-[30rem] lg:h-[34rem] xl:h-[38rem]" />
 
           <div className="pt-1 lg:sticky lg:top-28">
             <div className="h-3 w-28 rounded bg-wine/20" />
@@ -70,7 +72,13 @@ export function DecorationDetailLoadingState() {
   );
 }
 
-export function DecorationDetailContent({ product }: { product: CatalogProduct }) {
+export function DecorationDetailContent({
+  product,
+  onSelect,
+}: {
+  product: CatalogProduct;
+  onSelect?: (product: CatalogProduct, options?: { quantity?: number; note?: string }) => void;
+}) {
   const category = getDecorationCategory(product.subcategory);
 
   return (
@@ -93,11 +101,12 @@ export function DecorationDetailContent({ product }: { product: CatalogProduct }
 
         <div className="mt-7 grid gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:items-start xl:gap-16">
           <ProductGallery
-            className="aspect-[4/3] rounded-none border border-blush/50 bg-white shadow-[0_18px_50px_rgba(53,42,43,0.06)]"
+            className="min-h-[22rem] rounded-none border border-blush/50 bg-blush/15 shadow-[0_18px_50px_rgba(53,42,43,0.06)]"
             images={product.gallery}
             fallbackImage={product.image_url}
+            intrinsicHeight
             productName={product.name}
-            fit="cover"
+            fit="contain"
             priority
             rounded={false}
           />
@@ -118,16 +127,82 @@ export function DecorationDetailContent({ product }: { product: CatalogProduct }
               </div>
             ) : null}
 
-            <Button className="mt-7 w-full sm:w-auto" size="lg" asChild>
-              <a href={`#/soumission?service=decoration&item=${encodeURIComponent(product.slug)}`}>
-                <ClipboardList className="h-4 w-4" aria-hidden="true" />
-                Demander une soumission pour cet article
-              </a>
-            </Button>
+            {onSelect ? <DecorationSelectionForm product={product} onSelect={onSelect} /> : null}
+
+            <a
+              className="editorial-link mt-5"
+              href={`#/soumission?service=decoration&item=${encodeURIComponent(product.slug)}`}
+            >
+              <ClipboardList className="h-4 w-4" aria-hidden="true" />
+              Demander une soumission pour cet article
+            </a>
           </div>
         </div>
       </div>
     </article>
+  );
+}
+
+function DecorationSelectionForm({ product, onSelect }) {
+  const [quantity, setQuantity] = useState(1);
+  const [note, setNote] = useState("");
+  const [added, setAdded] = useState(false);
+
+  function addToSelection() {
+    const normalizedQuantity = Math.max(1, Math.min(1000, Math.trunc(Number(quantity) || 1)));
+    onSelect(product, { quantity: normalizedQuantity, note });
+    setQuantity(normalizedQuantity);
+    setAdded(true);
+  }
+
+  return (
+    <section className="mt-7 border border-blush/60 bg-white p-5" aria-labelledby="decoration-selection-title">
+      <h2 className="font-serif text-2xl font-semibold text-espresso" id="decoration-selection-title">
+        Ajouter à ma sélection
+      </h2>
+      <div className="mt-4 grid gap-4 sm:grid-cols-[7rem_1fr]">
+        <label className="grid gap-2 text-sm font-semibold text-espresso">
+          Quantité
+          <input
+            className="h-11 border border-blush bg-white px-3 text-center"
+            min="1"
+            max="1000"
+            step="1"
+            type="number"
+            value={quantity}
+            onChange={(event) => {
+              setQuantity(Number(event.target.value));
+              setAdded(false);
+            }}
+          />
+        </label>
+        <label className="grid gap-2 text-sm font-semibold text-espresso">
+          Préférences <span className="font-normal text-espresso/55">(facultatif)</span>
+          <textarea
+            className="min-h-20 border border-blush bg-white px-3 py-2 font-normal"
+            maxLength={500}
+            placeholder="Couleurs, thème ou précision utile"
+            value={note}
+            onChange={(event) => {
+              setNote(event.target.value);
+              setAdded(false);
+            }}
+          />
+        </label>
+      </div>
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <Button type="button" onClick={addToSelection}>
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          Ajouter à ma sélection
+        </Button>
+        {added ? (
+          <a className="editorial-link" href="#/panier">
+            <Check className="h-4 w-4" aria-hidden="true" />
+            Article ajouté — voir ma sélection
+          </a>
+        ) : null}
+      </div>
+    </section>
   );
 }
 

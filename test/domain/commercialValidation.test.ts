@@ -14,9 +14,12 @@ const validCartItem: CartItem = {
   key: "pate-four:unit",
   product_id: "20000000-0000-4000-8000-000000000001",
   bom_id: "bom-pate-four",
+  catalog_slug: "pate-au-four",
   name: "Pâté au four",
   category: "tasting",
+  subcategory: null,
   product_type: "standard",
+  pricing: "known",
   base_price_cents: 300,
   unit_price_cents: 300,
   purchase_mode: {
@@ -31,6 +34,7 @@ const validCartItem: CartItem = {
   ingredients: [],
   quantity: 2,
   image_url: "/pate.png",
+  note: null,
 };
 
 const validQuote: QuoteRequest = {
@@ -153,6 +157,25 @@ describe("customer order validation", () => {
       "items.0": expect.stringContaining("incomplet"),
       "items.0.quantity": expect.stringContaining("1 et 1000"),
     });
+  });
+
+  it("rejects quote-only decoration lines from the direct order contract", () => {
+    const result = validateCustomerOrder({
+      customer: { name: "Marie", phone: "514-555-1234" },
+      items: [{
+        ...validCartItem,
+        category: "decoration",
+        pricing: "quote",
+        base_price_cents: null,
+        unit_price_cents: null,
+        purchase_mode: null,
+      }],
+      totalCents: 0,
+    });
+
+    expect(result.errors["items.0.category"]).toContain("Dégustation");
+    expect(result.errors["items.0.price"]).toContain("prix");
+    expect(result.errors["items.0.purchase_mode"]).toContain("format");
   });
 
   it("requires the selected option for a single-choice configuration", () => {
@@ -278,7 +301,7 @@ describe("quote request validation", () => {
       ],
     });
 
-    expect(result.errors["items.0.requested_quantity"]).toContain("entier positif");
+    expect(result.errors["items.0.requested_quantity"]).toContain("entre 1 et 1000");
   });
 
   it("rejects an item without a supported catalog category", () => {

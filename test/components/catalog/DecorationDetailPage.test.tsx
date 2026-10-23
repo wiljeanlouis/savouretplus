@@ -34,12 +34,16 @@ describe("UI-2.1A decoration detail", () => {
     expect(html).toContain('aria-label="Chargement de la décoration"');
     expect(html).toContain('aria-busy="true"');
     expect(html).toContain("lg:grid-cols-[1.08fr_0.92fr]");
-    expect(html).toContain("aspect-[4/3]");
+    expect(html).toContain("h-[22rem]");
+    expect(html).toContain("max-h-[38rem]");
+    expect(html).not.toContain("aspect-[4/3]");
     expect(html).not.toContain("xl:grid-cols-3");
   });
 
   it("shows published information, gallery, breadcrumb, and quote action", () => {
-    const html = renderToStaticMarkup(<DecorationDetailContent product={product} />);
+    const html = renderToStaticMarkup(
+      <DecorationDetailContent product={product} onSelect={() => undefined} />,
+    );
 
     expect(html).toContain("Arche romantique");
     expect(html).toContain("Arche décorative");
@@ -48,7 +52,16 @@ describe("UI-2.1A decoration detail", () => {
     expect(html).toContain("item=arche-romantique");
     expect(html).toContain("Sur demande");
     expect(html).toContain("rounded-none");
+    expect(html).toContain("object-contain");
+    expect(html).toContain("h-auto w-full object-contain");
+    expect(html).not.toContain("max-h-[38rem]");
+    expect(html).not.toContain("object-cover");
     expect(html).not.toContain("rounded-xl");
+    expect(html).toContain("Ajouter à ma sélection");
+    expect(html).toContain("Préférences");
+    expect(html).toContain(
+      'class="editorial-link mt-5" href="#/soumission?service=decoration&amp;item=arche-romantique"',
+    );
   });
 
   it("does not invent a price or a commercial mode", () => {

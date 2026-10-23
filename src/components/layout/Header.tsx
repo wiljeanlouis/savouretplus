@@ -129,8 +129,9 @@ export function Header({ activeRoute, cartCount }) {
           >
             <a
               href="#/panier"
+              title="Ma sélection"
               aria-current={activeRoute === "panier" ? "page" : undefined}
-              aria-label={`Voir le panier, ${cartCount} article${cartCount > 1 ? "s" : ""}`}
+              aria-label={`Voir ma sélection, ${cartCount} article${cartCount > 1 ? "s" : ""}`}
               onClick={() => setOpen(false)}
             >
               <ShoppingBag className="h-[1.15rem] w-[1.15rem]" />

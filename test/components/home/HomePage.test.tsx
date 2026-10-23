@@ -49,7 +49,7 @@ describe("UI-1 header", () => {
     const html = renderToStaticMarkup(<Header activeRoute="accueil" cartCount={2} />);
 
     expect(html).toContain('href="#/panier"');
-    expect(html).toContain("Voir le panier, 2 articles");
+    expect(html).toContain("Voir ma sélection, 2 articles");
     expect(html).toContain('href="#/soumission"');
     expect(html).toContain("Demander une soumission");
     expect(html).toContain('aria-current="page"');
