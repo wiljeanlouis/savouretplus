@@ -92,6 +92,9 @@ function TastingIntro() {
           Découvrez quelques présentations possibles, puis envoyez les détails de votre activité pour compléter votre
           décor avec une offre traiteur adaptée.
         </p>
+        <p className="mt-3 text-sm leading-6 text-zinc-500">
+          Les prix affichés seront confirmés avec vous lors de la validation de la demande.
+        </p>
         <Button asChild className="mt-6 w-full sm:w-auto">
           <a href="#/soumission?service=traiteur">
             <ClipboardList className="h-4 w-4" />

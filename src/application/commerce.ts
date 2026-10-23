@@ -9,6 +9,10 @@ import {
   validateCustomerOrder,
   validateQuoteRequest,
 } from "../domain/commercialValidation";
+import {
+  completeCustomerOrderRequest,
+  prepareCustomerOrderRequest,
+} from "./customerOrderRequest";
 
 let gateway: CommerceGateway | null = null;
 
@@ -28,10 +32,14 @@ export function fetchCatalogProducts(category?: CatalogCategory) {
   return getGateway().fetchCatalogProducts(category);
 }
 
-export function createCustomerOrder(order: CustomerOrder) {
+export async function createCustomerOrder(order: CustomerOrder) {
   const result = validateCustomerOrder(order);
   if (!result.valid) throw new CommercialValidationError(result.errors);
-  return getGateway().createCustomerOrder(result.value);
+
+  const payload = await prepareCustomerOrderRequest(result.value);
+  const receptionId = await getGateway().receiveCustomerOrder(payload);
+  completeCustomerOrderRequest(payload.request_id);
+  return receptionId;
 }
 
 export function submitQuoteRequest(payload: QuoteRequest) {

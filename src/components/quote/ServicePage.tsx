@@ -76,7 +76,6 @@ export function ServicePage({ title, heroImage, images, heading, text }) {
       setForm(initialForm);
       setStatus("success");
     } catch (error) {
-      console.error(error);
       setStatus("error");
     }
   }

@@ -1,10 +1,11 @@
 import type { CatalogCategory, CatalogProduct } from "../../domain/catalog";
-import type { CustomerOrder, QuoteRequest } from "../../domain/commercialValidation";
+import type { QuoteRequest } from "../../domain/commercialValidation";
+import type { ReceiveCustomerOrderPayload } from "../../domain/customerOrderReception";
 
 export type { CustomerOrder, QuoteRequest } from "../../domain/commercialValidation";
 
 export interface CommerceGateway {
   fetchCatalogProducts(category?: CatalogCategory): Promise<CatalogProduct[]>;
-  createCustomerOrder(order: CustomerOrder): Promise<unknown>;
+  receiveCustomerOrder(payload: ReceiveCustomerOrderPayload): Promise<string>;
   submitQuoteRequest(payload: QuoteRequest): Promise<unknown>;
 }

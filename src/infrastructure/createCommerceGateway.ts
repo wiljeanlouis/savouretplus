@@ -7,10 +7,8 @@ export function createCommerceGateway(): CommerceGateway {
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   if (supabaseUrl && supabaseAnonKey) {
-    console.info("[SAVIS] Commerce gateway: Supabase", new URL(supabaseUrl).host);
     return new SupabaseCommerceGateway(supabaseUrl, supabaseAnonKey);
   }
 
-  console.info("[SAVIS] Commerce gateway: local fallback");
-  return new LocalCommerceGateway();
+  return new LocalCommerceGateway(!import.meta.env.PROD);
 }

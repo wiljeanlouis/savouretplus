@@ -1,4 +1,4 @@
-import type { ProductType, PurchaseMode } from "./catalog";
+import type { CatalogCategory, ProductType, PurchaseMode } from "./catalog";
 
 export type CartSelection = {
   choice_id: string;
@@ -16,6 +16,7 @@ export type CartIngredient = {
   id: string;
   name: string;
   quantity: number;
+  default_quantity: number;
   extra_price_cents: number;
 };
 
@@ -24,6 +25,7 @@ export type CartItem = {
   product_id: string;
   bom_id: string;
   name: string;
+  category: CatalogCategory;
   product_type: ProductType;
   base_price_cents: number;
   price_cents?: number;

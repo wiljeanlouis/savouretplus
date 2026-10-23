@@ -51,6 +51,10 @@ const canadianPhoneMessage =
   "Le numéro de téléphone est invalide. Saisissez un numéro canadien à 10 chiffres, par exemple 514-555-1234, ou un numéro international avec son indicatif.";
 const allowedPhoneCharacters = /^\+?[0-9().\-\s]+$/;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const maximumItemQuantity = 1000;
+const maximumEstimatedPriceCents = 100_000_000;
+const maximumEstimatedTotalCents = 2_147_483_647;
 
 export class CommercialValidationError extends Error {
   readonly errors: ValidationErrors;
@@ -94,15 +98,20 @@ export function validateCustomerContact(
   const email = typeof customer?.email === "string" ? customer.email.trim() : "";
 
   if (!name) errors[`${prefix}.name`] = "Le nom est requis.";
+  else if (name.length > 200) errors[`${prefix}.name`] = "Le nom est trop long.";
 
   const phone = normalizePhone(phoneInput);
   if (!phoneInput) {
     errors[`${prefix}.phone`] = "Le numéro de téléphone est requis.";
   } else if (!phone) {
     errors[`${prefix}.phone`] = canadianPhoneMessage;
+  } else if (phone.length > 50) {
+    errors[`${prefix}.phone`] = "Le numéro de téléphone est trop long.";
   }
 
-  if (email && !emailPattern.test(email)) {
+  if (email.length > 254) {
+    errors[`${prefix}.email`] = "Le courriel est trop long.";
+  } else if (email && !emailPattern.test(email)) {
     errors[`${prefix}.email`] = "Le courriel est invalide.";
   }
 
@@ -123,12 +132,31 @@ export function validateCustomerOrder(order: CustomerOrder): ValidationResult<Cu
 
   if (!Array.isArray(order?.items) || order.items.length === 0) {
     errors.items = "Le panier doit contenir au moins un article.";
+  } else if (order.items.length > 100) {
+    errors.items = "Le panier ne peut pas contenir plus de 100 articles distincts.";
   } else {
     order.items.forEach((item, index) => validateCartItem(item, index, errors));
   }
 
-  if (!isNonNegativeInteger(order?.totalCents)) {
+  if (
+    !isNonNegativeInteger(order?.totalCents) ||
+    order.totalCents > maximumEstimatedTotalCents
+  ) {
     errors.totalCents = "Le total de la commande est invalide.";
+  } else if (
+    Array.isArray(order?.items) &&
+    order.items.every(
+      (item) =>
+        isPositiveInteger(item?.quantity) && isNonNegativeInteger(item?.unit_price_cents),
+    ) &&
+    order.items.reduce((sum, item) => sum + item.quantity * item.unit_price_cents, 0) !==
+      order.totalCents
+  ) {
+    errors.totalCents = "Le total estimé ne correspond pas aux articles du panier.";
+  }
+
+  if ((order?.customer?.note?.length ?? 0) > 2000) {
+    errors["customer.note"] = "La note ne peut pas dépasser 2 000 caractères.";
   }
 
   if (hasErrors(errors) || !customerResult.valid) return invalid(errors);
@@ -221,15 +249,26 @@ export function validateQuoteRequest(request: QuoteRequest): ValidationResult<Qu
 function validateCartItem(item: CartItem, index: number, errors: ValidationErrors) {
   const prefix = `items.${index}`;
 
-  if (!hasText(item?.product_id) || !hasText(item?.bom_id) || !hasText(item?.name)) {
+  if (
+    !hasText(item?.product_id) ||
+    !uuidPattern.test(item.product_id) ||
+    !hasText(item?.bom_id) ||
+    !hasText(item?.name) ||
+    item.name.trim().length > 300
+  ) {
     errors[prefix] = "Un article du panier est incomplet.";
   }
-  if (!isPositiveInteger(item?.quantity)) {
-    errors[`${prefix}.quantity`] = "La quantité doit être un entier positif.";
+  if (!isPositiveInteger(item?.quantity) || item.quantity > maximumItemQuantity) {
+    errors[`${prefix}.quantity`] = `La quantité doit être un entier entre 1 et ${maximumItemQuantity}.`;
+  }
+  if (item?.category !== "tasting" && item?.category !== "decoration") {
+    errors[`${prefix}.category`] = "La catégorie de cet article est invalide.";
   }
   if (
     !isNonNegativeInteger(item?.unit_price_cents) ||
+    item.unit_price_cents > maximumEstimatedPriceCents ||
     !isNonNegativeInteger(item?.base_price_cents) ||
+    item.base_price_cents > maximumEstimatedPriceCents ||
     (item?.price_cents !== undefined && !isNonNegativeInteger(item.price_cents))
   ) {
     errors[`${prefix}.price`] = "Les données de prix de cet article sont invalides.";
@@ -237,7 +276,9 @@ function validateCartItem(item: CartItem, index: number, errors: ValidationError
   if (
     !hasText(item?.purchase_mode?.id) ||
     !isPositiveInteger(item.purchase_mode.quantity) ||
-    !isNonNegativeInteger(item.purchase_mode.price_cents)
+    item.purchase_mode.quantity > maximumItemQuantity ||
+    !isNonNegativeInteger(item.purchase_mode.price_cents) ||
+    item.purchase_mode.price_cents > maximumEstimatedPriceCents
   ) {
     errors[`${prefix}.purchase_mode`] = "Le format de cet article est invalide.";
   }
@@ -256,9 +297,13 @@ function validateCartItem(item: CartItem, index: number, errors: ValidationError
   ) {
     const allocationIsValid =
       Array.isArray(item.allocation) &&
+      item.allocation.length <= 100 &&
       item.allocation.length > 0 &&
       item.allocation.every(
-        (choice) => hasText(choice.choice_id) && isPositiveInteger(choice.quantity),
+        (choice) =>
+          hasText(choice.choice_id) &&
+          isPositiveInteger(choice.quantity) &&
+          choice.quantity <= maximumItemQuantity,
       ) &&
       item.allocation.reduce((sum, choice) => sum + choice.quantity, 0) ===
         item.purchase_mode.quantity;
@@ -270,12 +315,17 @@ function validateCartItem(item: CartItem, index: number, errors: ValidationError
   if (
     item?.product_type === "ingredient_customization" &&
     (!Array.isArray(item.ingredients) ||
+      item.ingredients.length > 100 ||
       item.ingredients.some(
         (ingredient) =>
           !hasText(ingredient.id) ||
           !Number.isInteger(ingredient.quantity) ||
           ingredient.quantity < 0 ||
-          !isNonNegativeInteger(ingredient.extra_price_cents),
+          ingredient.quantity > maximumItemQuantity ||
+          !isNonNegativeInteger(ingredient.default_quantity) ||
+          ingredient.default_quantity > maximumItemQuantity ||
+          !isNonNegativeInteger(ingredient.extra_price_cents) ||
+          ingredient.extra_price_cents > maximumEstimatedPriceCents,
       ))
   ) {
     errors[`${prefix}.ingredients`] = "La configuration des ingrédients est invalide.";

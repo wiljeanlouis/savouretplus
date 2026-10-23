@@ -32,7 +32,7 @@ describe("loadCatalogProducts", () => {
 
     configureCommerceGateway({
       fetchCatalogProducts,
-      createCustomerOrder: vi.fn(),
+      receiveCustomerOrder: vi.fn(),
       submitQuoteRequest: vi.fn(),
     });
 

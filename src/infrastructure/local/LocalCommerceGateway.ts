@@ -1,23 +1,27 @@
 import type {
   CommerceGateway,
-  CustomerOrder,
   QuoteRequest,
 } from "../../application/ports/CommerceGateway";
 import type { CatalogCategory } from "../../domain/catalog";
+import {
+  CustomerOrderReceptionError,
+  type ReceiveCustomerOrderPayload,
+} from "../../domain/customerOrderReception";
 import { fallbackCatalog } from "./fallbackCatalog";
 
 export class LocalCommerceGateway implements CommerceGateway {
+  constructor(private readonly exposeFallbackCatalog = true) {}
+
   async fetchCatalogProducts(category?: CatalogCategory) {
+    if (!this.exposeFallbackCatalog) return [];
     return category ? fallbackCatalog.filter((product) => product.category === category) : fallbackCatalog;
   }
 
-  async createCustomerOrder(order: CustomerOrder) {
-    console.info("[SAVIS] Backend non configuré. Commande simulée.", order);
-    return { id: `local-${Date.now()}` };
+  async receiveCustomerOrder(_payload: ReceiveCustomerOrderPayload): Promise<string> {
+    throw new CustomerOrderReceptionError("technical");
   }
 
-  async submitQuoteRequest(payload: QuoteRequest) {
-    console.info("[SAVIS] Backend non configuré. Soumission simulée.", payload);
-    return { id: `local-quote-${Date.now()}` };
+  async submitQuoteRequest(_payload: QuoteRequest) {
+    throw new Error("Le service de soumission n’est pas configuré.");
   }
 }

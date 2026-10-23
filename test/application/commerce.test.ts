@@ -13,12 +13,13 @@ describe("commerce application facade", () => {
 
   it("delegates catalog, order, and quote operations to the configured gateway", async () => {
     const commerce = await import("../../src/application/commerce");
-    const product = { id: "pate-four" };
+    const product = { id: "20000000-0000-4000-8000-000000000001" };
     const item = {
       key: "pate-four:unit",
-      product_id: "pate-four",
+      product_id: "20000000-0000-4000-8000-000000000001",
       bom_id: "bom-1",
       name: "Pâté au four",
+      category: "tasting",
       product_type: "standard",
       base_price_cents: 1200,
       unit_price_cents: 1200,
@@ -59,19 +60,49 @@ describe("commerce application facade", () => {
     };
     const gateway = {
       fetchCatalogProducts: vi.fn().mockResolvedValue([product]),
-      createCustomerOrder: vi.fn().mockResolvedValue({ accepted: true }),
+      receiveCustomerOrder: vi
+        .fn()
+        .mockResolvedValue("30000000-0000-4000-8000-000000000001"),
       submitQuoteRequest: vi.fn().mockResolvedValue({ id: "quote-1" }),
     };
 
     commerce.configureCommerceGateway(gateway);
 
     await expect(commerce.fetchCatalogProducts()).resolves.toEqual([product]);
-    await expect(commerce.createCustomerOrder(order)).resolves.toEqual({ accepted: true });
+    await expect(commerce.createCustomerOrder(order)).resolves.toBe(
+      "30000000-0000-4000-8000-000000000001",
+    );
     await expect(commerce.submitQuoteRequest(quote)).resolves.toEqual({ id: "quote-1" });
     expect(gateway.fetchCatalogProducts).toHaveBeenCalledOnce();
-    expect(gateway.createCustomerOrder).toHaveBeenCalledWith({
-      ...order,
-      customer: { ...order.customer, email: null, phone: "+15145551234" },
+    expect(gateway.receiveCustomerOrder).toHaveBeenCalledWith({
+      request_id: expect.stringMatching(/^[0-9a-f-]{36}$/),
+      customer_name: "Ada",
+      customer_phone: "+15145551234",
+      customer_email: null,
+      note: null,
+      total_cents: 1200,
+      items: [
+        {
+          key: "pate-four:unit",
+          product_id: "20000000-0000-4000-8000-000000000001",
+          name: "Pâté au four",
+          category: "tasting",
+          product_type: "standard",
+          image_url: "/pate.png",
+          quantity: 1,
+          base_price_cents: 1200,
+          unit_price_cents: 1200,
+          purchase_mode: {
+            id: "unit",
+            label: "Unité",
+            quantity: 1,
+            allocation_type: "none",
+          },
+          selection: null,
+          allocation: [],
+          ingredients: [],
+        },
+      ],
     });
     expect(gateway.submitQuoteRequest).toHaveBeenCalledWith({
       ...quote,
@@ -83,18 +114,18 @@ describe("commerce application facade", () => {
     const commerce = await import("../../src/application/commerce");
     const gateway = {
       fetchCatalogProducts: vi.fn(),
-      createCustomerOrder: vi.fn(),
+      receiveCustomerOrder: vi.fn(),
       submitQuoteRequest: vi.fn(),
     };
     commerce.configureCommerceGateway(gateway);
 
-    expect(() =>
+    await expect(
       commerce.createCustomerOrder({
         customer: { name: "Ada", phone: "514" },
         items: [],
         totalCents: 0,
       }),
-    ).toThrow("données commerciales sont invalides");
+    ).rejects.toThrow("données commerciales sont invalides");
     expect(() =>
       commerce.submitQuoteRequest({
         type: "QUOTE_REQUEST",
@@ -115,7 +146,7 @@ describe("commerce application facade", () => {
       }),
     ).toThrow("données commerciales sont invalides");
 
-    expect(gateway.createCustomerOrder).not.toHaveBeenCalled();
+    expect(gateway.receiveCustomerOrder).not.toHaveBeenCalled();
     expect(gateway.submitQuoteRequest).not.toHaveBeenCalled();
   });
 });

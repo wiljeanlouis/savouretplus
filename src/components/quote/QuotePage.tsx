@@ -273,7 +273,6 @@ export function QuotePage() {
         focusFirstInvalidField();
         return;
       }
-      console.error(error);
       setStatus("error");
     }
   }

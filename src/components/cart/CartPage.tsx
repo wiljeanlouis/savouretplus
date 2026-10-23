@@ -1,6 +1,7 @@
 import { ArrowLeft, Send, ShoppingBag, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createCustomerOrder } from "../../application/commerce";
+import { createCustomerOrderSubmitter } from "../../application/customerOrderRequest";
 import {
   CommercialValidationError,
   formatPhoneInput,
@@ -8,6 +9,7 @@ import {
   validateCustomerContact,
   validateCustomerOrder,
 } from "../../domain/commercialValidation";
+import { CustomerOrderReceptionError } from "../../domain/customerOrderReception";
 import { formatCurrency } from "../../shared/format";
 import { focusFirstInvalidField, ValidatedField } from "../forms/ValidatedField";
 import { BreadcrumbHero } from "../layout/BreadcrumbHero";
@@ -17,6 +19,10 @@ export function CartPage({ cart }) {
   const [customer, setCustomer] = useState({ name: "", phone: "", email: "", note: "" });
   const [status, setStatus] = useState("idle");
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const orderSubmitterRef = useRef(null);
+  if (!orderSubmitterRef.current) {
+    orderSubmitterRef.current = createCustomerOrderSubmitter(createCustomerOrder);
+  }
 
   function updateCustomer(field, value) {
     const nextCustomer = { ...customer, [field]: value };
@@ -58,7 +64,8 @@ export function CartPage({ cart }) {
     setErrors({});
     setStatus("saving");
     try {
-      await createCustomerOrder(validation.value);
+      const result = await orderSubmitterRef.current(validation.value);
+      if (!result.submitted) return;
       cart.clear();
       setCustomer({ name: "", phone: "", email: "", note: "" });
       setStatus("success");
@@ -69,8 +76,11 @@ export function CartPage({ cart }) {
         focusFirstInvalidField();
         return;
       }
-      console.error(error);
-      setStatus("error");
+      if (error instanceof CustomerOrderReceptionError) {
+        setStatus(`${error.kind}-error`);
+        return;
+      }
+      setStatus("technical-error");
     }
   }
 
@@ -79,7 +89,7 @@ export function CartPage({ cart }) {
       <BreadcrumbHero
         title="Votre panier"
         image="./images/catalog/tasting/breadcrumbs-bg-pates.png"
-        subtitle="Vérifiez vos articles, puis remplissez vos coordonnées pour envoyer votre commande."
+        subtitle="Vérifiez vos articles, puis transmettez votre demande de commande pour validation."
       />
 
       <section className="py-16 sm:py-20">
@@ -89,8 +99,11 @@ export function CartPage({ cart }) {
               className="mb-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-emerald-800"
               role="status"
             >
-              <p className="font-bold">Votre commande a bien été envoyée.</p>
-              <p className="mt-1 text-sm">Nous communiquerons avec vous pour confirmer les détails.</p>
+              <p className="font-bold">Votre demande de commande a bien été reçue.</p>
+              <p className="mt-1 text-sm">
+                Cette confirmation est uniquement technique. Nous communiquerons avec vous après la validation des
+                disponibilités, des prix et des détails de la demande.
+              </p>
             </div>
           ) : null}
 
@@ -172,6 +185,7 @@ function CartItem({ cart, item, index, errors, onQuantityChange }) {
           <input
             className="h-10 w-20 rounded-md border border-zinc-200 px-2 text-center font-bold aria-invalid:border-red-500 aria-invalid:ring-1 aria-invalid:ring-red-200"
             min="1"
+            max="1000"
             step="1"
             type="number"
             value={item.quantity}
@@ -216,7 +230,9 @@ function OrderForm({ cart, customer, errors, onCustomerChange, onSubmit, status 
   return (
     <aside className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm lg:sticky lg:top-28">
       <p className="eyebrow">Finaliser</p>
-      <h2 className="mt-2 font-serif text-2xl font-bold text-zinc-950">Soumettre la commande</h2>
+      <h2 className="mt-2 font-serif text-2xl font-bold text-zinc-950">
+        Transmettre la demande
+      </h2>
 
       <div className="my-6 flex items-center justify-between rounded-xl bg-zinc-100 px-4 py-4">
         <span className="font-semibold text-zinc-600">Total estimé</span>
@@ -277,11 +293,28 @@ function OrderForm({ cart, customer, errors, onCustomerChange, onSubmit, status 
 
         <Button className="mt-2 w-full" size="lg" type="submit" disabled={status === "saving"}>
           <Send className="h-5 w-5" />
-          {status === "saving" ? "Envoi..." : "Envoyer la commande"}
+          {status === "saving" ? "Envoi..." : "Envoyer la demande"}
         </Button>
-        {status === "error" ? (
+        {status === "validation-error" ? (
           <p className="text-sm font-semibold text-red-700" role="alert">
-            Impossible d’envoyer la commande. Veuillez réessayer.
+            Certaines données ont été refusées. Votre panier est conservé; vérifiez-le avant de réessayer.
+          </p>
+        ) : null}
+        {status === "idempotency-error" ? (
+          <p className="text-sm font-semibold text-red-700" role="alert">
+            Cette demande entre en conflit avec une tentative précédente. Votre panier est conservé; veuillez nous
+            contacter avant de la renvoyer.
+          </p>
+        ) : null}
+        {status === "network-error" ? (
+          <p className="text-sm font-semibold text-red-700" role="alert">
+            La réception n’a pas pu être confirmée. Votre panier et la référence de la demande sont conservés;
+            réessayez lorsque la connexion est rétablie.
+          </p>
+        ) : null}
+        {status === "technical-error" ? (
+          <p className="text-sm font-semibold text-red-700" role="alert">
+            Le service de réception est indisponible. Votre panier est conservé; veuillez réessayer plus tard.
           </p>
         ) : null}
       </form>
@@ -296,11 +329,11 @@ function EmptyCart({ hasSubmitted }) {
         <ShoppingBag className="h-7 w-7" />
       </span>
       <h2 className="mt-5 font-serif text-3xl font-bold text-zinc-950">
-        {hasSubmitted ? "Merci pour votre commande" : "Votre panier est vide"}
+        {hasSubmitted ? "Demande reçue" : "Votre panier est vide"}
       </h2>
       <p className="mx-auto mt-3 max-w-md leading-7 text-zinc-600">
         {hasSubmitted
-          ? "Vous pouvez retourner au catalogue si vous souhaitez découvrir nos autres produits."
+          ? "La réception technique est confirmée. La disponibilité, les prix et la commande restent à valider par notre équipe."
           : "Ajoutez les produits qui vous intéressent, puis revenez ici pour envoyer votre commande."}
       </p>
       <Button asChild className="mt-6">

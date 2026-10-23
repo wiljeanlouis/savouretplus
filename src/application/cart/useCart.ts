@@ -67,6 +67,7 @@ export function useCart() {
           product_id: product.id,
           bom_id: product.bom_id,
           name: product.name,
+          category: product.category,
           product_type: product.product_type,
           base_price_cents: basePriceCents,
           unit_price_cents: unitPriceCents,

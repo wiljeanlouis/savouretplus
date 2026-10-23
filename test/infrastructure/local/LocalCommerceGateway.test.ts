@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { fallbackCatalog } from "../../../src/infrastructure/local/fallbackCatalog";
 import { LocalCommerceGateway } from "../../../src/infrastructure/local/LocalCommerceGateway";
 
@@ -14,20 +14,44 @@ describe("LocalCommerceGateway", () => {
     expect(fallbackCatalog.every((product) => product.purchase_modes.length > 0)).toBe(true);
   });
 
-  it("simulates customer orders and quote requests", async () => {
-    vi.spyOn(console, "info").mockImplementation(() => undefined);
-    vi.spyOn(Date, "now").mockReturnValue(123456);
+  it("never simulates successful commercial writes", async () => {
     const gateway = new LocalCommerceGateway();
 
     await expect(
-      gateway.createCustomerOrder({
-        customer: { name: "Ada", phone: "514" },
+      gateway.receiveCustomerOrder({
+        request_id: "10000000-0000-4000-8000-000000000001",
+        customer_name: "Ada",
+        customer_phone: "+15145551234",
+        customer_email: null,
+        note: null,
         items: [],
-        totalCents: 1200,
+        total_cents: 1200,
       }),
-    ).resolves.toEqual({ id: "local-123456" });
-    await expect(gateway.submitQuoteRequest({ service: "traiteur" })).resolves.toEqual({
-      id: "local-quote-123456",
-    });
+    ).rejects.toMatchObject({ kind: "technical" });
+    await expect(
+      gateway.submitQuoteRequest({
+        type: "QUOTE_REQUEST",
+        customer: { name: "Ada", phone: "+15145551234" },
+        requested_services: ["traiteur"],
+        event_details: {
+          request_type: "traiteur",
+          event_type: "Fête",
+          event_date: "2027-01-01",
+          event_time: null,
+          event_address: "Montréal",
+          guest_count: 10,
+          budget: "À discuter",
+          allergies: null,
+          note: null,
+        },
+        items: [],
+      }),
+    ).rejects.toThrow("n’est pas configuré");
+  });
+
+  it("can hide fallback products when used by a production configuration", async () => {
+    const gateway = new LocalCommerceGateway(false);
+
+    await expect(gateway.fetchCatalogProducts()).resolves.toEqual([]);
   });
 });

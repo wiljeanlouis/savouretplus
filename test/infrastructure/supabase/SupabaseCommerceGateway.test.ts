@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fallbackCatalog } from "../../../src/infrastructure/local/fallbackCatalog";
 
 const supabaseMock = vi.hoisted(() => ({
   createClient: vi.fn(),
@@ -8,8 +7,38 @@ const supabaseMock = vi.hoisted(() => ({
   select: vi.fn(),
   eq: vi.fn(),
   order: vi.fn(),
-  insert: vi.fn(),
 }));
+
+const orderPayload = {
+  request_id: "10000000-0000-4000-8000-000000000001",
+  customer_name: "Ada",
+  customer_phone: "+15145551234",
+  customer_email: null,
+  note: null,
+  total_cents: 1200,
+  items: [
+    {
+      key: "pate:unit",
+      product_id: "20000000-0000-4000-8000-000000000001",
+      name: "Pâté",
+      category: "tasting" as const,
+      product_type: "standard" as const,
+      image_url: "/pate.png",
+      quantity: 1,
+      base_price_cents: 1200,
+      unit_price_cents: 1200,
+      purchase_mode: {
+        id: "unit",
+        label: "Unité",
+        quantity: 1,
+        allocation_type: "none" as const,
+      },
+      selection: null,
+      allocation: [],
+      ingredients: [],
+    },
+  ],
+};
 
 vi.mock("@supabase/supabase-js", () => ({
   createClient: supabaseMock.createClient,
@@ -191,8 +220,7 @@ describe("SupabaseCommerceGateway", () => {
     ]);
   });
 
-  it("falls back to the local catalog when Supabase returns an error", async () => {
-    vi.spyOn(console, "warn").mockImplementation(() => undefined);
+  it("does not expose fallback products when Supabase returns an error", async () => {
     supabaseMock.from.mockReturnValue({
       select: () => ({
         eq: () => ({
@@ -205,7 +233,9 @@ describe("SupabaseCommerceGateway", () => {
     );
     const gateway = new SupabaseCommerceGateway("https://example.supabase.co", "anon-key");
 
-    await expect(gateway.fetchCatalogProducts()).resolves.toBe(fallbackCatalog);
+    await expect(gateway.fetchCatalogProducts()).rejects.toThrow(
+      "Impossible de charger le catalogue publié",
+    );
   });
 
   it("keeps a successful empty catalog empty instead of showing unpublished fallback items", async () => {
@@ -224,34 +254,62 @@ describe("SupabaseCommerceGateway", () => {
     await expect(gateway.fetchCatalogProducts()).resolves.toEqual([]);
   });
 
-  it("inserts customer orders into Supabase", async () => {
-    supabaseMock.from.mockReturnValue({
-      insert: supabaseMock.insert,
+  it("receives customer-order requests through the exact SAVIS RPC contract", async () => {
+    supabaseMock.rpc.mockResolvedValue({
+      data: "30000000-0000-4000-8000-000000000001",
+      error: null,
+      status: 200,
     });
-    supabaseMock.insert.mockResolvedValue({ error: null });
     const { SupabaseCommerceGateway } = await import(
       "../../../src/infrastructure/supabase/SupabaseCommerceGateway"
     );
     const gateway = new SupabaseCommerceGateway("https://example.supabase.co", "anon-key");
 
-    await expect(
-      gateway.createCustomerOrder({
-        customer: { name: "Ada", phone: "514", email: "", note: "" },
-        items: [],
-        totalCents: 1200,
-      }),
-    ).resolves.toEqual({ accepted: true });
-    expect(supabaseMock.from).toHaveBeenCalledWith("customer_orders");
-    expect(supabaseMock.insert).toHaveBeenCalledWith({
-      customer_name: "Ada",
-      customer_phone: "514",
-      customer_email: null,
-      note: null,
-      status: "new",
-      source: "savouretplus",
-      total_cents: 1200,
-      items: [],
+    await expect(gateway.receiveCustomerOrder(orderPayload)).resolves.toBe(
+      "30000000-0000-4000-8000-000000000001",
+    );
+    expect(supabaseMock.from).not.toHaveBeenCalledWith("customer_orders");
+    expect(supabaseMock.rpc).toHaveBeenCalledWith("receive_customer_order", {
+      payload: orderPayload,
     });
+  });
+
+  it.each([
+    ["22023", "ORDER_INVALID_CONFIGURATION", "validation"],
+    ["23505", "ORDER_IDEMPOTENCY_CONFLICT", "idempotency"],
+  ])("maps controlled RPC error %s without retrying", async (code, message, kind) => {
+    supabaseMock.rpc.mockResolvedValue({ data: null, error: { code, message }, status: 400 });
+    const { SupabaseCommerceGateway } = await import(
+      "../../../src/infrastructure/supabase/SupabaseCommerceGateway"
+    );
+    const gateway = new SupabaseCommerceGateway("https://example.supabase.co", "anon-key");
+
+    await expect(gateway.receiveCustomerOrder(orderPayload)).rejects.toMatchObject({ kind, code });
+    expect(supabaseMock.rpc).toHaveBeenCalledOnce();
+  });
+
+  it("retries a network failure with the identical request payload", async () => {
+    vi.useFakeTimers();
+    supabaseMock.rpc
+      .mockResolvedValueOnce({ data: null, error: { code: "", message: "Failed to fetch" }, status: 0 })
+      .mockResolvedValueOnce({ data: null, error: { code: "", message: "Failed to fetch" }, status: 0 })
+      .mockResolvedValueOnce({
+        data: "30000000-0000-4000-8000-000000000001",
+        error: null,
+        status: 200,
+      });
+    const { SupabaseCommerceGateway } = await import(
+      "../../../src/infrastructure/supabase/SupabaseCommerceGateway"
+    );
+    const gateway = new SupabaseCommerceGateway("https://example.supabase.co", "anon-key");
+
+    const reception = gateway.receiveCustomerOrder(orderPayload);
+    await vi.runAllTimersAsync();
+
+    await expect(reception).resolves.toBe("30000000-0000-4000-8000-000000000001");
+    expect(supabaseMock.rpc).toHaveBeenCalledTimes(3);
+    expect(supabaseMock.rpc.mock.calls.every(([, args]) => args.payload === orderPayload)).toBe(true);
+    vi.useRealTimers();
   });
 
   it("submits quote requests through the Supabase RPC", async () => {

@@ -12,9 +12,10 @@ import {
 
 const validCartItem: CartItem = {
   key: "pate-four:unit",
-  product_id: "pate-four",
+  product_id: "20000000-0000-4000-8000-000000000001",
   bom_id: "bom-pate-four",
   name: "Pâté au four",
+  category: "tasting",
   product_type: "standard",
   base_price_cents: 300,
   unit_price_cents: 300,
@@ -125,9 +126,32 @@ describe("customer order validation", () => {
     });
 
     expect(result.errors).toMatchObject({
-      "items.0.quantity": expect.stringContaining("entier positif"),
+      "items.0.quantity": expect.stringContaining("entier entre"),
       "items.0.price": expect.stringContaining("prix"),
       totalCents: expect.stringContaining("total"),
+    });
+  });
+
+  it("rejects an estimated total that does not match the cart lines", () => {
+    const result = validateCustomerOrder({
+      customer: { name: "Marie", phone: "514-555-1234" },
+      items: [validCartItem],
+      totalCents: 599,
+    });
+
+    expect(result.errors.totalCents).toContain("ne correspond pas");
+  });
+
+  it("rejects a fallback identifier and a quantity above the RPC limit", () => {
+    const result = validateCustomerOrder({
+      customer: { name: "Marie", phone: "514-555-1234" },
+      items: [{ ...validCartItem, product_id: "pate-four", quantity: 1001 }],
+      totalCents: 600,
+    });
+
+    expect(result.errors).toMatchObject({
+      "items.0": expect.stringContaining("incomplet"),
+      "items.0.quantity": expect.stringContaining("1 et 1000"),
     });
   });
 
