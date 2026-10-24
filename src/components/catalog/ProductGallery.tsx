@@ -160,7 +160,7 @@ function GalleryImage({
           ? "h-full w-full object-cover transition duration-500 group-hover:scale-[1.025]"
           : intrinsicHeight
             ? "h-auto w-full object-contain drop-shadow-sm"
-          : "h-auto w-auto max-h-full max-w-full object-contain drop-shadow-sm"
+          : "h-full w-full object-contain drop-shadow-sm"
       }
       src={currentImage}
       alt={`${productName} — image ${safeIndex + 1} sur ${imageCount}`}

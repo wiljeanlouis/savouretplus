@@ -33,7 +33,7 @@ export function ContactPage() {
         className="overflow-hidden border-b border-blush/50 bg-ivory"
         aria-labelledby="contact-title"
       >
-        <div className="container-page relative py-14 sm:py-16 lg:py-20">
+        <div className="container-page relative py-9 text-center sm:py-10 lg:py-11">
           <div
             className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full border border-champagne/25"
             aria-hidden="true"
@@ -43,17 +43,17 @@ export function ContactPage() {
             aria-hidden="true"
           />
           <MessageCircle
-            className="relative h-9 w-9 stroke-[1.35] text-champagne"
+            className="relative mx-auto h-7 w-7 stroke-[1.35] text-champagne"
             aria-hidden="true"
           />
-          <p className="eyebrow relative mt-5">Échangeons</p>
+          <p className="eyebrow relative mt-3">Échangeons</p>
           <h1
-            className="relative mt-4 max-w-3xl font-serif text-5xl font-semibold leading-[0.92] tracking-[-0.035em] text-espresso sm:text-6xl lg:text-7xl"
+            className="relative mx-auto mt-2 max-w-3xl font-serif text-4xl font-semibold leading-[0.92] tracking-[-0.035em] text-espresso sm:text-5xl lg:text-6xl"
             id="contact-title"
           >
             Nous contacter
           </h1>
-          <p className="relative mt-6 max-w-2xl text-base leading-7 text-espresso/65 sm:text-lg">
+          <p className="relative mx-auto mt-3 max-w-2xl text-base leading-7 text-espresso/65 sm:text-lg">
             Une question, un projet ou une occasion à célébrer ? Notre équipe est à votre écoute.
           </p>
         </div>
@@ -75,15 +75,14 @@ export function ContactPage() {
         </div>
       </section>
 
-      <section className="border-y border-blush/50 bg-blush/15 py-14 sm:py-16" aria-labelledby="contact-quote-title">
-        <div className="container-page flex flex-col gap-7 lg:flex-row lg:items-center lg:justify-between">
+      <section className="border-y border-blush/50 bg-blush/15 py-10 sm:py-12" aria-labelledby="contact-quote-title">
+        <div className="container-page flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-3xl">
-            <p className="eyebrow">Votre projet</p>
-            <h2 className="mt-3 font-serif text-4xl font-semibold text-espresso sm:text-5xl" id="contact-quote-title">
+            <h2 className="font-serif text-3xl font-semibold text-espresso sm:text-4xl" id="contact-quote-title">
               Vous préparez un événement ?
             </h2>
-            <p className="mt-4 max-w-2xl leading-7 text-espresso/65">
-              Décrivez-nous votre projet de décoration, de service traiteur ou d'organisation. Nous préparerons une proposition adaptée à vos besoins.
+            <p className="mt-3 max-w-2xl leading-7 text-espresso/65">
+              Présentez-nous votre projet pour recevoir une proposition adaptée.
             </p>
           </div>
           <Button asChild className="shrink-0" size="lg">

@@ -14,7 +14,6 @@ import { isSelectionOrderEligible } from "../../domain/cart";
 import { buildSelectionQuoteHash } from "../../domain/quote";
 import { formatCurrency } from "../../shared/format";
 import { focusFirstInvalidField, ValidatedField } from "../forms/ValidatedField";
-import { BreadcrumbHero } from "../layout/BreadcrumbHero";
 import { Button } from "../ui/button";
 
 export function CartPage({ cart }) {
@@ -91,17 +90,38 @@ export function CartPage({ cart }) {
 
   return (
     <>
-      <BreadcrumbHero
-        title="Ma sélection"
-        image="./images/catalog/tasting/breadcrumbs-bg-pates.png"
-        subtitle="Regroupez vos gourmandises et vos inspirations décoratives, puis choisissez le parcours adapté."
-      />
+      <section className="overflow-hidden border-b border-blush/50 bg-ivory" aria-labelledby="selection-title">
+        <div className="container-page relative py-9 text-center sm:py-10 lg:py-11">
+          <div
+            className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full border border-champagne/25"
+            aria-hidden="true"
+          />
+          <div
+            className="pointer-events-none absolute -bottom-20 left-1/3 h-48 w-48 rounded-full bg-blush/20 blur-3xl"
+            aria-hidden="true"
+          />
+          <ShoppingBag
+            className="relative mx-auto h-7 w-7 stroke-[1.35] text-champagne"
+            aria-hidden="true"
+          />
+          <p className="eyebrow relative mt-3">Votre projet</p>
+          <h1
+            className="relative mx-auto mt-2 max-w-3xl font-serif text-4xl font-semibold leading-[0.92] tracking-[-0.035em] text-espresso sm:text-5xl lg:text-6xl"
+            id="selection-title"
+          >
+            Ma sélection
+          </h1>
+          <p className="relative mx-auto mt-3 max-w-2xl text-base leading-7 text-espresso/65 sm:text-lg">
+            Retrouvez vos spécialités et vos inspirations décoratives pour préparer votre commande ou votre demande de soumission.
+          </p>
+        </div>
+      </section>
 
-      <section className="py-16 sm:py-20">
+      <section className="bg-white py-14 sm:py-16 lg:py-20">
         <div className="container-page">
           {status === "success" ? (
             <div
-              className="mb-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-emerald-800"
+              className="mb-8 border border-emerald-200 bg-emerald-50 p-5 text-emerald-800"
               role="status"
             >
               <p className="font-bold">Votre demande de commande a bien été reçue.</p>
@@ -118,7 +138,7 @@ export function CartPage({ cart }) {
                 <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
                   <div>
                     <p className="eyebrow">Ma sélection</p>
-                    <h2 className="mt-2 font-serif text-3xl font-bold text-zinc-950">
+                    <h2 className="mt-2 font-serif text-3xl font-semibold text-espresso">
                       {cart.count} article{cart.count > 1 ? "s" : ""}
                     </h2>
                   </div>
@@ -199,26 +219,32 @@ function CartItem({ cart, item, index, errors, onQuantityChange }) {
 
   return (
     <article
-      className="grid gap-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:grid-cols-[7rem_minmax(0,1fr)_auto] sm:p-5"
+      className="grid gap-4 border border-blush/60 bg-ivory/45 p-4 shadow-[0_14px_38px_rgba(53,42,43,0.05)] sm:grid-cols-[7rem_minmax(0,1fr)_auto] sm:p-5"
       aria-invalid={Boolean(configurationError)}
       aria-describedby={configurationError ? `cart-item-${index}-configuration-error` : undefined}
       tabIndex={configurationError ? -1 : undefined}
     >
       <img
-        className={`h-28 w-full bg-rose-50 sm:w-28 ${item.category === "decoration" ? "object-cover" : "object-contain"}`}
+        className={`h-28 w-full bg-blush/20 sm:w-28 ${item.category === "decoration" ? "object-cover" : "object-contain"}`}
         src={item.image_url}
         alt=""
       />
       <div>
-        <h3 className="font-serif text-xl font-bold text-zinc-950">{item.name}</h3>
+        <h3 className="font-serif text-xl font-semibold text-espresso">{item.name}</h3>
         <CartItemConfiguration item={item} />
-        <p className="mt-3 text-sm font-bold text-wine">
-          {unitPrice === null ? "Tarification sur soumission" : `${formatCurrency(unitPrice)} l’unité`}
+        <p className="mt-3 text-sm font-semibold text-wine">
+          {unitPrice === null ? (
+            "Prix sur soumission"
+          ) : (
+            <>
+              Prix unitaire : <strong>{formatCurrency(unitPrice)}</strong>
+            </>
+          )}
         </p>
-        <label className="mt-4 flex w-fit items-center gap-3 text-sm font-semibold text-zinc-700">
+        <label className="mt-4 flex w-fit items-center gap-3 text-sm font-semibold text-espresso/75">
           Quantité
           <input
-            className="h-10 w-20 rounded-md border border-zinc-200 px-2 text-center font-bold aria-invalid:border-red-500 aria-invalid:ring-1 aria-invalid:ring-red-200"
+            className="h-10 w-20 rounded-none border border-blush bg-white px-2 text-center font-bold aria-invalid:border-red-500 aria-invalid:ring-1 aria-invalid:ring-red-200"
             min="1"
             max="1000"
             step="1"
@@ -235,7 +261,7 @@ function CartItem({ cart, item, index, errors, onQuantityChange }) {
           </p>
         ) : null}
         {item.category === "decoration" ? (
-          <label className="mt-4 grid gap-2 text-sm font-semibold text-zinc-700">
+          <label className="mt-4 grid gap-2 text-sm font-semibold text-espresso/75">
             Préférences
             <textarea
               className="min-h-20 border border-blush bg-white px-3 py-2 font-normal"
@@ -257,7 +283,10 @@ function CartItem({ cart, item, index, errors, onQuantityChange }) {
         ) : null}
       </div>
       <div className="flex items-start justify-between gap-3 sm:block sm:text-right">
-        <strong className="text-lg text-zinc-950">
+        <span className="sr-only">
+          {unitPrice === null ? "Prix de cet article" : "Total pour cet article"}
+        </span>
+        <strong className="text-lg text-espresso">
           {unitPrice === null ? "Sur soumission" : formatCurrency(unitPrice * item.quantity)}
         </strong>
         <Button
@@ -285,7 +314,7 @@ export function SelectionCommercialActions({ cart, orderEligible, quoteHash }) {
       <p className="eyebrow">Parcours disponibles</p>
       <h2 className="mt-2 font-serif text-2xl font-semibold text-espresso">Comment poursuivre ?</h2>
       <div className="mt-5 border-y border-blush/50 py-4">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center sm:gap-4">
           <span className="text-sm font-semibold text-espresso/65">Sous-total indicatif tarifé</span>
           <strong className="text-xl text-espresso">
             {hasPricedItems ? formatCurrency(cart.totalCents) : "Aucun article tarifé"}
@@ -319,16 +348,16 @@ function OrderForm({ cart, customer, errors, onCustomerChange, onSubmit, status 
   return (
     <aside className="border border-blush/60 bg-white p-5 shadow-sm">
       <p className="eyebrow">Demande de commande</p>
-      <h2 className="mt-2 font-serif text-2xl font-bold text-zinc-950">
+      <h2 className="mt-2 font-serif text-2xl font-semibold text-espresso">
         Transmettre la demande
       </h2>
 
-      <div className="my-6 flex items-center justify-between rounded-xl bg-zinc-100 px-4 py-4">
-        <span className="font-semibold text-zinc-600">Sous-total indicatif</span>
-        <strong className="text-2xl text-zinc-950">{formatCurrency(cart.totalCents)}</strong>
+      <div className="my-6 flex flex-col items-start justify-between gap-1 border border-blush/50 bg-ivory px-4 py-4 sm:flex-row sm:items-center sm:gap-4">
+        <span className="font-semibold text-espresso/65">Sous-total indicatif</span>
+        <strong className="text-2xl text-espresso">{formatCurrency(cart.totalCents)}</strong>
       </div>
 
-      <form className="grid gap-4" onSubmit={onSubmit} noValidate>
+      <form className="quote-form grid gap-4" onSubmit={onSubmit} noValidate>
         <ValidatedField id="order-name" label="Nom" required error={errors["customer.name"]}>
           <input
             autoComplete="name"
@@ -413,21 +442,26 @@ function OrderForm({ cart, customer, errors, onCustomerChange, onSubmit, status 
 
 function EmptyCart({ hasSubmitted }) {
   return (
-    <div className="mx-auto max-w-2xl rounded-3xl border border-dashed border-rose-200 bg-white p-10 text-center shadow-sm sm:p-14">
-      <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-rose-50 text-rose-600">
+    <div className="mx-auto max-w-2xl border border-blush/60 bg-ivory/45 p-8 text-center shadow-[0_18px_50px_rgba(53,42,43,0.06)] sm:p-12">
+      <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-blush/25 text-wine">
         <ShoppingBag className="h-7 w-7" />
       </span>
-      <h2 className="mt-5 font-serif text-3xl font-bold text-zinc-950">
+      <h2 className="mt-5 font-serif text-3xl font-semibold text-espresso">
         {hasSubmitted ? "Demande reçue" : "Votre sélection est vide"}
       </h2>
-      <p className="mx-auto mt-3 max-w-md leading-7 text-zinc-600">
+      <p className="mx-auto mt-3 max-w-md leading-7 text-espresso/65">
         {hasSubmitted
           ? "La réception technique est confirmée. La disponibilité, les prix et la commande restent à valider par notre équipe."
           : "Ajoutez les produits ou les décorations qui vous intéressent, puis revenez ici pour choisir votre parcours."}
       </p>
-      <Button asChild className="mt-6">
-        <a href="#/decoration">Explorer les catalogues</a>
-      </Button>
+      <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+        <Button asChild>
+          <a href="#/decoration">Découvrir les décorations</a>
+        </Button>
+        <Button asChild variant="outline">
+          <a href="#/degustation">Découvrir les spécialités</a>
+        </Button>
+      </div>
     </div>
   );
 }
@@ -449,7 +483,7 @@ function CartItemConfiguration({ item }) {
     .filter(Boolean);
 
   return (
-    <div className="mt-2 grid gap-1 text-sm text-zinc-500">
+    <div className="mt-2 grid gap-1 text-sm text-espresso/55">
       {item.purchase_mode ? <span>Format : {item.purchase_mode.label}</span> : null}
       {item.selection ? (
         <span>

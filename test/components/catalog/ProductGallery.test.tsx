@@ -16,6 +16,7 @@ describe("ProductGallery", () => {
     expect(html).toContain("Pâté maison — image 1 sur 2");
     expect(html).toContain("Image suivante de Pâté maison");
     expect(html.match(/Voir l&#x27;image/g)).toHaveLength(2);
+    expect(html).toContain("h-full w-full object-contain");
   });
 
   it("shows an elegant replacement when no image is available", () => {

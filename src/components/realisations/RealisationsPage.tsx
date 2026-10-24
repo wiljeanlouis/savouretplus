@@ -27,15 +27,15 @@ export function RealisationsPage({ realisations = publishedRealisations }: Reali
   return (
     <>
       <section className="overflow-hidden border-b border-blush/50 bg-ivory" aria-labelledby="realisations-title">
-        <div className="container-page relative py-16 text-center sm:py-20 lg:py-24">
+        <div className="container-page relative py-9 text-center sm:py-10 lg:py-11">
           <div className="pointer-events-none absolute left-8 top-8 h-40 w-40 rounded-full border border-champagne/25" aria-hidden="true" />
           <div className="pointer-events-none absolute -bottom-20 right-4 h-56 w-56 rounded-full bg-blush/20 blur-3xl" aria-hidden="true" />
-          <Camera className="relative mx-auto h-9 w-9 stroke-[1.35] text-champagne" aria-hidden="true" />
-          <p className="eyebrow relative mt-5">Portfolio SavouretPlus</p>
-          <h1 className="relative mx-auto mt-4 max-w-4xl font-serif text-5xl font-semibold leading-[0.92] tracking-[-0.035em] text-espresso sm:text-6xl lg:text-7xl" id="realisations-title">
+          <Camera className="relative mx-auto h-7 w-7 stroke-[1.35] text-champagne" aria-hidden="true" />
+          <p className="eyebrow relative mt-3">Portfolio SavouretPlus</p>
+          <h1 className="relative mx-auto mt-2 max-w-4xl font-serif text-4xl font-semibold leading-[0.92] tracking-[-0.035em] text-espresso sm:text-5xl lg:text-6xl" id="realisations-title">
             Nos réalisations
           </h1>
-          <p className="relative mx-auto mt-6 max-w-2xl text-base leading-7 text-espresso/65 sm:text-lg">
+          <p className="relative mx-auto mt-3 max-w-2xl text-base leading-7 text-espresso/65 sm:text-lg">
             Découvrez une sélection de décors et de tables gourmandes réalisés par SavouretPlus.
           </p>
         </div>
@@ -61,7 +61,7 @@ export function RealisationsPage({ realisations = publishedRealisations }: Reali
                 </div>
               ) : null}
 
-              <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3" aria-live="polite">
+              <div className="grid items-start gap-6 sm:grid-cols-2 xl:grid-cols-3" aria-live="polite">
                 {visibleRealisations.map((realisation) => (
                   <RealisationCard realisation={realisation} key={realisation.id} />
                 ))}

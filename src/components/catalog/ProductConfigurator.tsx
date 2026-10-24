@@ -15,8 +15,12 @@ import {
 
 export function ProductConfigurator({ product, open, onClose, onAdd }) {
   const panelRef = useRef(null);
-  const [selectedPurchaseModeId, setSelectedPurchaseModeId] = useState("");
-  const [selectedChoiceId, setSelectedChoiceId] = useState("");
+  const [selectedPurchaseModeId, setSelectedPurchaseModeId] = useState(
+    () => product?.purchase_modes?.[0]?.id || "",
+  );
+  const [selectedChoiceId, setSelectedChoiceId] = useState(
+    () => product?.choice_group?.options?.[0]?.id || "",
+  );
   const [choiceAllocation, setChoiceAllocation] = useState({});
   const [ingredientQuantities, setIngredientQuantities] = useState({});
   const [quantity, setQuantity] = useState(1);
@@ -263,8 +267,8 @@ function PurchaseModeSelector({ modes, selectedModeId, onSelect }) {
           <button
             className={`rounded-xl border p-3 text-left transition ${
               selectedModeId === mode.id
-                ? "border-rose-600 bg-rose-50 text-rose-800"
-                : "border-zinc-200 bg-white text-zinc-700 hover:border-rose-300"
+                ? "border-wine bg-blush/25 text-wine"
+                : "border-blush/70 bg-white text-espresso/75 hover:border-wine/45"
             }`}
             key={mode.id}
             type="button"
@@ -294,8 +298,8 @@ function ChoiceGroup({ group, selectedChoiceId, onSelect }) {
           <button
             className={`rounded-full border px-2.5 py-1 text-xs font-semibold transition ${
               selectedChoiceId === option.id
-                ? "border-rose-600 bg-rose-600 text-white"
-                : "border-zinc-200 bg-white text-zinc-700 hover:border-rose-300"
+                ? "border-wine bg-wine text-white"
+                : "border-blush/70 bg-white text-espresso/75 hover:border-wine/45"
             }`}
             key={option.id}
             type="button"
