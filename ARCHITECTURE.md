@@ -20,7 +20,7 @@ Navigateur du client
   -> application React statique
   -> Supabase
        -> vue publique du catalogue
-       -> table de commandes
+       -> RPC de réception des commandes
        -> RPC de soumission
   -> SAVIS et ses processus opérationnels
 ```
@@ -42,7 +42,7 @@ src/
     HomePage.tsx         Accueil et carrousel des offres
     CatalogPage.tsx      Catalogue et configuration des produits
     QuotePage.tsx        Demande de soumission centralisée
-    CartDrawer.tsx       Panier et envoi de commande
+    CartPage.tsx         Page du panier et envoi de commande
     Header.tsx           Navigation principale
     Footer.tsx           Pied de page
   application/
@@ -128,9 +128,9 @@ Les commandes directes et les demandes de soumission sont deux parcours différe
 Commande directe
   -> catalogue
   -> configuration d'un produit
-  -> panier
+  -> Ma sélection
   -> coordonnées du client
-  -> customer_orders
+  -> RPC receive_customer_order
 
 Demande de soumission
   -> choix des services
@@ -189,13 +189,18 @@ Supabase peut exposer des champs partiels ou historiques. `normalizeCatalogProdu
 
 - tableaux vides pour les options absentes;
 - catégorie et libellés par défaut;
+- sous-catégorie reconnue ou `null` pour une valeur absente/inconnue;
 - prix convertis en nombres;
 - galerie et image de secours;
 - inférence du `product_type` si nécessaire.
 
 La normalisation doit rester dans l'adaptateur Supabase, pas dans les composants visuels.
 
-## Panier et commandes
+Les sous-catégories utilisent le type général `ProductSubcategory`. La
+taxonomie Décoration associe leurs codes publics aux sections de la page; les
+produits non associés sont conservés dans la section « Autres décorations ».
+
+## Sélection et commandes
 
 ### Supabase local
 
@@ -209,25 +214,29 @@ seulement `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY` dans son
 
 ### État local
 
-`useCart()` est l'unique propriétaire de l'état du panier. Il expose :
+`useCart()` est l'unique propriétaire de « Ma sélection ». Il expose :
 
 ```text
 items
 count
 totalCents
 add(...)
+addDecoration(...)
 updateQuantity(...)
+updateNote(...)
 remove(...)
 clear()
 ```
 
-Le panier est conservé dans `localStorage` sous la clé :
+La sélection est conservée dans `localStorage` sous la clé :
 
 ```text
 savouretplus-cart
 ```
 
-Il survit donc à un rafraîchissement du navigateur, mais il n'est pas synchronisé entre appareils et n'est pas un panier authentifié.
+Le format courant est une enveloppe versionnée `version: 2`. La lecture accepte aussi
+l'ancien tableau brut et le migre à la prochaine écriture. La sélection survit donc à
+un rafraîchissement, mais elle n'est ni synchronisée entre appareils ni authentifiée.
 
 ### Identité d'un item
 
@@ -239,28 +248,29 @@ La clé d'un item combine :
 - la répartition du bundle;
 - les quantités d'ingrédients.
 
+Pour une décoration, la clé combine l'identifiant publié et les préférences. Une
+modification de préférence recalcule cette clé et fusionne les lignes devenues
+identiques. Les décorations conservent un prix `null` et le statut « sur soumission ».
+
 Deux configurations identiques fusionnent leurs quantités. Deux configurations différentes restent des lignes distinctes.
 
 ### Envoi d'une commande
 
-`CartDrawer` collecte les coordonnées du client puis appelle `createCustomerOrder()`.
+L'accès « Ma sélection » mène à la route historique `#/panier`. `CartPage` regroupe
+les lignes par catégorie. La commande directe et son formulaire ne sont proposés que
+si toutes les lignes sont des produits Dégustation tarifés et configurés.
 
-Écriture Supabase :
+Réception Supabase :
 
 ```text
-table: customer_orders
-
-customer_name
-customer_phone
-customer_email
-note
-status = "new"
-source = "savouretplus"
-total_cents
-items
+RPC receive_customer_order(payload jsonb)
+  -> request_id UUID persistant pour une demande identique
+  -> coordonnées, total estimatif et items configurés
 ```
 
-Le total affiché est calculé côté client. SAVIS doit traiter les données reçues comme une demande client et appliquer les validations métier nécessaires avant exécution.
+Le total affiché est calculé côté client et reste estimatif. SAVIS valide les données,
+les prix et les disponibilités. La sélection n'est effacée qu'après confirmation
+technique de réception; elle reste intacte après une erreur ou un timeout.
 
 ## Soumission centralisée
 
@@ -325,6 +335,16 @@ submit_quote_request(payload jsonb)
 
 Le frontend conserve un seul point d'entrée `submitQuoteRequest()` pour toutes les demandes, peu importe la combinaison de services sélectionnée.
 
+Une sélection mono-catégorie peut alimenter ce formulaire avec plusieurs lignes :
+
+- Dégustation utilise `request_type = traiteur`;
+- Décoration utilise `request_type = decoration`.
+
+Le contrat connu ne définit pas `request_type = traiteur-decoration` sans le service
+Organisation. Une sélection mixte est donc conservée et présentée, mais son envoi est
+bloqué explicitement. Le frontend n'utilise pas
+`traiteur-decoration-organisation`, car cela ajouterait un service non demandé.
+
 ## Intégration Supabase et SAVIS
 
 Le frontend ne communique pas directement avec les services internes de SAVIS. Supabase constitue sa frontière publique.
@@ -352,7 +372,8 @@ VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
 ```
 
-Sans ces deux variables, les lectures utilisent le catalogue de secours et les écritures sont simulées dans la console.
+Sans ces deux variables, les lectures utilisent le catalogue de secours en développement
+et les écritures échouent explicitement, sans confirmation simulée.
 
 ## Interface et expérience utilisateur
 
@@ -427,12 +448,8 @@ npm run typecheck
 npm run build
 ```
 
-Le projet ne possède pas encore de suite de tests automatisés ni de linter configuré. Les prochaines améliorations recommandées sont :
+Le projet possède une suite Vitest, mais aucun linter n'est encore configuré. Les prochaines améliorations recommandées sont :
 
-- tests unitaires pour la tarification et les clés du panier;
-- tests de composants pour les configurateurs produits;
-- tests des variantes de soumission;
-- tests d'intégration de l'adaptateur Supabase;
 - ESLint et formatage automatisé;
 - activation progressive de `strict: true`.
 

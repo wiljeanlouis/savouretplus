@@ -4,6 +4,10 @@ export type ProductType =
   | "single_choice_bundle"
   | "ingredient_customization";
 
+export type CatalogCategory = "tasting" | "decoration";
+
+export type ProductSubcategory = "decorative-arch" | "centerpiece" | "birthday" | "wedding";
+
 export type ChoiceOption = {
   id: string;
   name: string;
@@ -20,7 +24,7 @@ export type PurchaseMode = {
   label: string;
   quantity: number;
   price_cents: number;
-  allocation_type: "single_choice" | "choice_allocation";
+  allocation_type: "none"|"single_choice" | "choice_allocation";
 };
 
 export type IngredientOption = {
@@ -37,7 +41,8 @@ export type CatalogProduct = {
   bom_id: string;
   slug: string;
   name: string;
-  category: string;
+  category: CatalogCategory;
+  subcategory: ProductSubcategory | null;
   description: string;
   product_type: ProductType;
   purchase_modes: PurchaseMode[];
@@ -47,3 +52,9 @@ export type CatalogProduct = {
   gallery: string[];
   availability_note: string;
 };
+
+const catalogSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+export function isCatalogSlug(value: string): boolean {
+  return value.length <= 120 && catalogSlugPattern.test(value);
+}

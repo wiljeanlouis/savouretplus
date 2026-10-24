@@ -2,21 +2,27 @@
 @import "tw-animate-css";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Playfair Display", ui-serif, Georgia, serif;
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Cormorant Garamond", ui-serif, Georgia, serif;
+  --font-signature: "Allura", "Brush Script MT", cursive;
+  --color-ivory: #faf6f2;
+  --color-blush: #e8c9c6;
+  --color-wine: #873f4b;
+  --color-champagne: #d9bd96;
+  --color-espresso: #352a2b;
 }
 
 @layer base {
   * {
-    @apply border-zinc-200;
+    @apply border-blush/60;
   }
 
   html {
-    @apply scroll-smooth bg-zinc-50 text-zinc-950;
+    @apply scroll-smooth bg-ivory text-espresso;
   }
 
   body {
-    @apply min-w-80 bg-[radial-gradient(circle_at_top_left,rgba(244,63,94,0.10),transparent_34rem),linear-gradient(180deg,#fff_0%,#fafafa_42%,#f4f4f5_100%)] font-sans antialiased;
+    @apply min-w-80 bg-ivory font-sans antialiased;
   }
 
   a {
@@ -26,18 +32,59 @@
   img {
     @apply max-w-full;
   }
+
+  ::selection {
+    @apply bg-blush text-espresso;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-4 outline-wine;
+  }
 }
 
 @layer components {
   .container-page {
-    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+    @apply mx-auto w-full max-w-[90rem] px-5 sm:px-8 lg:px-12;
   }
 
   .eyebrow {
-    @apply text-xs font-bold uppercase tracking-[0.2em] text-rose-600;
+    @apply text-[0.68rem] font-bold uppercase tracking-[0.34em] text-wine;
   }
 
   .glass-panel {
-    @apply border border-white/60 bg-white/80 shadow-xl shadow-rose-950/5 backdrop-blur;
+    @apply border border-white/60 bg-white/80 shadow-xl shadow-espresso/5 backdrop-blur;
+  }
+
+  .section-title {
+    @apply font-serif text-4xl font-semibold leading-[0.95] tracking-[-0.025em] text-espresso sm:text-5xl lg:text-6xl;
+  }
+
+  .editorial-link {
+    @apply inline-flex items-center gap-2 text-sm font-bold text-wine underline-offset-4 transition hover:text-espresso hover:underline;
+  }
+
+  .surface-card {
+    @apply border border-blush/50 bg-white shadow-[0_18px_50px_rgba(53,42,43,0.06)];
+  }
+
+  .quote-form input,
+  .quote-form select,
+  .quote-form textarea {
+    @apply rounded-none border-blush text-espresso transition focus:border-wine focus:outline-none focus:ring-1 focus:ring-wine/25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -1,19 +1,50 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type {
   CommerceGateway,
-  CustomerOrder,
-  QuoteRequest,
 } from "../../application/ports/CommerceGateway";
-import { fallbackCatalog } from "../local/fallbackCatalog";
 import type {
+  CatalogCategory,
   CatalogProduct,
   ChoiceGroup,
+  ProductSubcategory,
   IngredientOption,
   ProductType,
   PurchaseMode,
 } from "../../domain/catalog";
+import {
+  CustomerOrderReceptionError,
+  type ReceiveCustomerOrderPayload,
+} from "../../domain/customerOrderReception";
+import {
+  QuoteRequestReceptionError,
+  type ReceiveQuoteRequestPayload,
+} from "../../domain/quoteReception";
+
+const receptionValidationErrors = new Set([
+  "ORDER_INVALID_PAYLOAD",
+  "ORDER_INVALID_REQUEST_ID",
+  "ORDER_INVALID_PRODUCT_ID",
+  "ORDER_INVALID_CATEGORY_OR_TYPE",
+  "ORDER_INVALID_CONFIGURATION",
+  "ORDER_LIMIT_EXCEEDED",
+  "ORDER_ESTIMATE_MISMATCH",
+]);
+const maximumReceptionAttempts = 3;
+const quoteValidationErrors = new Set([
+  "QUOTE_INVALID_PAYLOAD",
+  "QUOTE_INVALID_REQUEST_ID",
+  "QUOTE_INVALID_CUSTOMER",
+  "QUOTE_INVALID_EVENT",
+  "QUOTE_INVALID_ITEM",
+  "QUOTE_INVALID_CONFIGURATION",
+  "QUOTE_INCOHERENT_SERVICES",
+  "QUOTE_UNKNOWN_OFFERING",
+  "QUOTE_LIMIT_EXCEEDED",
+]);
 
 type SupabaseCatalogProduct = Partial<CatalogProduct> & {
+  bom_id?: string;
+  category?: string;
   purchase_modes?: Partial<PurchaseMode>[];
   choice_group?: Partial<ChoiceGroup> & { options?: ChoiceGroup["options"] };
   ingredient_options?: Partial<IngredientOption>[];
@@ -31,61 +62,151 @@ export class SupabaseCommerceGateway implements CommerceGateway {
     });
   }
 
-  async fetchCatalogProducts(): Promise<CatalogProduct[]> {
-    const { data, error } = await this.client
+  async fetchCatalogProducts(category?: CatalogCategory): Promise<CatalogProduct[]> {
+    let query = this.client
       .from("published_catalog_products")
       .select("*")
       .eq("is_available", true)
       .order("display_order", { ascending: true });
 
+    if (category) {
+      query = query.eq("category", category);
+    }
+
+    const { data, error } = await query;
+
     if (error) {
-      console.warn("[SAVIS] Impossible de charger le catalogue Supabase.", error);
-      return fallbackCatalog;
+      throw new Error("Impossible de charger le catalogue publié.");
     }
 
     const products = data?.map(normalizeCatalogProduct).filter(isCatalogProduct) ?? [];
 
-    return products.length ? products : fallbackCatalog;
+    return products;
   }
 
-  async createCustomerOrder(order: CustomerOrder) {
-    const { error } = await this.client.from("customer_orders").insert({
-      customer_name: order.customer.name,
-      customer_phone: order.customer.phone,
-      customer_email: order.customer.email || null,
-      note: order.customer.note || null,
-      status: "new",
-      source: "savouretplus",
-      total_cents: order.totalCents,
-      items: order.items,
-    });
+  async receiveCustomerOrder(payload: ReceiveCustomerOrderPayload): Promise<string> {
+    for (let attempt = 0; attempt < maximumReceptionAttempts; attempt += 1) {
+      try {
+        const { data, error, status } = await this.client.rpc("receive_customer_order", {
+          payload,
+        });
 
-    if (error) throw error;
-    return { accepted: true };
+        if (!error) {
+          if (typeof data !== "string") {
+            throw new CustomerOrderReceptionError("technical");
+          }
+          return data;
+        }
+
+        const mappedError = mapReceptionError(error);
+        if (
+          (mappedError.kind === "network" || status >= 500) &&
+          attempt < maximumReceptionAttempts - 1
+        ) {
+          await waitBeforeRetry(attempt);
+          continue;
+        }
+        throw status >= 500
+          ? new CustomerOrderReceptionError("network", error.code || null)
+          : mappedError;
+      } catch (error) {
+        if (error instanceof CustomerOrderReceptionError) throw error;
+        if (attempt < maximumReceptionAttempts - 1) {
+          await waitBeforeRetry(attempt);
+          continue;
+        }
+        throw new CustomerOrderReceptionError("network");
+      }
+    }
+
+    throw new CustomerOrderReceptionError("network");
   }
 
-  async submitQuoteRequest(payload: QuoteRequest) {
-    const { data, error } = await this.client.rpc("submit_quote_request", {
-      payload,
-    });
+  async submitQuoteRequest(payload: ReceiveQuoteRequestPayload): Promise<string> {
+    for (let attempt = 0; attempt < maximumReceptionAttempts; attempt += 1) {
+      try {
+        const { data, error, status } = await this.client.rpc("submit_quote_request", {
+          payload,
+        });
 
-    if (error) throw error;
-    return data;
+        if (!error) {
+          if (typeof data !== "string") throw new QuoteRequestReceptionError("technical");
+          return data;
+        }
+
+        const mappedError = mapQuoteReceptionError(error);
+        if (
+          (mappedError.kind === "network" || status >= 500) &&
+          attempt < maximumReceptionAttempts - 1
+        ) {
+          await waitBeforeRetry(attempt);
+          continue;
+        }
+        throw status >= 500
+          ? new QuoteRequestReceptionError("network", error.code || null)
+          : mappedError;
+      } catch (error) {
+        if (error instanceof QuoteRequestReceptionError) throw error;
+        if (attempt < maximumReceptionAttempts - 1) {
+          await waitBeforeRetry(attempt);
+          continue;
+        }
+        throw new QuoteRequestReceptionError("network");
+      }
+    }
+
+    throw new QuoteRequestReceptionError("network");
   }
+}
+
+function mapQuoteReceptionError(error: { code?: string; message?: string }) {
+  const code = error.code || null;
+  const message = error.message || "";
+
+  if (code === "23505" && message === "QUOTE_IDEMPOTENCY_CONFLICT") {
+    return new QuoteRequestReceptionError("idempotency", code);
+  }
+  if (code === "22023" && quoteValidationErrors.has(message)) {
+    return new QuoteRequestReceptionError("validation", code);
+  }
+  if (!code) return new QuoteRequestReceptionError("network");
+  return new QuoteRequestReceptionError("technical", code);
+}
+
+function mapReceptionError(error: { code?: string; message?: string }) {
+  const code = error.code || null;
+  const message = error.message || "";
+
+  if (code === "23505" && message === "ORDER_IDEMPOTENCY_CONFLICT") {
+    return new CustomerOrderReceptionError("idempotency", code);
+  }
+  if (code === "22023" && receptionValidationErrors.has(message)) {
+    return new CustomerOrderReceptionError("validation", code);
+  }
+  if (!code) return new CustomerOrderReceptionError("network");
+  return new CustomerOrderReceptionError("technical", code);
+}
+
+function waitBeforeRetry(attempt: number) {
+  return new Promise((resolve) => globalThis.setTimeout(resolve, 250 * 2 ** attempt));
 }
 
 function normalizeCatalogProduct(product: SupabaseCatalogProduct): CatalogProduct | null {
   const purchaseModes = normalizePurchaseModes(product);
-  if (!purchaseModes.length) return null;
+  const category = normalizeCategory(product.category);
+  if (category === "tasting" && !purchaseModes.length) return null;
+  if (!product.id || !product.slug || !product.name) return null;
 
-  const imageUrl = product.image_url || "./images/offer-1-340x243.png";
+  const imageUrl =
+    product.image_url || (category === "tasting" ? "./images/home/offer-1-340x243.png" : "");
 
   return {
     id: product.id,
-    bom_id: product.bom_id,
+    bom_id: product.bom_id || product.id,
     slug: product.slug,
     name: product.name,
-    category: product.category || "degustation",
+    category,
+    subcategory: normalizeProductSubcategory(product.subcategory),
     description: product.description || "",
     product_type: product.product_type || inferProductType(product),
     purchase_modes: purchaseModes,
@@ -93,8 +214,30 @@ function normalizeCatalogProduct(product: SupabaseCatalogProduct): CatalogProduc
     ingredient_options: normalizeIngredientOptions(product.ingredient_options),
     image_url: imageUrl,
     gallery: product.gallery?.length ? product.gallery : [imageUrl],
-    availability_note: product.availability_note || "Disponible sur commande",
+    availability_note:
+      product.availability_note || (category === "tasting" ? "Disponible sur commande" : ""),
   };
+}
+
+function normalizeProductSubcategory(
+  subcategory?: ProductSubcategory | null,
+): ProductSubcategory | null {
+  if (
+    subcategory === "decorative-arch" ||
+    subcategory === "centerpiece" ||
+    subcategory === "birthday" ||
+    subcategory === "wedding"
+  ) {
+    return subcategory;
+  }
+
+  return null;
+}
+
+function normalizeCategory(category?: string): CatalogCategory {
+  if (category === "decoration") return "decoration";
+  if (category === "tasting") return "tasting";
+  return "tasting";
 }
 
 function isCatalogProduct(product: CatalogProduct | null): product is CatalogProduct {

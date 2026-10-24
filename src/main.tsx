@@ -1,52 +1,67 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
-import { Header } from "./components/Header";
-import { Footer } from "./components/Footer";
-import { HomePage } from "./components/HomePage";
-import { CatalogPage } from "./components/CatalogPage";
-import { QuotePage } from "./components/QuotePage";
-import { ContactPage } from "./components/ContactPage";
-import { CartDrawer } from "./components/CartDrawer";
+import { CartPage } from "./components/cart/CartPage";
+import { DecorationCatalogPage } from "./components/catalog/page/DecorationCatalogPage";
+import { DecorationDetailPage } from "./components/catalog/page/DecorationDetailPage";
+import { TastingCatalogPage } from "./components/catalog/page/TastingCatalogPage";
+import { ContactPage } from "./components/contact/ContactPage";
+import { HomePage } from "./components/home/HomePage";
+import { Footer } from "./components/layout/Footer";
+import { Header } from "./components/layout/Header";
+import { QuotePage } from "./components/quote/QuotePage";
+import { RealisationDetailPage } from "./components/realisations/RealisationDetailPage";
+import { RealisationsPage } from "./components/realisations/RealisationsPage";
+import { ServicesPage } from "./components/services/ServicesPage";
 import { useCart } from "./application/cart/useCart";
 import { configureCommerceGateway } from "./application/commerce";
 import { createCommerceGateway } from "./infrastructure/createCommerceGateway";
+import {
+  useHashNavigation,
+  useNavigationScroll,
+} from "./application/navigation/useHashNavigation";
 
 configureCommerceGateway(createCommerceGateway());
 
 const pages = {
   accueil: HomePage,
-  degustation: CatalogPage,
+  decoration: DecorationCatalogPage,
+  "decoration-detail": DecorationDetailPage,
+  degustation: TastingCatalogPage,
+  services: ServicesPage,
+  realisations: RealisationsPage,
+  "realisation-detail": RealisationDetailPage,
+  panier: CartPage,
   soumission: QuotePage,
   contact: ContactPage,
 };
 
-function normalizeRoute() {
-  const hash = window.location.hash.replace(/^#\/?/, "");
-  const route = hash.split("?")[0];
-  return pages[route] ? route : "accueil";
-}
-
 function App() {
-  const [route, setRoute] = useState(normalizeRoute);
-  const [cartOpen, setCartOpen] = useState(false);
+  const navigation = useHashNavigation();
+  const { route, decorationSlug, realisationSlug } = navigation.location;
   const cart = useCart();
   const Page = useMemo(() => pages[route] || HomePage, [route]);
-
-  useEffect(() => {
-    const onHashChange = () => setRoute(normalizeRoute());
-    window.addEventListener("hashchange", onHashChange);
-    return () => window.removeEventListener("hashchange", onHashChange);
-  }, []);
+  useNavigationScroll(navigation);
 
   return (
     <div className="min-h-svh">
-      <Header activeRoute={route} cartCount={cart.count} onCartOpen={() => setCartOpen(true)} />
+      <Header
+        activeRoute={
+          route === "decoration-detail"
+            ? "decoration"
+            : route === "realisation-detail"
+              ? "realisations"
+              : route
+        }
+        cartCount={cart.count}
+      />
       <main>
-        <Page cart={cart} onCartOpen={() => setCartOpen(true)} />
+        <Page
+          cart={cart}
+          slug={route === "realisation-detail" ? realisationSlug : decorationSlug}
+        />
       </main>
       <Footer />
-      <CartDrawer cart={cart} open={cartOpen} onClose={() => setCartOpen(false)} />
     </div>
   );
 }
