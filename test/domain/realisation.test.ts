@@ -41,7 +41,7 @@ describe("realisations manifest", () => {
   it("publishes the new authentic galleries with their complete image sets", () => {
     const ceremony = realisationsManifest.find(({ slug }) => slug === "decor-colonne-ballons-rouge-blanc");
     const birthday = realisationsManifest.find(({ slug }) => slug === "cadeaux-personnalises-anniversaire");
-    const chips = realisationsManifest.find(({ slug }) => slug === "chips-personnalisees");
+    const chips = realisationsManifest.find(({ slug }) => slug === "chips-personnalises");
     const drinks = realisationsManifest.find(({ slug }) => slug === "boissons-personnalisees");
     const bouquet = realisationsManifest.find(({ slug }) => slug === "bouquet-cadeau-billets-bleu-or");
 
