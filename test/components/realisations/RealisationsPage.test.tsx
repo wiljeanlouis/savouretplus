@@ -28,8 +28,14 @@ describe("UI-2.4 realisations portfolio", () => {
     expect(html).toContain("Nos réalisations");
     expect(html).toContain("Décoration");
     expect(html).toContain("Service traiteur");
-    expect(html).toContain('href="#/realisations/decor-rouge-noir"');
+    expect(html).toContain('href="#/realisations/decor-arche-ballon-rouge-noir"');
+    expect(html).toContain('href="#/realisations/decor-colonne-ballons-rouge-blanc"');
+    expect(html).toContain('href="#/realisations/cadeaux-personnalises-anniversaire"');
+    expect(html).toContain('href="#/realisations/chips-personnalisees"');
+    expect(html).toContain('href="#/realisations/boissons-personnalisees"');
+    expect(html).toContain('href="#/realisations/bouquet-cadeau-billets-bleu-or"');
     expect(html).toContain('aria-label="Filtrer les réalisations"');
+    expect(html).toContain("py-9 text-center sm:py-10 lg:py-11");
   });
 
   it("renders a useful global empty state", () => {
@@ -38,6 +44,22 @@ describe("UI-2.4 realisations portfolio", () => {
 
     expect(html).toContain("De nouvelles réalisations seront ajoutées prochainement");
     expect(emptyHtml).toContain('href="#/soumission"');
+  });
+
+  it.each([1, 2, 3, 4, 7])("keeps a stable grid for %i published realisations", (count) => {
+    const realisations = Array.from({ length: count }, (_, index) => ({
+      ...multiImageRealisation,
+      id: `realisation-${index}`,
+      slug: `realisation-${index}`,
+      title: `Réalisation ${index + 1}`,
+      displayOrder: index + 1,
+    }));
+    const html = renderToStaticMarkup(<RealisationsPage realisations={realisations} />);
+
+    expect(html.match(/Voir la réalisation/g)).toHaveLength(count);
+    expect(html).toContain("items-start");
+    expect(html).toContain("sm:grid-cols-2");
+    expect(html).toContain("xl:grid-cols-3");
   });
 
   it("supports a multi-image detail gallery and preserves its quote preselection", () => {

@@ -21,7 +21,7 @@ const decoration: CartItem = {
   ingredients: [],
   quantity: 1,
   image_url: "/decor.png",
-  note: null,
+  note: "Rose poudré",
 };
 
 const tasting: CartItem = {
@@ -38,6 +38,31 @@ const tasting: CartItem = {
 };
 
 describe("selection commercial actions", () => {
+  it("offers both catalogues from an empty selection", () => {
+    const html = renderToStaticMarkup(
+      <CartPage
+        cart={{
+          items: [],
+          totalCents: 0,
+          count: 0,
+          updateQuantity: vi.fn(),
+          updateNote: vi.fn(),
+          remove: vi.fn(),
+          clear: vi.fn(),
+        }}
+      />,
+    );
+
+    expect(html).toContain("Votre sélection est vide");
+    expect(html).toContain("Découvrir les décorations");
+    expect(html).toContain('href="#/decoration"');
+    expect(html).toContain("Découvrir les spécialités");
+    expect(html).toContain('href="#/degustation"');
+    expect(html).toContain("py-9 text-center sm:py-10 lg:py-11");
+    expect(html).toContain("relative mx-auto h-7 w-7");
+    expect(html).not.toContain("border-dashed");
+  });
+
   it("presents quote-only decoration without a zero price", () => {
     const html = renderToStaticMarkup(
       <SelectionCommercialActions
@@ -84,10 +109,78 @@ describe("selection commercial actions", () => {
     expect(html).toContain("Ma sélection");
     expect(html).toContain("Décoration");
     expect(html).toContain("Dégustation");
-    expect(html).toContain("Tarification sur soumission");
+    expect(html).toContain("Prix sur soumission");
+    expect(html).toContain("Préférences : Rose poudré");
     expect(html).toContain("Demander une soumission");
     expect(html).toContain("service=traiteur-decoration&amp;source=selection");
     expect(html).not.toContain("temporairement indisponible");
     expect(html).not.toContain("Transmettre la demande");
+    expect(html).not.toContain("0,00 $");
+  });
+
+  it("keeps tasting quantities, configuration, price and direct-order actions", () => {
+    const configuredTasting: CartItem = {
+      ...tasting,
+      quantity: 2,
+      selection: {
+        choice_id: "beef",
+        choice_name: "Bœuf",
+        group_label: "Saveur",
+      },
+      ingredients: [
+        {
+          id: "pepper",
+          name: "Piment",
+          quantity: 0,
+          default_quantity: 1,
+          extra_price_cents: 0,
+        },
+      ],
+    };
+    const html = renderToStaticMarkup(
+      <CartPage
+        cart={{
+          items: [configuredTasting],
+          totalCents: 600,
+          count: 2,
+          updateQuantity: vi.fn(),
+          updateNote: vi.fn(),
+          remove: vi.fn(),
+          clear: vi.fn(),
+        }}
+      />,
+    );
+
+    expect(html).toContain('value="2"');
+    expect(html).toContain("Format : Unité");
+    expect(html).toContain("Saveur : Bœuf");
+    expect(html).toContain("Sans Piment");
+    expect(html).toContain("6,00 $");
+    expect(html).toContain("Transmettre la demande");
+    expect(html).toContain("Envoyer la demande");
+    expect(html).toContain("Demander une soumission");
+  });
+
+  it("keeps a decoration-only selection on the quote path without a fictional price", () => {
+    const html = renderToStaticMarkup(
+      <CartPage
+        cart={{
+          items: [decoration],
+          totalCents: 0,
+          count: 1,
+          updateQuantity: vi.fn(),
+          updateNote: vi.fn(),
+          remove: vi.fn(),
+          clear: vi.fn(),
+        }}
+      />,
+    );
+
+    expect(html).toContain("Prix sur soumission");
+    expect(html).toContain("Sur soumission");
+    expect(html).toContain("Préférences : Rose poudré");
+    expect(html).toContain("Demander une soumission");
+    expect(html).not.toContain("Transmettre la demande");
+    expect(html).not.toContain("0,00");
   });
 });
