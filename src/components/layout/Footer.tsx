@@ -5,7 +5,7 @@ const footerLinks = [
   ["#/decoration", "Décoration"],
   ["#/degustation", "Dégustation"],
   ["#/services", "Nos services"],
-  ["#/accueil?section=realisations", "Réalisations"],
+  ["#/realisations", "Réalisations"],
   ["#/contact", "Contact"],
 ];
 

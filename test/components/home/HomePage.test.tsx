@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { HomePage } from "../../../src/components/home/HomePage";
-import { realizationPhotos } from "../../../src/components/home/homeContent";
+import { publishedRealisations } from "../../../src/content/realisations";
 import { Header } from "../../../src/components/layout/Header";
 
 describe("UI-1 home page", () => {
@@ -19,7 +19,7 @@ describe("UI-1 home page", () => {
     expect(html).toContain('href="#/degustation"');
     expect(html).toContain('href="#/soumission"');
     expect(html).toContain('href="#/services"');
-    expect(html).not.toContain('href="#/realisations"');
+    expect(html).toContain('href="#/realisations"');
   });
 
   it("loads the hero image eagerly and defers below-the-fold photographs", () => {
@@ -35,8 +35,8 @@ describe("UI-1 home page", () => {
   });
 
   it("keeps stock ambiance photography outside the SavouretPlus realization gallery", () => {
-    expect(realizationPhotos).toHaveLength(4);
-    expect(realizationPhotos.every((photo) => !photo.src.includes("ambient-"))).toBe(true);
+    expect(publishedRealisations).toHaveLength(4);
+    expect(publishedRealisations.every((realisation) => !realisation.coverImage.includes("ambient-"))).toBe(true);
 
     const html = renderToStaticMarkup(<HomePage />);
     expect(html).toContain("col-span-2 row-span-2");
@@ -54,7 +54,7 @@ describe("UI-1 header", () => {
     expect(html).toContain('href="#/services"');
     expect(html).toContain("Demander une soumission");
     expect(html).toContain('aria-current="page"');
-    expect(html).toContain("section=realisations");
+    expect(html).toContain('href="#/realisations"');
   });
 
   it("separates service discovery from the direct quote action", () => {

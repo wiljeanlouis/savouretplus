@@ -23,7 +23,7 @@ export function HeroSection() {
                 </a>
               </Button>
               <Button asChild variant="outline" size="lg">
-                <a href="#/accueil?section=realisations">Voir nos réalisations</a>
+                <a href="#/realisations">Voir nos réalisations</a>
               </Button>
             </div>
           </div>

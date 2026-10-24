@@ -10,6 +10,8 @@ import { HomePage } from "./components/home/HomePage";
 import { Footer } from "./components/layout/Footer";
 import { Header } from "./components/layout/Header";
 import { QuotePage } from "./components/quote/QuotePage";
+import { RealisationDetailPage } from "./components/realisations/RealisationDetailPage";
+import { RealisationsPage } from "./components/realisations/RealisationsPage";
 import { ServicesPage } from "./components/services/ServicesPage";
 import { useCart } from "./application/cart/useCart";
 import { configureCommerceGateway } from "./application/commerce";
@@ -24,6 +26,8 @@ const pages = {
   "decoration-detail": DecorationDetailPage,
   degustation: TastingCatalogPage,
   services: ServicesPage,
+  realisations: RealisationsPage,
+  "realisation-detail": RealisationDetailPage,
   panier: CartPage,
   soumission: QuotePage,
   contact: ContactPage,
@@ -35,7 +39,7 @@ function getLocationState() {
 
 function App() {
   const [location, setLocation] = useState(getLocationState);
-  const { route, section, decorationSlug } = location;
+  const { route, section, decorationSlug, realisationSlug } = location;
   const cart = useCart();
   const Page = useMemo(() => pages[route] || HomePage, [route]);
 
@@ -55,9 +59,21 @@ function App() {
 
   return (
     <div className="min-h-svh">
-      <Header activeRoute={route === "decoration-detail" ? "decoration" : route} cartCount={cart.count} />
+      <Header
+        activeRoute={
+          route === "decoration-detail"
+            ? "decoration"
+            : route === "realisation-detail"
+              ? "realisations"
+              : route
+        }
+        cartCount={cart.count}
+      />
       <main>
-        <Page cart={cart} slug={decorationSlug} />
+        <Page
+          cart={cart}
+          slug={route === "realisation-detail" ? realisationSlug : decorationSlug}
+        />
       </main>
       <Footer />
     </div>

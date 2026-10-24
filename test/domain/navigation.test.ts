@@ -29,4 +29,22 @@ describe("application hash navigation", () => {
       route: "soumission",
     });
   });
+
+  it("loads realisation listing and detail routes with validated slugs", () => {
+    expect(parseAppHash("#/realisations")).toMatchObject({
+      route: "realisations",
+      realisationSlug: null,
+    });
+    expect(parseAppHash("#/realisations/decor-rouge-noir")).toMatchObject({
+      route: "realisation-detail",
+      realisationSlug: "decor-rouge-noir",
+    });
+  });
+
+  it("rejects malformed realisation slugs", () => {
+    expect(parseAppHash("#/realisations/../../secret")).toMatchObject({
+      route: "accueil",
+      realisationSlug: null,
+    });
+  });
 });

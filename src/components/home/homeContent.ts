@@ -46,28 +46,5 @@ export const testimonials = [
   },
 ];
 
-export const realizationPhotos = [
-  {
-    src: "./images/catalog/decoration/decoration-1-530x480.png",
-    alt: "Décoration de table pour événement",
-    label: "Décoration de table",
-  },
-  {
-    src: "./images/catalog/decoration/arche-1-530x480.png",
-    alt: "Arche de ballons pour célébration",
-    label: "Arche de ballons",
-  },
-  {
-    src: "./images/catalog/decoration/decoration-3-530x480.png",
-    alt: "Décoration d'événement avec mise en place",
-    label: "Mise en place",
-  },
-  {
-    src: "./images/home/offer-2-340x243.png",
-    alt: "Table de réception garnie de bouchées et de boissons",
-    label: "Table de réception",
-  },
-];
-
 export const youtubeChannelUrl = "https://youtube.com/@SavourEtplus";
 export const youtubeEmbedUrl = "https://www.youtube.com/embed/u2pTPB8lK94";

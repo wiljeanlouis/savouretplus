@@ -1,10 +1,12 @@
 import { isCatalogSlug } from "./catalog";
+import { isRealisationSlug } from "./realisation";
 
 const staticRoutes = new Set([
   "accueil",
   "decoration",
   "degustation",
   "services",
+  "realisations",
   "panier",
   "soumission",
   "contact",
@@ -20,6 +22,17 @@ export function parseAppHash(hash: string) {
       route: "decoration-detail",
       section: null,
       decorationSlug: segments[1],
+      realisationSlug: null,
+      hash,
+    };
+  }
+
+  if (segments[0] === "realisations" && segments.length === 2 && isRealisationSlug(segments[1])) {
+    return {
+      route: "realisation-detail",
+      section: null,
+      decorationSlug: null,
+      realisationSlug: segments[1],
       hash,
     };
   }
@@ -28,5 +41,5 @@ export function parseAppHash(hash: string) {
   const requestedSection = new URLSearchParams(query).get("section");
   const section = route === "accueil" && requestedSection === "realisations" ? requestedSection : null;
 
-  return { route, section, decorationSlug: null, hash };
+  return { route, section, decorationSlug: null, realisationSlug: null, hash };
 }
