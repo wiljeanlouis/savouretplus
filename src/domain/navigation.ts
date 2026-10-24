@@ -39,7 +39,11 @@ export function parseAppHash(hash: string) {
 
   const route = staticRoutes.has(segments[0]) && segments.length === 1 ? segments[0] : "accueil";
   const requestedSection = new URLSearchParams(query).get("section");
-  const section = route === "accueil" && requestedSection === "realisations" ? requestedSection : null;
+  const section =
+    (route === "accueil" && requestedSection === "realisations") ||
+    (route === "degustation" && requestedSection === "catalogue-degustation")
+      ? requestedSection
+      : null;
 
   return { route, section, decorationSlug: null, realisationSlug: null, hash };
 }

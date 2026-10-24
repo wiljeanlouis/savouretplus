@@ -268,7 +268,7 @@ export function QuotePage({ cart = null }) {
   function selectRequestType(requestType: QuoteQuery["service"]) {
     updateForm({ request_type: requestType });
     window.history.replaceState(
-      null,
+      window.history.state,
       "",
       buildQuoteHash(requestType, selectedItemSlug),
     );
@@ -326,7 +326,7 @@ export function QuotePage({ cart = null }) {
       setSelectedItemSlug(null);
       if (fromSelection) cart?.clear();
       setFromSelection(false);
-      window.history.replaceState(null, "", "#/soumission");
+      window.history.replaceState(window.history.state, "", "#/soumission");
       setStatus("success");
     } catch (error) {
       if (error instanceof CommercialValidationError) {

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 import { CartPage } from "./components/cart/CartPage";
@@ -16,7 +16,10 @@ import { ServicesPage } from "./components/services/ServicesPage";
 import { useCart } from "./application/cart/useCart";
 import { configureCommerceGateway } from "./application/commerce";
 import { createCommerceGateway } from "./infrastructure/createCommerceGateway";
-import { parseAppHash } from "./domain/navigation";
+import {
+  useHashNavigation,
+  useNavigationScroll,
+} from "./application/navigation/useHashNavigation";
 
 configureCommerceGateway(createCommerceGateway());
 
@@ -33,29 +36,12 @@ const pages = {
   contact: ContactPage,
 };
 
-function getLocationState() {
-  return parseAppHash(window.location.hash);
-}
-
 function App() {
-  const [location, setLocation] = useState(getLocationState);
-  const { route, section, decorationSlug, realisationSlug } = location;
+  const navigation = useHashNavigation();
+  const { route, decorationSlug, realisationSlug } = navigation.location;
   const cart = useCart();
   const Page = useMemo(() => pages[route] || HomePage, [route]);
-
-  useEffect(() => {
-    const onHashChange = () => setLocation(getLocationState());
-    window.addEventListener("hashchange", onHashChange);
-    return () => window.removeEventListener("hashchange", onHashChange);
-  }, []);
-
-  useEffect(() => {
-    if (!section) return;
-    const frame = window.requestAnimationFrame(() => {
-      document.getElementById(section)?.scrollIntoView({ block: "start" });
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [location.hash, section]);
+  useNavigationScroll(navigation);
 
   return (
     <div className="min-h-svh">

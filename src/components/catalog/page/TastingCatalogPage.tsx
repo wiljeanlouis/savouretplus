@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CatalogLoadingState } from "../CatalogLoadingState";
 import { Button } from "../../ui/button";
 import { ProductCard } from "../ProductCard";
@@ -34,25 +34,6 @@ export function TastingCatalogPage({ cart }) {
   const { products, loading, error, retry } = useCatalogProducts(TASTING_CATEGORY);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [addedItem, setAddedItem] = useState(null);
-
-  useEffect(() => {
-    function scrollToRequestedSection() {
-      const query = window.location.hash.split("?")[1] || "";
-      if (new URLSearchParams(query).get("section") !== "catalogue-degustation") return;
-
-      const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-      window.requestAnimationFrame(() => {
-        document.getElementById("catalogue-degustation")?.scrollIntoView({
-          behavior: reducedMotion ? "auto" : "smooth",
-          block: "start",
-        });
-      });
-    }
-
-    scrollToRequestedSection();
-    window.addEventListener("hashchange", scrollToRequestedSection);
-    return () => window.removeEventListener("hashchange", scrollToRequestedSection);
-  }, []);
 
   function addConfiguredProduct(product, options) {
     cart.add(product, options);

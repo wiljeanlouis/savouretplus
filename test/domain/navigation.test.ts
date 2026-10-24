@@ -30,6 +30,13 @@ describe("application hash navigation", () => {
     });
   });
 
+  it("recognizes intentional section navigation on the tasting page", () => {
+    expect(parseAppHash("#/degustation?section=catalogue-degustation")).toMatchObject({
+      route: "degustation",
+      section: "catalogue-degustation",
+    });
+  });
+
   it("loads realisation listing and detail routes with validated slugs", () => {
     expect(parseAppHash("#/realisations")).toMatchObject({
       route: "realisations",

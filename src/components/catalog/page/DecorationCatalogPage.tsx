@@ -11,6 +11,7 @@ import {
 import { Button } from "../../ui/button";
 import { DecorationProductCard } from "../DecorationProductCard";
 import { useCatalogProducts } from "../useCatalogProducts";
+import { scrollElementIntoView } from "../../../application/navigation/scrollRestoration";
 
 const DECORATION_CATEGORY = "decoration";
 
@@ -23,9 +24,15 @@ export function DecorationCatalogPage({ cart = null }) {
     if (loading) return;
 
     function scrollToRequestedCategory() {
+      const query = window.location.hash.split("?")[1] || "";
+      const parameters = new URLSearchParams(query);
+      if (!parameters.has("categorie") && parameters.get("section") !== "autres") return;
+
       const targetId = getDecorationCatalogTarget(window.location.hash, products);
+      const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
       window.requestAnimationFrame(() => {
-        document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+        const target = document.getElementById(targetId);
+        if (target) scrollElementIntoView(target, !reducedMotion);
       });
     }
 
