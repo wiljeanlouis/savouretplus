@@ -4,20 +4,39 @@ import {
   validateRealisationsManifest,
 } from "../domain/realisation";
 
+// Les exemples fictifs ci-dessous servent à la démonstration et sont identifiés
+// visiblement. Les remplacer par des témoignages autorisés avant publication.
 export const realisationsManifest = validateRealisationsManifest([
   {
-    id: "realisation-decor-arche-ballon-rouge-noir",
-    slug: "decor-arche-ballon-rouge-noir",
-    title: "Décor d'arche de ballons rouge et noir",
+    id: "realisation-grand-opening-soul-store",
+    reference: "REA-0001",
+    slug: "grand-opening-soul-store",
+    title: "Grand Opening Soul Store",
     description:
-      "Une composition de ballons rouges et noirs installée autour d'une arche de fond circulaire.",
+      "Une décoration élégante pour le grand opening de la boutique Soul Store. Arche de ballons, table de champagne et bouchées.",
     category: "decoration",
-    coverImage: "./images/realisations/decor-arche-ballon-rouge-noir/couverture.png",
+    coverImage: "./images/realisations/grand-opening-soul-store/couverture.png",
     images: [
       {
-        src: "./images/realisations/decor-arche-ballon-rouge-noir/couverture.png",
-        alt: "Composition de ballons rouges et noirs autour d'une arche de fond circulaire",
+        src: "./images/realisations/grand-opening-soul-store/couverture.png",
+        alt: "Table de champagne avec ballons et décorations pour le grand opening de la boutique Soul Store",
         displayOrder: 1,
+      },
+      {
+        src: "./images/realisations/grand-opening-soul-store/arche-ballons.png",
+        alt: "Arche de ballons rouges et noirs pour le grand opening de la boutique Soul Store",
+        displayOrder: 2,
+      },
+      {
+        src: "./images/realisations/grand-opening-soul-store/table-de-degustation.jpg",
+        alt: "Table de bouchées, desserts et boissons.",
+        displayOrder: 3,
+      },
+    ],
+    testimonials: [
+      {
+        quote: "Une décoration qui mettait notre boutique en valeur et créait une belle ambiance pour accueillir nos invités.",
+        author: "Soul Store",
       },
     ],
     published: true,
@@ -25,51 +44,67 @@ export const realisationsManifest = validateRealisationsManifest([
     quoteService: "decoration",
   },
   {
-    id: "realisation-accueil-rouge-noir",
-    slug: "accueil-rouge-noir",
-    title: "Accueil rouge et noir",
+    id: "realisation-anniversaire-winnie",
+    reference: "REA-0002",
+    slug: "anniversaire-winnie",
+    title: "Décoration d'anniversaire Winnie",
     description:
-      "Une mise en place d'accueil avec ballons rouges et noirs, verres et rafraîchissements.",
+      "Décoration faite de sacs-cadeaux, de pochettes personnalisées et de chips personnalisés, préparés dans un thème vert et floral pour un anniversaire.",
     category: "decoration",
-    coverImage: "./images/realisations/accueil-rouge-noir/couverture.png",
+    coverImage: "./images/realisations/anniversaire-winnie/couverture.jpg",
     images: [
       {
-        src: "./images/realisations/accueil-rouge-noir/couverture.png",
-        alt: "Espace d'accueil avec ballons rouges et noirs, bouteille et verres",
+        src: "./images/realisations/anniversaire-winnie/couverture.jpg",
+        alt: "Chip personnalisé",
         displayOrder: 1,
+      },
+      {
+        src: "./images/realisations/anniversaire-winnie/chips-personnalises.jpg",
+        alt: "Ensemble de sachets de chips personnalisés disposés en rangées",
+        displayOrder: 2,
+      },
+      {
+        src: "./images/realisations/anniversaire-winnie/sacs-cadeaux.jpg",
+        alt: "Sacs-cadeaux personnalisés avec rubans verts dans une mise en scène florale",
+        displayOrder: 3,
+      },
+      {
+        src: "./images/realisations/anniversaire-winnie/sacs-cadeaux-en-scene.jpg",
+        alt: "Sacs-cadeaux personnalisés disposés sur une table",
+        displayOrder: 4,
+      },
+      {
+        src: "./images/realisations/anniversaire-winnie/boisson-personnalisee.jpg",
+        alt: "Pochette de boisson Kool-Aid personnalisée pour un anniversaire",
+        displayOrder: 5,
+      },
+      {
+        src: "./images/realisations/anniversaire-winnie/boissons-personnalisees.jpg",
+        alt: "Présentations de pochettes de boisson personnalisées sur un thème vert",
+        displayOrder: 6,
+      },
+    ],
+    testimonials: [
+      {
+        quote: "Les petites attentions personnalisées apportaient une belle cohérence à la fête.",
+        author: "Maman de Winnie",
       },
     ],
     published: true,
-    displayOrder: 3,
+    displayOrder: 2,
     quoteService: "decoration",
   },
-  {
-    id: "realisation-table-gourmande",
-    slug: "table-gourmande-rouge-noir",
-    title: "Table gourmande",
-    description:
-      "Une table garnie de bouchées, desserts et boissons, coordonnée avec une décoration rouge et noire.",
-    category: "traiteur",
-    coverImage: "./images/realisations/table-gourmande-rouge-noir/couverture.jpg",
-    images: [
-      {
-        src: "./images/realisations/table-gourmande-rouge-noir/couverture.jpg",
-        alt: "Table de bouchées, desserts et boissons avec une décoration rouge et noire",
-        displayOrder: 1,
-      },
-    ],
-    published: true,
-    displayOrder: 4,
-    quoteService: "traiteur-decoration",
-  },
+
   {
     id: "realisation-decor-colonne-ballons-rouge-blanc",
+    reference: "REA-0003",
     slug: "decor-colonne-ballons-rouge-blanc",
     title: "Décor de colonne de ballons rouge et blanc",
     description:
       "Une mise en scène coordonnée avec deux colonnes de ballons rouges et blancs, un pupitre transparent et une composition florale.",
     category: "decoration",
-    coverImage: "./images/realisations/decor-colonne-ballons-rouge-blanc/couverture.jpg",
+    coverImage:
+      "./images/realisations/decor-colonne-ballons-rouge-blanc/couverture.jpg",
     images: [
       {
         src: "./images/realisations/decor-colonne-ballons-rouge-blanc/couverture.jpg",
@@ -77,94 +112,50 @@ export const realisationsManifest = validateRealisationsManifest([
         displayOrder: 1,
       },
     ],
-    published: true,
-    displayOrder: 5,
-    quoteService: "decoration",
-  },
-  {
-    id: "realisation-cadeaux-personnalises-anniversaire",
-    slug: "cadeaux-personnalises-anniversaire",
-    title: "Cadeaux personnalisés d’anniversaire",
-    description:
-      "Un ensemble coordonné de sacs-cadeaux et de pochettes personnalisées, préparé dans un thème vert et floral pour un anniversaire.",
-    category: "decoration",
-    coverImage: "./images/realisations/cadeaux-personnalises-anniversaire/couverture.jpg",
-    images: [
+    testimonials: [
       {
-        src: "./images/realisations/cadeaux-personnalises-anniversaire/couverture.jpg",
-        alt: "Ensemble de sacs-cadeaux transparents ornés de rubans verts",
-        displayOrder: 1,
-      },
-      {
-        src: "./images/realisations/cadeaux-personnalises-anniversaire/sacs-cadeaux.jpg",
-        alt: "Vue complète des sacs-cadeaux personnalisés disposés en rangées",
-        displayOrder: 2,
-      },
-      {
-        src: "./images/realisations/cadeaux-personnalises-anniversaire/sacs-cadeaux-en-scene.jpg",
-        alt: "Sacs-cadeaux personnalisés avec rubans verts dans une mise en scène florale",
-        displayOrder: 3,
+        quote: "Le rouge et le blanc donnaient une belle présence au décor. Un ensemble à la fois sobre et chaleureux.",
+        author: "Responsable de l'événement",
       },
     ],
     published: true,
-    displayOrder: 6,
+    displayOrder: 3,
     quoteService: "decoration",
   },
   {
-    id: "realisation-chips-personnalisees",
-    slug: "chips-personnalises",
-    title: "Chips personnalisés",
+    id: "realisation-anniversaire-marvensley",
+    reference: "REA-0004",
+    slug: "anniversaire-marvensley",
+    title: "Décoration d'anniversaire Marvensley",
     description:
-      "Des sachets de chips personnalisés et coordonnés au thème vert et floral d’un anniversaire.",
+      "Décoration faite de sacs-cadeaux, de pochettes personnalisées et de chips personnalisés, préparés dans un thème de gamer pour un anniversaire.",
     category: "decoration",
-    coverImage: "./images/realisations/chips-personnalises/couverture.jpg",
+    coverImage: "./images/realisations/anniversaire-marvensley/couverture.jpg",
     images: [
       {
-        src: "./images/realisations/chips-personnalises/couverture.jpg",
-        alt: "Sachets de chips personnalisés dans un décor vert et floral",
+        src: "./images/realisations/anniversaire-marvensley/couverture.jpg",
+        alt: "Pochette de boisson Kool-Aid personnalisée pour un anniversaire de gamer",
         displayOrder: 1,
       },
       {
-        src: "./images/realisations/chips-personnalises/collection-verte.jpg",
-        alt: "Collection de sachets de chips personnalisés pour un anniversaire",
+        src: "./images/realisations/anniversaire-marvensley/boisson-personnalisee.jpg",
+        alt: "Pochette de boisson Kool-Aid personnalisée pour un anniversaire de gamer",
         displayOrder: 2,
       },
     ],
-    published: true,
-    displayOrder: 7,
-    quoteService: "decoration",
-  },
-  {
-    id: "realisation-boissons-personnalisees",
-    slug: "boissons-personnalisees",
-    title: "Boissons personnalisées",
-    description:
-      "Des pochettes de boisson Kool-Aid habillées d’un visuel personnalisé pour s’accorder au thème de la célébration.",
-    category: "decoration",
-    coverImage: "./images/realisations/boissons-personnalisees/couverture.jpg",
-    images: [
+    testimonials: [
       {
-        src: "./images/realisations/boissons-personnalisees/couverture.jpg",
-        alt: "Pochette de boisson Kool-Aid personnalisée pour un anniversaire",
-        displayOrder: 1,
-      },
-      {
-        src: "./images/realisations/boissons-personnalisees/collection-verte.jpg",
-        alt: "Deux présentations de pochettes de boisson personnalisées sur un thème vert",
-        displayOrder: 2,
-      },
-      {
-        src: "./images/realisations/boissons-personnalisees/collection-bleue.jpg",
-        alt: "Deux présentations de pochettes de boisson personnalisées sur un thème bleu",
-        displayOrder: 3,
+        quote: "Le thème gamer correspondait parfaitement à l’ambiance souhaitée pour cet anniversaire.",
+        author: "Maman de Marvensley",
       },
     ],
     published: true,
-    displayOrder: 8,
+    displayOrder: 4,
     quoteService: "decoration",
   },
   {
     id: "realisation-bouquet-cadeau-billets-bleu-or",
+    reference: "REA-0005",
     slug: "bouquet-cadeau-billets-bleu-or",
     title: "Bouquet-cadeau de billets bleu et or",
     description:
@@ -178,10 +169,17 @@ export const realisationsManifest = validateRealisationsManifest([
         displayOrder: 1,
       },
     ],
+    testimonials: [
+      {
+        quote: "Une idée de cadeau originale, avec une présentation de billets en forme de fleurs qui faisait tout son charme.",
+        author: "Maman de l'heureux destinataire",
+      },
+    ],
     published: true,
-    displayOrder: 9,
+    displayOrder: 5,
     quoteService: "decoration",
   },
 ] satisfies Realisation[]);
 
-export const publishedRealisations = getPublishedRealisations(realisationsManifest);
+export const publishedRealisations =
+  getPublishedRealisations(realisationsManifest);

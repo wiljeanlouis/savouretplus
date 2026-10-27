@@ -1,14 +1,15 @@
-import { ArrowLeft, ArrowRight, Maximize2 } from "lucide-react";
+import { ArrowLeft, Copy, Maximize2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { realisationsManifest } from "../../content/realisations";
 import {
   findPublishedRealisationBySlug,
   getOrderedRealisationImages,
-  getRealisationQuoteHref,
   REALISATION_CATEGORIES,
   type Realisation,
+  type RealisationImage,
 } from "../../domain/realisation";
 import { Button } from "../ui/button";
+import { RealisationTestimonials } from "./RealisationTestimonials";
 import { RealisationLightbox } from "./RealisationLightbox";
 
 type RealisationDetailPageProps = {
@@ -20,12 +21,13 @@ export function RealisationDetailPage({ slug, realisations = realisationsManifes
   const realisation = findPublishedRealisationBySlug(realisations, slug);
 
   if (!realisation) return <UnknownRealisation />;
-  return <RealisationDetail realisation={realisation} />;
+  return <RealisationDetail key={realisation.id} realisation={realisation} />;
 }
 
 export function RealisationDetail({ realisation }: { realisation: Realisation }) {
   const images = getOrderedRealisationImages(realisation);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [copyStatus, setCopyStatus] = useState("");
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const lightboxTriggerRef = useRef<HTMLElement | null>(null);
 
@@ -46,7 +48,7 @@ export function RealisationDetail({ realisation }: { realisation: Realisation })
           Retour aux réalisations
         </a>
 
-        <div className="mt-8 grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start lg:gap-16">
+        <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-start lg:gap-16">
           <RealisationGallery
             images={images}
             activeIndex={activeIndex}
@@ -55,7 +57,7 @@ export function RealisationDetail({ realisation }: { realisation: Realisation })
             onOpen={openLightbox}
           />
 
-          <div className="lg:sticky lg:top-28">
+          <div className="min-w-0 lg:sticky lg:top-28">
             <p className="eyebrow">{REALISATION_CATEGORIES[realisation.category]}</p>
             <h1 className="mt-4 font-serif text-5xl font-semibold leading-[0.92] tracking-[-0.03em] text-espresso sm:text-6xl">
               {realisation.title}
@@ -67,15 +69,33 @@ export function RealisationDetail({ realisation }: { realisation: Realisation })
                 {realisation.location ? <DetailMeta label="Lieu" value={realisation.location} /> : null}
               </dl>
             ) : null}
-            <Button asChild className="mt-8 w-full sm:w-auto" size="lg">
-              <a href={getRealisationQuoteHref(realisation)}>
-                Demander une soumission
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </a>
-            </Button>
-            <p className="mt-3 max-w-md text-xs leading-5 text-espresso/50">
-              Cette réalisation sert d'inspiration; votre demande sera adaptée à votre événement.
-            </p>
+            <div className="mt-6 border-t border-blush/60 pt-5">
+              <p className="text-sm font-semibold tracking-wide text-wine">Référence : {realisation.reference}</p>
+              <p className="mt-2 max-w-md text-sm leading-6 text-espresso/65">
+                Mentionnez cette référence lors de votre commande ou de votre demande de soumission.
+              </p>
+              <Button
+                className="mt-4"
+                variant="outline"
+                type="button"
+                onClick={async () => {
+                  setCopyStatus("");
+                  try {
+                    await navigator.clipboard.writeText(realisation.reference);
+                    setCopyStatus(`Référence ${realisation.reference} copiée.`);
+                  } catch {
+                    setCopyStatus(`Copie impossible. Sélectionnez et copiez la référence ${realisation.reference} manuellement.`);
+                  }
+                }}
+              >
+                <Copy className="h-4 w-4" aria-hidden="true" />
+                Copier la référence
+              </Button>
+              <p className="mt-2 min-h-10 text-xs leading-5 text-espresso/65" role="status" aria-live="polite" aria-atomic="true">
+                {copyStatus}
+              </p>
+            </div>
+            <RealisationTestimonials testimonials={realisation.testimonials} />
           </div>
         </div>
       </div>
@@ -94,27 +114,40 @@ export function RealisationDetail({ realisation }: { realisation: Realisation })
   );
 }
 
-function RealisationGallery({ images, activeIndex, title, onSelect, onOpen }) {
+type RealisationGalleryProps = {
+  images: RealisationImage[];
+  activeIndex: number;
+  title: string;
+  onSelect: (index: number) => void;
+  onOpen: (trigger: HTMLElement) => void;
+};
+
+export function RealisationGallery({ images, activeIndex, title, onSelect, onOpen }: RealisationGalleryProps) {
   const activeImage = images[activeIndex];
 
   return (
     <div>
-      <button
-        className="group relative grid min-h-[22rem] w-full place-items-center overflow-hidden border border-blush/60 bg-white p-3 shadow-[0_18px_50px_rgba(53,42,43,0.07)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine sm:min-h-[30rem] lg:min-h-[38rem]"
-        type="button"
-        onClick={(event) => onOpen(event.currentTarget)}
-        aria-label={`Agrandir ${activeImage.alt}`}
-      >
-        <img
-          className="max-h-[72svh] h-auto w-auto max-w-full object-contain"
-          src={activeImage.src}
-          alt={activeImage.alt}
-          decoding="async"
-        />
-        <span className="absolute bottom-4 right-4 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-wine shadow-md transition group-hover:bg-wine group-hover:text-white" aria-hidden="true">
-          <Maximize2 className="h-4 w-4" />
-        </span>
-      </button>
+      <figure>
+        <button
+          className="group relative grid min-h-[22rem] w-full place-items-center overflow-hidden border border-blush/60 bg-white p-3 shadow-[0_18px_50px_rgba(53,42,43,0.07)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine sm:min-h-[30rem] lg:min-h-[38rem]"
+          type="button"
+          onClick={(event) => onOpen(event.currentTarget)}
+          aria-label={`Agrandir ${activeImage.alt}`}
+        >
+          <img
+            className="max-h-[72svh] h-auto w-auto max-w-full object-contain"
+            src={activeImage.src}
+            alt={activeImage.alt}
+            decoding="async"
+          />
+          <span className="absolute bottom-4 right-4 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-wine shadow-md transition group-hover:bg-wine group-hover:text-white" aria-hidden="true">
+            <Maximize2 className="h-4 w-4" />
+          </span>
+        </button>
+        <figcaption className="mt-3 text-sm leading-6 text-espresso/60">
+          {activeImage.caption?.trim() || activeImage.alt}
+        </figcaption>
+      </figure>
 
       {images.length > 1 ? (
         <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4" aria-label={`Photographies de ${title}`}>

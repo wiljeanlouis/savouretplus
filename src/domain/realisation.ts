@@ -8,17 +8,27 @@ export type RealisationCategory = keyof typeof REALISATION_CATEGORIES;
 export type RealisationImage = {
   src: string;
   alt: string;
+  caption?: string;
   displayOrder?: number;
+};
+
+export type RealisationTestimonial = {
+  quote: string;
+  author: string;
+  context?: string;
+  date?: string;
 };
 
 export type Realisation = {
   id: string;
+  reference: string;
   slug: string;
   title: string;
   description: string;
   category: RealisationCategory;
   coverImage: string;
   images: RealisationImage[];
+  testimonials?: RealisationTestimonial[];
   published: boolean;
   displayOrder: number;
   quoteService?: "decoration" | "traiteur" | "traiteur-decoration";
@@ -35,6 +45,7 @@ export function isRealisationSlug(value: unknown): value is string {
 export function validateRealisationsManifest(realisations: Realisation[]) {
   const ids = new Set<string>();
   const slugs = new Set<string>();
+  const references = new Set<string>();
 
   for (const realisation of realisations) {
     if (!realisation.id.trim()) throw new Error("Une réalisation doit avoir un identifiant stable.");
@@ -47,6 +58,14 @@ export function validateRealisationsManifest(realisations: Realisation[]) {
     if (slugs.has(realisation.slug)) throw new Error(`Slug de réalisation dupliqué : ${realisation.slug}`);
     slugs.add(realisation.slug);
 
+    if (typeof realisation.reference !== "string" || realisation.reference.length !== 8 || !/^REA-(?!0000)[0-9]{4}$/.test(realisation.reference)) {
+      throw new Error(`Référence de réalisation invalide : ${realisation.reference}`);
+    }
+    if (references.has(realisation.reference)) {
+      throw new Error(`Référence de réalisation dupliquée : ${realisation.reference}`);
+    }
+    references.add(realisation.reference);
+
     if (!(realisation.category in REALISATION_CATEGORIES)) {
       throw new Error(`Catégorie de réalisation inconnue : ${realisation.category}`);
     }
@@ -58,6 +77,27 @@ export function validateRealisationsManifest(realisations: Realisation[]) {
     }
     if (!realisation.images.some((image) => image.src === realisation.coverImage)) {
       throw new Error(`La couverture de ${realisation.slug} doit figurer dans son tableau d'images.`);
+    }
+
+    if (realisation.testimonials !== undefined) {
+      if (!Array.isArray(realisation.testimonials)) {
+        throw new Error(`Liste de témoignages invalide pour ${realisation.slug}.`);
+      }
+      for (const testimonial of realisation.testimonials) {
+        if (!testimonial || typeof testimonial !== "object" || Array.isArray(testimonial)) {
+          throw new Error(`Témoignage invalide pour ${realisation.slug}.`);
+        }
+        for (const field of ["quote", "author"] as const) {
+          if (typeof testimonial[field] !== "string" || !testimonial[field].trim()) {
+            throw new Error(`Champ ${field} manquant ou invalide dans un témoignage de ${realisation.slug}.`);
+          }
+        }
+        for (const field of ["context", "date"] as const) {
+          if (testimonial[field] !== undefined && (typeof testimonial[field] !== "string" || !testimonial[field].trim())) {
+            throw new Error(`Champ ${field} invalide dans un témoignage de ${realisation.slug}.`);
+          }
+        }
+      }
     }
 
     for (const image of realisation.images) {

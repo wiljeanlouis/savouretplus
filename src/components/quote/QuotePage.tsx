@@ -592,6 +592,7 @@ export function QuotePage({ cart = null }) {
               ) : null}
               <ValidatedField
                 id="quote-note"
+                hint="Une réalisation vous inspire? Collez sa référence ici (ex. REA-0001)."
                 label={
                   includesDecoration
                     ? "Thème, couleurs ou besoins particuliers"
