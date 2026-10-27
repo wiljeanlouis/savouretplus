@@ -69,6 +69,22 @@ describe("realisation interactions", () => {
     expect(html).toContain('role="status" aria-live="polite" aria-atomic="true"');
     expect(html).toContain("Référence REA-0123 copiée.");
     expect(copy.props.type).toBe("button");
+    expect(copy.props["aria-label"]).toBe("Copier la référence REA-0123");
+    expect(copy.props.variant).toBe("ghost");
+    expect(copy.props.size).toBe("icon");
+    const controlHtml = renderToStaticMarkup(copy);
+    expect(controlHtml).toContain("focus-visible:ring-2");
+    expect(controlHtml).toContain("h-11 w-11");
+    expect(controlHtml).toContain('aria-hidden="true"');
+    expect(controlHtml).not.toContain(">Copier la référence");
+  });
+
+  it("keeps the reference readable without reserving visible space for empty feedback", () => {
+    const html = renderToStaticMarkup(renderDetail());
+    expect(html).toContain("Référence : REA-0123");
+    expect(html).toContain('<p class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>');
+    expect(html).not.toContain("min-h-10");
+    expect(html).toContain("Mentionnez cette référence lors de votre commande ou de votre demande de soumission.");
   });
 
   it.each(["unavailable", "denied"])("offers manual copy when the clipboard is %s", async (reason) => {

@@ -1,6 +1,7 @@
 export const REALISATION_CATEGORIES = {
   decoration: "Décoration",
-  traiteur: "Service traiteur",
+  cartering: "Service traiteur",
+  decoAndCatering: "Décoration et service traiteur",
 } as const;
 
 export type RealisationCategory = keyof typeof REALISATION_CATEGORIES;

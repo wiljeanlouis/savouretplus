@@ -11,7 +11,7 @@ export function RealisationTestimonials({ testimonials }: RealisationTestimonial
   if (!testimonials?.length) return null;
 
   return (
-    <section className="mt-5 min-w-0 border border-champagne/40 bg-ivory p-5 sm:p-6" aria-labelledby={headingId}>
+    <section className="mt-4 min-w-0 border border-champagne/40 bg-ivory p-5 sm:p-6" aria-labelledby={headingId}>
       <h2 className="font-serif text-2xl font-semibold leading-tight text-espresso sm:text-3xl" id={headingId}>
         {testimonials.length === 1 ? "Le témoignage de notre client" : "Les témoignages de nos clients"}
       </h2>

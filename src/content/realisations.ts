@@ -4,8 +4,7 @@ import {
   validateRealisationsManifest,
 } from "../domain/realisation";
 
-// Les exemples fictifs ci-dessous servent à la démonstration et sont identifiés
-// visiblement. Les remplacer par des témoignages autorisés avant publication.
+
 export const realisationsManifest = validateRealisationsManifest([
   {
     id: "realisation-grand-opening-soul-store",
@@ -14,7 +13,7 @@ export const realisationsManifest = validateRealisationsManifest([
     title: "Grand Opening Soul Store",
     description:
       "Une décoration élégante pour le grand opening de la boutique Soul Store. Arche de ballons, table de champagne et bouchées.",
-    category: "decoration",
+    category: "decoAndCatering",
     coverImage: "./images/realisations/grand-opening-soul-store/couverture.png",
     images: [
       {

@@ -70,28 +70,31 @@ export function RealisationDetail({ realisation }: { realisation: Realisation })
               </dl>
             ) : null}
             <div className="mt-6 border-t border-blush/60 pt-5">
-              <p className="text-sm font-semibold tracking-wide text-wine">Référence : {realisation.reference}</p>
-              <p className="mt-2 max-w-md text-sm leading-6 text-espresso/65">
+              <div className="flex flex-wrap items-center gap-1">
+                <p className="text-sm font-semibold tracking-wide text-wine">Référence : {realisation.reference}</p>
+                <Button
+                  className="h-11 w-11 shrink-0"
+                  variant="ghost"
+                  size="icon"
+                  type="button"
+                  aria-label={`Copier la référence ${realisation.reference}`}
+                  onClick={async () => {
+                    setCopyStatus("");
+                    try {
+                      await navigator.clipboard.writeText(realisation.reference);
+                      setCopyStatus(`Référence ${realisation.reference} copiée.`);
+                    } catch {
+                      setCopyStatus(`Copie impossible. Sélectionnez et copiez la référence ${realisation.reference} manuellement.`);
+                    }
+                  }}
+                >
+                  <Copy className="h-4 w-4" aria-hidden="true" />
+                </Button>
+              </div>
+              <p className="mt-1 max-w-md text-sm leading-6 text-espresso/65">
                 Mentionnez cette référence lors de votre commande ou de votre demande de soumission.
               </p>
-              <Button
-                className="mt-4"
-                variant="outline"
-                type="button"
-                onClick={async () => {
-                  setCopyStatus("");
-                  try {
-                    await navigator.clipboard.writeText(realisation.reference);
-                    setCopyStatus(`Référence ${realisation.reference} copiée.`);
-                  } catch {
-                    setCopyStatus(`Copie impossible. Sélectionnez et copiez la référence ${realisation.reference} manuellement.`);
-                  }
-                }}
-              >
-                <Copy className="h-4 w-4" aria-hidden="true" />
-                Copier la référence
-              </Button>
-              <p className="mt-2 min-h-10 text-xs leading-5 text-espresso/65" role="status" aria-live="polite" aria-atomic="true">
+              <p className={copyStatus ? "mt-2 text-xs leading-5 text-espresso/65" : "sr-only"} role="status" aria-live="polite" aria-atomic="true">
                 {copyStatus}
               </p>
             </div>
