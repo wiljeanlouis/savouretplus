@@ -26,4 +26,4 @@ export const heroSlides = [
 ];
 
 export const youtubeChannelUrl = "https://youtube.com/@SavourEtplus";
-export const youtubeEmbedUrl = "https://www.youtube.com/embed/u2pTPB8lK94";
+export const tiktokProfileUrl = "https://www.tiktok.com/@savouretplus";

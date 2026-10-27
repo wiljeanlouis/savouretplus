@@ -1,4 +1,6 @@
-import { PlayCircle } from "lucide-react";
+import { TikTokIcon } from "../ui/TikTokIcon";
+import { YouTubeIcon } from "../ui/YouTubeIcon";
+import { tiktokProfileUrl, youtubeChannelUrl } from "../home/homeContent";
 
 const footerLinks = [
   ["#/accueil", "Accueil"],
@@ -31,15 +33,28 @@ export function Footer() {
               </a>
             ))}
           </nav>
-          <a
-            className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-white/75 transition hover:text-champagne"
-            href="https://youtube.com/@SavourEtplus"
-            target="_blank"
-            rel="noreferrer"
-          >
-            <PlayCircle className="h-5 w-5" />
-            @SavourEtplus
-          </a>
+          <nav className="flex flex-wrap gap-x-5 gap-y-3 lg:flex-col" aria-label="Réseaux sociaux">
+            <a
+              className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-white/75 transition hover:text-champagne"
+              href={youtubeChannelUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Savour Et Plus sur YouTube (nouvel onglet)"
+            >
+              <YouTubeIcon className="h-5 w-5" aria-hidden="true" />
+              Youtube · @SavourEtplus
+            </a>
+            <a
+              className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-white/75 transition hover:text-champagne"
+              href={tiktokProfileUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Savour Et Plus sur TikTok (nouvel onglet)"
+            >
+              <TikTokIcon className="h-5 w-5" aria-hidden="true" />
+              TikTok · @savouretplus
+            </a>
+          </nav>
         </div>
         <p className="pt-6 text-xs text-white/50">
           &copy; {new Date().getFullYear()} Savour Et Plus. Tous droits réservés.

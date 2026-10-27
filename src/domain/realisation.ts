@@ -7,11 +7,42 @@ export const REALISATION_CATEGORIES = {
 export type RealisationCategory = keyof typeof REALISATION_CATEGORIES;
 
 export type RealisationImage = {
+  type?: "image";
   src: string;
   alt: string;
   caption?: string;
   displayOrder?: number;
 };
+
+export type RealisationVideo = {
+  type: "video";
+  platform: "youtube" | "tiktok";
+  url: string;
+  thumbnail?: string;
+  thumbnailAlt?: string;
+  title: string;
+  caption?: string;
+  displayOrder?: number;
+};
+
+export type RealisationMedia = (RealisationImage & { type: "image" }) | RealisationVideo;
+
+export function isRealisationVideoUrl(value: unknown, platform: RealisationVideo["platform"]): value is string {
+  if (typeof value !== "string" || !/^https:\/\/[^/?#]+(?:[/?#]|$)/i.test(value) || /[\s\\]/.test(value)) return false;
+  try {
+    const url = new URL(value);
+    const hosts = platform === "youtube"
+      ? ["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"]
+      : platform === "tiktok" ? ["tiktok.com", "www.tiktok.com", "m.tiktok.com", "vm.tiktok.com", "vt.tiktok.com"] : [];
+    return url.protocol === "https:" && !url.username && !url.password && !url.port && hosts.includes(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function isLocalMediaPath(value: unknown): value is string {
+  return typeof value === "string" && /^\.\/images\/[a-zA-Z0-9_/-]+\.[a-zA-Z0-9]+$/.test(value);
+}
 
 export type RealisationTestimonial = {
   featuredOnHome?: boolean;
@@ -31,6 +62,7 @@ export type Realisation = {
   category: RealisationCategory;
   coverImage: string;
   images: RealisationImage[];
+  videos?: RealisationVideo[];
   testimonials?: RealisationTestimonial[];
   published: boolean;
   displayOrder: number;
@@ -75,7 +107,7 @@ export function validateRealisationsManifest(realisations: Realisation[]) {
     if (!Number.isFinite(realisation.displayOrder)) {
       throw new Error(`Ordre d'affichage invalide pour ${realisation.slug}.`);
     }
-    if (realisation.images.length === 0) {
+    if (!Array.isArray(realisation.images) || realisation.images.length === 0) {
       throw new Error(`La réalisation ${realisation.slug} doit contenir au moins une photographie.`);
     }
     if (!realisation.images.some((image) => image.src === realisation.coverImage)) {
@@ -109,11 +141,39 @@ export function validateRealisationsManifest(realisations: Realisation[]) {
       }
     }
 
+    if (realisation.videos !== undefined && !Array.isArray(realisation.videos)) {
+      throw new Error(`Liste de vidéos invalide pour ${realisation.slug}.`);
+    }
+    for (const video of realisation.videos ?? []) {
+      if (!video || video.type !== "video" || !["youtube", "tiktok"].includes(video.platform)) {
+        throw new Error(`Type ou plateforme vidéo invalide pour ${realisation.slug}.`);
+      }
+      if (!isRealisationVideoUrl(video.url, video.platform)) {
+        throw new Error(`URL vidéo invalide pour ${realisation.slug}.`);
+      }
+      if (typeof video.title !== "string" || !video.title.trim()) {
+        throw new Error(`Titre vidéo manquant pour ${realisation.slug}.`);
+      }
+      if (video.thumbnail !== undefined && (!isLocalMediaPath(video.thumbnail) || typeof video.thumbnailAlt !== "string" || !video.thumbnailAlt.trim())) {
+        throw new Error(`Miniature vidéo ou texte alternatif invalide pour ${realisation.slug}.`);
+      }
+    }
+    for (const media of [...realisation.images, ...(realisation.videos ?? [])]) {
+      if (media.displayOrder !== undefined && !Number.isFinite(media.displayOrder)) {
+        throw new Error(`Ordre de média invalide pour ${realisation.slug}.`);
+      }
+      if (media.caption !== undefined && typeof media.caption !== "string") {
+        throw new Error(`Légende de média invalide pour ${realisation.slug}.`);
+      }
+    }
     for (const image of realisation.images) {
-      if (!image.src.startsWith("./images/") || image.src.includes("..")) {
+      if (!image || (image.type !== undefined && image.type !== "image")) {
+        throw new Error(`Type de photographie invalide pour ${realisation.slug}.`);
+      }
+      if (!isLocalMediaPath(image.src)) {
         throw new Error(`Chemin d'image non local ou invalide pour ${realisation.slug} : ${image.src}`);
       }
-      if (!image.alt.trim()) throw new Error(`Texte alternatif manquant pour ${realisation.slug}.`);
+      if (typeof image.alt !== "string" || !image.alt.trim()) throw new Error(`Texte alternatif manquant pour ${realisation.slug}.`);
     }
   }
 
@@ -146,6 +206,13 @@ export function getOrderedRealisationImages(realisation: Realisation) {
   return [...realisation.images].sort(
     (first, second) => (first.displayOrder ?? 0) - (second.displayOrder ?? 0),
   );
+}
+
+export function getOrderedRealisationMedia(realisation: Realisation): RealisationMedia[] {
+  return [
+    ...realisation.images.map((image) => ({ ...image, type: "image" as const })),
+    ...(realisation.videos ?? []),
+  ].sort((first, second) => (first.displayOrder ?? 0) - (second.displayOrder ?? 0));
 }
 
 export function getRealisationQuoteHref(realisation: Realisation) {

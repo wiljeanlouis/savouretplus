@@ -5,7 +5,6 @@ import {
   validateRealisationsManifest,
 } from "../domain/realisation";
 
-
 export const realisationsManifest = validateRealisationsManifest([
   {
     id: "realisation-grand-opening-soul-store",
@@ -36,8 +35,10 @@ export const realisationsManifest = validateRealisationsManifest([
     testimonials: [
       {
         featuredOnHome: true,
-        homeImageSrc: "./images/realisations/grand-opening-soul-store/arche-ballons.png",
-        quote: "Une décoration qui mettait notre boutique en valeur et créait une belle ambiance pour accueillir nos invités.",
+        homeImageSrc:
+          "./images/realisations/grand-opening-soul-store/arche-ballons.png",
+        quote:
+          "Une décoration qui mettait notre boutique en valeur et créait une belle ambiance pour accueillir nos invités.",
         author: "Soul Store",
       },
     ],
@@ -86,11 +87,25 @@ export const realisationsManifest = validateRealisationsManifest([
         displayOrder: 6,
       },
     ],
+    videos: [
+      {
+        type: "video",
+        platform: "tiktok",
+        url: "https://www.tiktok.com/@savouretplus/video/7694458492979105042",
+        thumbnail:
+          "./images/realisations/anniversaire-winnie/boisson-personnalisee.jpg",
+        thumbnailAlt: "Petite vidéo montrant l'anniversaire de Winnie",
+        title: "L'anniversaire de Winnie en vidéo",
+        displayOrder: 7,
+      },
+    ],
     testimonials: [
       {
         featuredOnHome: true,
-        homeImageSrc: "./images/realisations/anniversaire-winnie/sacs-cadeaux.jpg",
-        quote: "Les petites attentions personnalisées apportaient une belle cohérence à la fête.",
+        homeImageSrc:
+          "./images/realisations/anniversaire-winnie/sacs-cadeaux.jpg",
+        quote:
+          "Les petites attentions personnalisées apportaient une belle cohérence à la fête.",
         author: "Maman de Winnie",
       },
     ],
@@ -119,7 +134,8 @@ export const realisationsManifest = validateRealisationsManifest([
     testimonials: [
       {
         featuredOnHome: true,
-        quote: "Le rouge et le blanc donnaient une belle présence au décor. Un ensemble à la fois sobre et chaleureux.",
+        quote:
+          "Le rouge et le blanc donnaient une belle présence au décor. Un ensemble à la fois sobre et chaleureux.",
         author: "Responsable de l'événement",
       },
     ],
@@ -148,11 +164,26 @@ export const realisationsManifest = validateRealisationsManifest([
         displayOrder: 2,
       },
     ],
+    videos: [
+      {
+        type: "video",
+        platform: "tiktok",
+        url: "https://www.tiktok.com/@savouretplus/video/7694479229433482514",
+        thumbnail:
+          "./images/realisations/anniversaire-marvensley/boisson-personnalisee.jpg",
+        thumbnailAlt:
+          "Aperçu des articles personnalisés pour l'anniversaire de Marvensley",
+        title: "L'anniversaire de Marvensley en vidéo",
+        displayOrder: 3,
+      },
+    ],
     testimonials: [
       {
         featuredOnHome: true,
-        homeImageSrc: "./images/realisations/anniversaire-marvensley/boisson-personnalisee.jpg",
-        quote: "Le thème gamer correspondait parfaitement à l’ambiance souhaitée pour cet anniversaire.",
+        homeImageSrc:
+          "./images/realisations/anniversaire-marvensley/boisson-personnalisee.jpg",
+        quote:
+          "Le thème gamer correspondait parfaitement à l’ambiance souhaitée pour cet anniversaire.",
         author: "Maman de Marvensley",
       },
     ],
@@ -176,10 +207,23 @@ export const realisationsManifest = validateRealisationsManifest([
         displayOrder: 1,
       },
     ],
+    videos: [
+      {
+        type: "video",
+        platform: "tiktok",
+        url: "https://www.tiktok.com/@savouretplus/video/7694479528357416210",
+        thumbnail:
+          "./images/realisations/bouquet-cadeau-bleu-or/couverture.jpg",
+        thumbnailAlt: "Aperçu du bouquet-cadeau bleu et or composé de billets canadiens et américains",
+        title: "Bouquet-cadeau bleu et or en vidéo",
+        displayOrder: 7,
+      },
+    ],
     testimonials: [
       {
         featuredOnHome: true,
-        quote: "Une idée de cadeau originale, avec une présentation de billets en forme de fleurs qui faisait tout son charme.",
+        quote:
+          "Une idée de cadeau originale, avec une présentation de billets en forme de fleurs qui faisait tout son charme.",
         author: "Maman de l'heureux destinataire",
       },
     ],
@@ -192,4 +236,5 @@ export const realisationsManifest = validateRealisationsManifest([
 export const publishedRealisations =
   getPublishedRealisations(realisationsManifest);
 
-export const homeRealisationTestimonials = getHomeRealisationTestimonials(realisationsManifest);
+export const homeRealisationTestimonials =
+  getHomeRealisationTestimonials(realisationsManifest);

@@ -41,9 +41,9 @@ function find(node: ReactNode, predicate: (element: Element) => boolean): Elemen
     if (found) return found;
   }
 }
-function renderDetail() {
+function renderDetail(item = realisation) {
   state.cursor = 0;
-  return RealisationDetail({ realisation });
+  return RealisationDetail({ realisation: item });
 }
 function gallery(tree: ReactNode) {
   return find(tree, (element) => element.type === RealisationGallery);
@@ -140,5 +140,91 @@ describe("realisation interactions", () => {
     find(tree, (element) => element.type === RealisationLightbox).props.onClose();
     expect(find(renderDetail(), (element) => element.type === RealisationLightbox)).toBeUndefined();
     expect(galleryHtml(renderDetail())).toContain("Vue de détail");
+  });
+});
+
+
+describe("multimedia gallery interactions", () => {
+  const mixed: Realisation = {
+    ...realisation,
+    images: realisation.images.map((image, index) => ({ ...image, displayOrder: index * 2 })),
+    videos: [
+      { type: "video", platform: "youtube", url: "https://youtu.be/test", title: "Vidéo de test", caption: "Légende vidéo", thumbnail: "./images/video.jpg", thumbnailAlt: "Aperçu vidéo", displayOrder: 1 },
+      { type: "video", platform: "tiktok", url: "https://www.tiktok.com/@test/video/123", title: "Sans miniature", displayOrder: 3 },
+    ],
+  };
+
+  it("selects a video without opening it, then exposes only the explicit safe external action", () => {
+    const open = vi.fn();
+    vi.stubGlobal("open", open);
+    let tree = renderDetail(mixed);
+    let controls = RealisationGallery(gallery(tree).props as any);
+    const select = find(controls, (element) => element.props["aria-label"] === "Afficher la vidéo YouTube : Vidéo de test");
+    select.props.onClick();
+    tree = renderDetail(mixed);
+    const html = galleryHtml(tree);
+    expect(open).not.toHaveBeenCalled();
+    expect(html).toContain('src="./images/video.jpg"');
+    expect(html).toContain('alt="Aperçu vidéo"');
+    expect(html).toContain('href="https://youtu.be/test" target="_blank" rel="noopener noreferrer"');
+    expect(html).toContain("Voir la vidéo sur YouTube");
+    expect(html).toMatch(/<figcaption[^>]*>Légende vidéo<\/figcaption>/);
+    expect(html).not.toContain("<iframe");
+    expect(html).not.toContain("<script");
+    expect(html).not.toContain("Agrandir");
+    expect(find(tree, (element) => element.type === RealisationLightbox)).toBeUndefined();
+    controls = RealisationGallery(gallery(tree).props as any);
+    find(controls, (element) => element.props["aria-label"] === "Afficher la photographie 2").props.onClick();
+    tree = renderDetail(mixed);
+    expect(galleryHtml(tree)).toContain("Légende éditoriale");
+    gallery(tree).props.onOpen(null);
+    tree = renderDetail(mixed);
+    let lightbox = find(tree, (element) => element.type === RealisationLightbox);
+    expect(lightbox.props.images).toHaveLength(3);
+    expect(lightbox.props.activeIndex).toBe(1);
+    lightbox.props.onNavigate(-1);
+    tree = renderDetail(mixed);
+    expect(galleryHtml(tree)).toContain("Vue principale");
+    lightbox = find(tree, (element) => element.type === RealisationLightbox);
+    lightbox.props.onNavigate(-1);
+    expect(galleryHtml(renderDetail(mixed))).toContain("Vue de détail");
+  });
+
+  it("replaces a failed thumbnail with the accessible fallback", () => {
+    const controls = RealisationGallery({
+      media: mixed.videos!, activeIndex: 0, title: "Test", onSelect: vi.fn(), onOpen: vi.fn(),
+    });
+    const preview = find(controls, (element) => element.props.video && !element.props.compact);
+    const component = preview.type as (props: any) => Element;
+    state.cursor = 0;
+    const image = component(preview.props);
+    expect(image.type).toBe("img");
+    image.props.onError();
+    state.cursor = 0;
+    const html = renderToStaticMarkup(component(preview.props));
+    expect(html).toContain("Aperçu indisponible");
+    expect(html).not.toContain("<img");
+  });
+
+  it("selects missing-preview TikTok video via keyboard and preserves a stable preview", () => {
+    const controls = RealisationGallery(gallery(renderDetail(mixed)).props as any);
+    const first = find(controls, (element) => element.props["aria-label"] === "Afficher la photographie 1");
+    const preventDefault = vi.fn();
+    const focus = vi.fn();
+    const event = { key: "ArrowRight", preventDefault, currentTarget: { parentElement: { querySelectorAll: () => [{}, { focus }] } } };
+    first.props.onKeyDown(event);
+    expect(preventDefault).toHaveBeenCalled();
+    expect(focus).toHaveBeenCalled();
+    expect(galleryHtml(renderDetail(mixed))).toContain("Voir la vidéo sur YouTube");
+    const next = RealisationGallery(gallery(renderDetail(mixed)).props as any);
+    find(next, (element) => element.props["aria-label"] === "Afficher la vidéo TikTok : Sans miniature").props.onClick();
+    const html = galleryHtml(renderDetail(mixed));
+    expect(html).toContain("Aperçu indisponible");
+    expect(html).toContain("Voir la vidéo sur TikTok");
+    expect(html).toContain('href="https://www.tiktok.com/@test/video/123"');
+    expect(html).toContain("h-[22rem]");
+    expect(html).toContain("sm:h-[30rem]");
+    expect(html).toContain("lg:h-[38rem]");
+    expect(html).toMatch(/<figcaption[^>]*>Sans miniature<\/figcaption>/);
   });
 });
