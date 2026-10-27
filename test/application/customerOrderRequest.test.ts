@@ -84,6 +84,13 @@ describe("customer order request persistence", () => {
     expect(globalThis.crypto.randomUUID).toHaveBeenCalledOnce();
   });
 
+  it("preserves a realisation reference in the existing order note", async () => {
+    const payload = await prepareCustomerOrderRequest({
+      ...order, customer: { ...order.customer, note: "Inspiration : REA-0001" },
+    });
+    expect(payload.note).toBe("Inspiration : REA-0001");
+  });
+
   it("creates a new UUID when the logical request changes", async () => {
     await prepareCustomerOrderRequest(order);
     const changed = await prepareCustomerOrderRequest({

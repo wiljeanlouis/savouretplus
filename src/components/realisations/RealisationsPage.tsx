@@ -116,7 +116,7 @@ function FilterButton({ active, onClick, children }) {
 function RealisationCard({ realisation }: { realisation: Realisation }) {
   return (
     <article className="group flex h-full flex-col overflow-hidden border border-blush/55 bg-ivory shadow-[0_18px_50px_rgba(53,42,43,0.06)]">
-      <a className="relative block aspect-[4/3] overflow-hidden bg-blush/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-wine" href={`#/realisations/${realisation.slug}`}>
+      <a aria-label={`Voir ${realisation.title}`} className="relative block aspect-[4/3] overflow-hidden bg-blush/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-wine" href={`#/realisations/${realisation.slug}`}>
         <img
           className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.025]"
           src={realisation.coverImage}
@@ -128,6 +128,7 @@ function RealisationCard({ realisation }: { realisation: Realisation }) {
       </a>
       <div className="flex flex-1 flex-col p-6">
         <p className="eyebrow">{REALISATION_CATEGORIES[realisation.category]}</p>
+        <p className="mt-2 text-xs tracking-wide text-espresso/55">Réf. {realisation.reference}</p>
         <h3 className="mt-3 font-serif text-3xl font-semibold leading-none text-espresso">
           <a className="rounded-sm hover:text-wine focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine" href={`#/realisations/${realisation.slug}`}>
             {realisation.title}

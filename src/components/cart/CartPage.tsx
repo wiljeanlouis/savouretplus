@@ -390,7 +390,7 @@ function OrderForm({ cart, customer, errors, onCustomerChange, onSubmit, status 
             onChange={(event) => onCustomerChange("email", event.target.value)}
           />
         </ValidatedField>
-        <ValidatedField id="order-note" label="Note">
+        <ValidatedField id="order-note" label="Note" hint="Une réalisation vous inspire? Collez sa référence ici (ex. REA-0001).">
           <textarea
             rows={4}
             value={customer.note}

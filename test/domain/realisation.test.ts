@@ -15,6 +15,7 @@ import {
 
 const fixture = (overrides: Partial<Realisation> = {}): Realisation => ({
   id: "fixture-1",
+  reference: "REA-0100",
   slug: "fixture-realisation",
   title: "Réalisation test",
   description: "Description test",
@@ -40,17 +41,44 @@ describe("realisations manifest", () => {
 
   it("publishes the new authentic galleries with their complete image sets", () => {
     const ceremony = realisationsManifest.find(({ slug }) => slug === "decor-colonne-ballons-rouge-blanc");
-    const birthday = realisationsManifest.find(({ slug }) => slug === "cadeaux-personnalises-anniversaire");
-    const chips = realisationsManifest.find(({ slug }) => slug === "chips-personnalises");
-    const drinks = realisationsManifest.find(({ slug }) => slug === "boissons-personnalisees");
+    const birthday = realisationsManifest.find(({ slug }) => slug === "anniversaire-winnie");
+    const opening = realisationsManifest.find(({ slug }) => slug === "grand-opening-soul-store");
+    const gamer = realisationsManifest.find(({ slug }) => slug === "anniversaire-marvensley");
     const bouquet = realisationsManifest.find(({ slug }) => slug === "bouquet-cadeau-billets-bleu-or");
 
     expect(ceremony?.images).toHaveLength(1);
-    expect(birthday?.images).toHaveLength(3);
-    expect(chips?.images).toHaveLength(2);
-    expect(drinks?.images).toHaveLength(3);
+    expect(birthday?.images).toHaveLength(6);
+    expect(opening?.images).toHaveLength(3);
+    expect(gamer?.images).toHaveLength(2);
     expect(bouquet?.images).toHaveLength(1);
     expect(bouquet?.description).toContain("billets canadiens et américains");
+  });
+
+  it("keeps the permanent references when titles, categories and display order change", () => {
+    const expected = {
+      "realisation-grand-opening-soul-store": "REA-0001",
+      "realisation-anniversaire-winnie": "REA-0002",
+      "realisation-decor-colonne-ballons-rouge-blanc": "REA-0003",
+      "realisation-anniversaire-marvensley": "REA-0004",
+      "realisation-bouquet-cadeau-billets-bleu-or": "REA-0005",
+    };
+    const changed = [...realisationsManifest].reverse().map((item, index) => ({
+      ...item, title: `Titre ${index}`, category: "traiteur" as const, displayOrder: -item.displayOrder,
+    }));
+    for (const items of [realisationsManifest, getPublishedRealisations(changed)]) {
+      expect(Object.fromEntries(items.map(({ id, reference }) => [id, reference]))).toEqual(expected);
+      expect(new Set(items.map(({ reference }) => reference)).size).toBe(items.length);
+    }
+  });
+
+  it.each([undefined, "", "REA-0000", "REA-001", "REA-00001", "rea-0001", "REA-ABCD", "REA-0001\n", " REA-0001"])("rejects invalid reference %s", (reference) => {
+    expect(() => validateRealisationsManifest([fixture({ reference })])).toThrow(/Référence/);
+  });
+
+  it("rejects duplicate references even on unpublished entries", () => {
+    expect(() => validateRealisationsManifest([
+      fixture(), fixture({ id: "second", slug: "second", published: false }),
+    ])).toThrow(/Référence.*dupliquée/);
   });
 
   it("sorts published entries and hides unpublished ones", () => {
@@ -96,5 +124,39 @@ describe("realisations manifest", () => {
     expect(() => validateRealisationsManifest([fixture(), fixture({ id: "fixture-2" })])).toThrow(/Slug/);
     expect(() => validateRealisationsManifest([fixture({ category: "inconnue" as never })])).toThrow(/Catégorie/);
     expect(() => validateRealisationsManifest([fixture({ coverImage: "./images/missing.jpg" })])).toThrow(/couverture/i);
+  });
+});
+
+describe("realisation testimonial validation", () => {
+  const testimonial = { quote: "Texte de test — non publiable", author: "Attribution de test — non publiable" };
+
+  it("accepts absent, empty and multiple testimonials without modifying approved text", () => {
+    const items = [fixture(), fixture({ testimonials: [] }), fixture({ testimonials: [
+      { ...testimonial, quote: "  Texte de test\navec sa mise en forme.  ", context: "Contexte de test", date: "Date de test" },
+      testimonial,
+    ] })];
+    for (const item of items) {
+      const before = structuredClone(item);
+      expect(validateRealisationsManifest([item])[0]).toBe(item);
+      expect(item).toEqual(before);
+    }
+  });
+
+  it.each([null, {}, "texte", [null], ["texte"], [[]]])("rejects an invalid testimonial list or entry (%j)", (testimonials) => {
+    expect(() => validateRealisationsManifest([fixture({ testimonials: testimonials as never })])).toThrow(/témoignage/i);
+  });
+
+  it.each(["quote", "author"] as const)("requires nonempty %s", (field) => {
+    for (const value of [undefined, null, "", " \n ", 123]) {
+      expect(() => validateRealisationsManifest([fixture({ testimonials: [{ ...testimonial, [field]: value } as never] })]))
+        .toThrow(new RegExp(field));
+    }
+  });
+
+  it.each(["context", "date"] as const)("rejects invalid optional %s when supplied", (field) => {
+    for (const value of [null, "", " \n ", 123]) {
+      expect(() => validateRealisationsManifest([fixture({ testimonials: [{ ...testimonial, [field]: value } as never] })]))
+        .toThrow(new RegExp(field));
+    }
   });
 });

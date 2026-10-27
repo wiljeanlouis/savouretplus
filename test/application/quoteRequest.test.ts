@@ -80,6 +80,13 @@ describe("quote request persistence", () => {
     expect(globalThis.crypto.randomUUID).toHaveBeenCalledOnce();
   });
 
+  it("preserves a realisation reference in the existing event note", async () => {
+    const payload = await prepareQuoteRequest({
+      ...request, event_details: { ...request.event_details, note: "Inspiration : REA-0001" },
+    });
+    expect(payload.event_details.note).toBe("Inspiration : REA-0001");
+  });
+
   it("creates a new request UUID when a line changes", async () => {
     await prepareQuoteRequest(request);
     const changed = structuredClone(request);

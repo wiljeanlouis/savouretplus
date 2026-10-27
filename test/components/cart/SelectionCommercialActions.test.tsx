@@ -158,6 +158,8 @@ describe("selection commercial actions", () => {
     expect(html).toContain("6,00 $");
     expect(html).toContain("Transmettre la demande");
     expect(html).toContain("Envoyer la demande");
+    expect(html).toContain("Collez sa référence ici (ex. REA-0001).");
+    expect(html).toContain('aria-describedby="order-note-hint"');
     expect(html).toContain("Demander une soumission");
   });
 

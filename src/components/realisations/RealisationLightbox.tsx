@@ -65,7 +65,7 @@ export function RealisationLightbox({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="relative w-full max-w-6xl">
+      <div className="relative max-h-[calc(100svh-2rem)] w-full max-w-6xl overflow-y-auto">
         <div className="mb-3 flex items-center justify-between gap-3 text-white">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.18em] text-champagne">{title}</p>
@@ -83,23 +83,28 @@ export function RealisationLightbox({
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
-        <div className="relative grid min-h-72 place-items-center overflow-hidden bg-black shadow-2xl">
-          <img
-            className="max-h-[78svh] w-full object-contain"
-            src={activeImage.src}
-            alt={activeImage.alt}
-          />
-          {images.length > 1 ? (
-            <>
-              <LightboxButton side="left" label="Photographie précédente" onClick={() => onNavigate(-1)}>
-                <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-              </LightboxButton>
-              <LightboxButton side="right" label="Photographie suivante" onClick={() => onNavigate(1)}>
-                <ChevronRight className="h-5 w-5" aria-hidden="true" />
-              </LightboxButton>
-            </>
-          ) : null}
-        </div>
+        <figure>
+          <div className="relative grid min-h-72 place-items-center overflow-hidden bg-black shadow-2xl">
+            <img
+              className="max-h-[68svh] w-full object-contain"
+              src={activeImage.src}
+              alt={activeImage.alt}
+            />
+            {images.length > 1 ? (
+              <>
+                <LightboxButton side="left" label="Photographie précédente" onClick={() => onNavigate(-1)}>
+                  <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                </LightboxButton>
+                <LightboxButton side="right" label="Photographie suivante" onClick={() => onNavigate(1)}>
+                  <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                </LightboxButton>
+              </>
+            ) : null}
+          </div>
+          <figcaption className="mt-3 text-center text-sm leading-6 text-white/75">
+            {activeImage.caption?.trim() || activeImage.alt}
+          </figcaption>
+        </figure>
       </div>
     </div>
   );
