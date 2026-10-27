@@ -63,7 +63,7 @@ describe("realisations manifest", () => {
       "realisation-bouquet-cadeau-billets-bleu-or": "REA-0005",
     };
     const changed = [...realisationsManifest].reverse().map((item, index) => ({
-      ...item, title: `Titre ${index}`, category: "traiteur" as const, displayOrder: -item.displayOrder,
+      ...item, title: `Titre ${index}`, category: "cartering" as const, displayOrder: -item.displayOrder,
     }));
     for (const items of [realisationsManifest, getPublishedRealisations(changed)]) {
       expect(Object.fromEntries(items.map(({ id, reference }) => [id, reference]))).toEqual(expected);
@@ -96,13 +96,13 @@ describe("realisations manifest", () => {
   it("filters only categories present in the published collection", () => {
     const items = [
       fixture(),
-      fixture({ id: "food", slug: "food", category: "traiteur" }),
+      fixture({ id: "food", slug: "food", category: "cartering" }),
     ];
 
-    expect(filterRealisations(items, "traiteur").map((item) => item.slug)).toEqual(["food"]);
+    expect(filterRealisations(items, "cartering").map((item) => item.slug)).toEqual(["food"]);
     expect(getAvailableRealisationCategories(items).map((category) => category.id)).toEqual([
       "decoration",
-      "traiteur",
+      "cartering",
     ]);
   });
 

@@ -1,5 +1,6 @@
 import {
   getPublishedRealisations,
+  getHomeRealisationTestimonials,
   type Realisation,
   validateRealisationsManifest,
 } from "../domain/realisation";
@@ -34,6 +35,8 @@ export const realisationsManifest = validateRealisationsManifest([
     ],
     testimonials: [
       {
+        featuredOnHome: true,
+        homeImageSrc: "./images/realisations/grand-opening-soul-store/arche-ballons.png",
         quote: "Une décoration qui mettait notre boutique en valeur et créait une belle ambiance pour accueillir nos invités.",
         author: "Soul Store",
       },
@@ -85,6 +88,8 @@ export const realisationsManifest = validateRealisationsManifest([
     ],
     testimonials: [
       {
+        featuredOnHome: true,
+        homeImageSrc: "./images/realisations/anniversaire-winnie/sacs-cadeaux.jpg",
         quote: "Les petites attentions personnalisées apportaient une belle cohérence à la fête.",
         author: "Maman de Winnie",
       },
@@ -113,6 +118,7 @@ export const realisationsManifest = validateRealisationsManifest([
     ],
     testimonials: [
       {
+        featuredOnHome: true,
         quote: "Le rouge et le blanc donnaient une belle présence au décor. Un ensemble à la fois sobre et chaleureux.",
         author: "Responsable de l'événement",
       },
@@ -144,6 +150,8 @@ export const realisationsManifest = validateRealisationsManifest([
     ],
     testimonials: [
       {
+        featuredOnHome: true,
+        homeImageSrc: "./images/realisations/anniversaire-marvensley/boisson-personnalisee.jpg",
         quote: "Le thème gamer correspondait parfaitement à l’ambiance souhaitée pour cet anniversaire.",
         author: "Maman de Marvensley",
       },
@@ -170,6 +178,7 @@ export const realisationsManifest = validateRealisationsManifest([
     ],
     testimonials: [
       {
+        featuredOnHome: true,
         quote: "Une idée de cadeau originale, avec une présentation de billets en forme de fleurs qui faisait tout son charme.",
         author: "Maman de l'heureux destinataire",
       },
@@ -182,3 +191,5 @@ export const realisationsManifest = validateRealisationsManifest([
 
 export const publishedRealisations =
   getPublishedRealisations(realisationsManifest);
+
+export const homeRealisationTestimonials = getHomeRealisationTestimonials(realisationsManifest);

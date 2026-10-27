@@ -36,7 +36,8 @@ describe("UI-2.4 realisations portfolio", () => {
     for (const reference of ["REA-0001", "REA-0002", "REA-0003", "REA-0004", "REA-0005"]) {
       expect(html).toContain(`Réf. ${reference}`);
     }
-    expect(html).not.toContain('aria-label="Filtrer les réalisations"');
+    expect(html).toContain('aria-label="Filtrer les réalisations"');
+    expect(html).toContain("Décoration et service traiteur");
     expect(html).toContain("py-9 text-center sm:py-10 lg:py-11");
   });
 

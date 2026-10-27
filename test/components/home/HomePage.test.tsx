@@ -22,6 +22,23 @@ describe("UI-1 home page", () => {
     expect(html).toContain('href="#/realisations"');
   });
 
+  it("separates full-width commitments and testimonials before the final CTA", () => {
+    const html = renderToStaticMarkup(<HomePage />);
+    for (const title of ["Service sur mesure", "Gastronomie authentique", "Accompagnement personnalisé", "Attention aux détails"]) {
+      expect(html).toContain(title);
+    }
+    expect(html).toContain('aria-label="Témoignages"');
+    expect(html).not.toContain("Témoignage fictif");
+    expect(html).not.toContain("xl:grid-cols-[1.45fr_0.75fr]");
+    expect(html).toContain("sm:grid-cols-2 lg:grid-cols-4");
+    expect(html).toContain("Ils nous ont fait confiance");
+    expect(html).toContain("Les témoignages de nos clients");
+    const testimonialSection = html.indexOf('aria-labelledby="home-testimonials-title"');
+    expect(testimonialSection).toBeGreaterThan(html.indexOf("Attention aux détails"));
+    expect(testimonialSection).toBeLessThan(html.indexOf("Prêts à planifier votre prochain événement ?"));
+    expect(html).toMatch(/<\/section><section[^>]+aria-labelledby="home-testimonials-title"><div class="container-page">/);
+  });
+
   it("loads the hero image eagerly and defers below-the-fold photographs", () => {
     const html = renderToStaticMarkup(<HomePage />);
 

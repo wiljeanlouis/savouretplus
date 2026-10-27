@@ -123,10 +123,7 @@ et pour les champs facultatifs lorsqu'ils sont présents. Elle ne modifie pas le
 textes. Elle ne peut pas vérifier l'authenticité ni le consentement : confirmez
 l'autorisation du client et les informations publiables avant d'ajouter un
 élément. N'incluez pas de coordonnées ni d'informations personnelles non autorisées.
-Les exemples fictifs actuellement présents servent uniquement à la démonstration
-et portent tous le libellé visible « Témoignage fictif — démonstration ».
-Ils ne proviennent pas de clients réels. Les retirer ou les remplacer par des avis
-authentiques autorisés avant toute publication en production.
+Ne publiez pas de témoignages fictifs comme avis clients authentiques.
 
 Omettez `testimonials` ou utilisez une liste vide en l'absence de contenu autorisé.
 La section « Le témoignage de notre client » est alors entièrement absente.
@@ -134,6 +131,47 @@ Les témoignages apparaissent dans un encadré de la colonne de droite, après l
 description et le bloc de référence. Ils restent empilés, sans carrousel. Sur mobile
 et tablette, la galerie puis le contenu de la fiche suivent un ordre vertical
 naturel. Le titre passe à « Les témoignages de nos clients » pour plusieurs avis.
+
+## Sélection des témoignages pour l'accueil
+
+L'accueil utilise les mêmes témoignages que les fiches. Il n'existe plus de liste
+indépendante dans `homeContent.ts`. `getHomeRealisationTestimonials()` retient
+uniquement les témoignages avec `featuredOnHome: true` de réalisations publiées.
+Une propriété absente ou `false` conserve le témoignage uniquement sur la fiche.
+Ce choix éditorial ne remplace pas la vérification du consentement du client.
+
+Le sélecteur trie les réalisations par `displayOrder`, titre français puis `id`
+en cas d'égalité; il garde l'ordre des témoignages dans chaque liste. Il réutilise
+les objets de témoignage et les métadonnées des médias existants sans les copier.
+Par défaut, la photo est celle de `coverImage`. Pour choisir une autre photo de
+la même réalisation, renseignez `homeImageSrc` sur le témoignage avec la valeur
+exacte d'un `images[].src`. La validation refuse toute image étrangère à la galerie
+et toute valeur non booléenne de `featuredOnHome`.
+
+Les cinq témoignages associés à `REA-0001` à `REA-0005` sont sélectionnés pour
+l'accueil. Le responsable du site a confirmé leur authenticité et l'autorisation
+de publication des clients le 27 octobre 2026. Leurs textes et auteurs sont conservés.
+
+Les quatre engagements occupent une section pleine largeur, avec quatre colonnes
+sur desktop, deux sur tablette et une sur mobile. Les témoignages ont leur propre
+section immédiatement après les engagements et avant le CTA final, dans le même
+conteneur que les autres sections. Sans sélection, cette section est entièrement
+absente. Le carrousel présente une carte horizontale à partir de la tablette,
+avec la citation dominante et une miniature carrée secondaire à droite; sur mobile,
+la miniature suit le texte. Les photos des témoignages de Soul Store, Winnie et
+Marvensley sont sélectionnées explicitement avec `homeImageSrc` pour utiliser une
+autre vue de leur réalisation que la couverture de la galerie d'accueil. Les deux
+réalisations à photo unique conservent leur couverture.
+Avec une sélection, le carrousel manuel affiche la photo locale, la citation,
+l'auteur, les métadonnées disponibles, la référence et un lien vers la fiche.
+Une seule sélection masque flèches et indicateurs. Les diapositives partagent la
+hauteur du contenu le plus long pour éviter les sauts, sans tronquer les textes.
+Seule la miniature active est chargée, jamais les galeries complètes.
+
+Pour la vérification visuelle, utiliser uniquement des fixtures de test ou des
+avis dont l'autorisation est confirmée. Contrôler sur desktop et mobile : zéro,
+un et plusieurs avis; navigation par flèches et indicateurs; focus clavier;
+textes longs; références, photos et liens vers les bonnes fiches.
 
 ## 6. Vérifier localement
 

@@ -14,6 +14,8 @@ export type RealisationImage = {
 };
 
 export type RealisationTestimonial = {
+  featuredOnHome?: boolean;
+  homeImageSrc?: string;
   quote: string;
   author: string;
   context?: string;
@@ -93,6 +95,12 @@ export function validateRealisationsManifest(realisations: Realisation[]) {
             throw new Error(`Champ ${field} manquant ou invalide dans un témoignage de ${realisation.slug}.`);
           }
         }
+        if (testimonial.featuredOnHome !== undefined && typeof testimonial.featuredOnHome !== "boolean") {
+          throw new Error(`Champ featuredOnHome invalide dans un témoignage de ${realisation.slug}.`);
+        }
+        if (testimonial.homeImageSrc !== undefined && !realisation.images.some((image) => image.src === testimonial.homeImageSrc)) {
+          throw new Error(`Photographie homeImageSrc invalide dans un témoignage de ${realisation.slug}.`);
+        }
         for (const field of ["context", "date"] as const) {
           if (testimonial[field] !== undefined && (typeof testimonial[field] !== "string" || !testimonial[field].trim())) {
             throw new Error(`Champ ${field} invalide dans un témoignage de ${realisation.slug}.`);
@@ -144,4 +152,24 @@ export function getRealisationQuoteHref(realisation: Realisation) {
   return realisation.quoteService
     ? `#/soumission?service=${realisation.quoteService}`
     : "#/soumission";
+}
+
+export type HomeRealisationTestimonial = {
+  key: string;
+  realisation: Realisation;
+  testimonial: RealisationTestimonial;
+  image: RealisationImage;
+};
+
+export function getHomeRealisationTestimonials(realisations: Realisation[]): HomeRealisationTestimonial[] {
+  return getPublishedRealisations(realisations)
+    .sort((first, second) =>
+      first.displayOrder - second.displayOrder || first.title.localeCompare(second.title, "fr") || first.id.localeCompare(second.id, "fr"),
+    )
+    .flatMap((realisation) => (realisation.testimonials ?? []).flatMap((testimonial, index) => {
+      if (testimonial.featuredOnHome !== true) return [];
+      const image = realisation.images.find((image) => image.src === (testimonial.homeImageSrc ?? realisation.coverImage));
+      if (!image) return [];
+      return [{ key: `${realisation.id}:${index}`, realisation, testimonial, image }];
+    }));
 }
