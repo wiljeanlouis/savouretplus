@@ -1,12 +1,14 @@
-import { ArrowLeft, Copy, Maximize2 } from "lucide-react";
+import { ArrowLeft, Copy, Maximize2, PlayCircle, Video } from "lucide-react";
 import { useRef, useState } from "react";
 import { realisationsManifest } from "../../content/realisations";
 import {
   findPublishedRealisationBySlug,
-  getOrderedRealisationImages,
+  getOrderedRealisationMedia,
+  isRealisationVideoUrl,
   REALISATION_CATEGORIES,
   type Realisation,
-  type RealisationImage,
+  type RealisationMedia,
+  type RealisationVideo,
 } from "../../domain/realisation";
 import { Button } from "../ui/button";
 import { RealisationTestimonials } from "./RealisationTestimonials";
@@ -25,14 +27,18 @@ export function RealisationDetailPage({ slug, realisations = realisationsManifes
 }
 
 export function RealisationDetail({ realisation }: { realisation: Realisation }) {
-  const images = getOrderedRealisationImages(realisation);
+  const media = getOrderedRealisationMedia(realisation);
+  const images = media.filter((item) => item.type === "image");
   const [activeIndex, setActiveIndex] = useState(0);
   const [copyStatus, setCopyStatus] = useState("");
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const lightboxTriggerRef = useRef<HTMLElement | null>(null);
 
   function showRelativeImage(offset: number) {
-    setActiveIndex((current) => (current + offset + images.length) % images.length);
+    setActiveIndex((current) => {
+      const photoIndex = images.indexOf(media[current] as typeof images[number]);
+      return media.indexOf(images[(photoIndex + offset + images.length) % images.length]);
+    });
   }
 
   function openLightbox(trigger: HTMLElement) {
@@ -50,7 +56,7 @@ export function RealisationDetail({ realisation }: { realisation: Realisation })
 
         <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-start lg:gap-16">
           <RealisationGallery
-            images={images}
+            media={media}
             activeIndex={activeIndex}
             title={realisation.title}
             onSelect={setActiveIndex}
@@ -70,28 +76,31 @@ export function RealisationDetail({ realisation }: { realisation: Realisation })
               </dl>
             ) : null}
             <div className="mt-6 border-t border-blush/60 pt-5">
-              <p className="text-sm font-semibold tracking-wide text-wine">Référence : {realisation.reference}</p>
-              <p className="mt-2 max-w-md text-sm leading-6 text-espresso/65">
+              <div className="flex flex-wrap items-center gap-1">
+                <p className="text-sm font-semibold tracking-wide text-wine">Référence : {realisation.reference}</p>
+                <Button
+                  className="h-11 w-11 shrink-0"
+                  variant="ghost"
+                  size="icon"
+                  type="button"
+                  aria-label={`Copier la référence ${realisation.reference}`}
+                  onClick={async () => {
+                    setCopyStatus("");
+                    try {
+                      await navigator.clipboard.writeText(realisation.reference);
+                      setCopyStatus(`Référence ${realisation.reference} copiée.`);
+                    } catch {
+                      setCopyStatus(`Copie impossible. Sélectionnez et copiez la référence ${realisation.reference} manuellement.`);
+                    }
+                  }}
+                >
+                  <Copy className="h-4 w-4" aria-hidden="true" />
+                </Button>
+              </div>
+              <p className="mt-1 max-w-md text-sm leading-6 text-espresso/65">
                 Mentionnez cette référence lors de votre commande ou de votre demande de soumission.
               </p>
-              <Button
-                className="mt-4"
-                variant="outline"
-                type="button"
-                onClick={async () => {
-                  setCopyStatus("");
-                  try {
-                    await navigator.clipboard.writeText(realisation.reference);
-                    setCopyStatus(`Référence ${realisation.reference} copiée.`);
-                  } catch {
-                    setCopyStatus(`Copie impossible. Sélectionnez et copiez la référence ${realisation.reference} manuellement.`);
-                  }
-                }}
-              >
-                <Copy className="h-4 w-4" aria-hidden="true" />
-                Copier la référence
-              </Button>
-              <p className="mt-2 min-h-10 text-xs leading-5 text-espresso/65" role="status" aria-live="polite" aria-atomic="true">
+              <p className={copyStatus ? "mt-2 text-xs leading-5 text-espresso/65" : "sr-only"} role="status" aria-live="polite" aria-atomic="true">
                 {copyStatus}
               </p>
             </div>
@@ -100,10 +109,10 @@ export function RealisationDetail({ realisation }: { realisation: Realisation })
         </div>
       </div>
 
-      {lightboxOpen ? (
+      {lightboxOpen && media[activeIndex].type === "image" ? (
         <RealisationLightbox
           images={images}
-          activeIndex={activeIndex}
+          activeIndex={images.indexOf(media[activeIndex] as typeof images[number])}
           title={realisation.title}
           onClose={() => setLightboxOpen(false)}
           onNavigate={showRelativeImage}
@@ -115,54 +124,88 @@ export function RealisationDetail({ realisation }: { realisation: Realisation })
 }
 
 type RealisationGalleryProps = {
-  images: RealisationImage[];
+  media: RealisationMedia[];
   activeIndex: number;
   title: string;
   onSelect: (index: number) => void;
   onOpen: (trigger: HTMLElement) => void;
 };
 
-export function RealisationGallery({ images, activeIndex, title, onSelect, onOpen }: RealisationGalleryProps) {
-  const activeImage = images[activeIndex];
+const platformLabels = { youtube: "YouTube", tiktok: "TikTok" } as const;
+const previewClass = "group relative grid h-[22rem] w-full place-items-center overflow-hidden border border-blush/60 bg-white p-3 shadow-[0_18px_50px_rgba(53,42,43,0.07)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine sm:h-[30rem] lg:h-[38rem]";
+
+function VideoThumbnail({ video, compact = false }: { video: RealisationVideo; compact?: boolean }) {
+  const [failed, setFailed] = useState(false);
+  return video.thumbnail && !failed ? (
+    <img className="h-full min-h-0 w-full object-contain" src={video.thumbnail} alt={compact ? "" : video.thumbnailAlt} loading="lazy" decoding="async" onError={() => setFailed(true)} />
+  ) : (
+    <span className="flex h-full flex-col items-center justify-center gap-2 p-2 text-center text-wine">
+      <Video className="h-7 w-7" aria-hidden="true" />
+      <span className={compact ? "sr-only" : "text-xs"}>Aperçu indisponible</span>
+    </span>
+  );
+}
+
+export function RealisationGallery({ media, activeIndex, title, onSelect, onOpen }: RealisationGalleryProps) {
+  const activeMedia = media[activeIndex];
 
   return (
-    <div>
+    <div className="min-w-0">
       <figure>
-        <button
-          className="group relative grid min-h-[22rem] w-full place-items-center overflow-hidden border border-blush/60 bg-white p-3 shadow-[0_18px_50px_rgba(53,42,43,0.07)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine sm:min-h-[30rem] lg:min-h-[38rem]"
-          type="button"
-          onClick={(event) => onOpen(event.currentTarget)}
-          aria-label={`Agrandir ${activeImage.alt}`}
-        >
-          <img
-            className="max-h-[72svh] h-auto w-auto max-w-full object-contain"
-            src={activeImage.src}
-            alt={activeImage.alt}
-            decoding="async"
-          />
-          <span className="absolute bottom-4 right-4 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-wine shadow-md transition group-hover:bg-wine group-hover:text-white" aria-hidden="true">
-            <Maximize2 className="h-4 w-4" />
-          </span>
-        </button>
-        <figcaption className="mt-3 text-sm leading-6 text-espresso/60">
-          {activeImage.caption?.trim() || activeImage.alt}
+        {activeMedia.type === "image" ? (
+          <button className={previewClass} type="button" onClick={(event) => onOpen(event.currentTarget)} aria-label={`Agrandir ${activeMedia.alt}`}>
+            <img className="h-full min-h-0 w-full object-contain" src={activeMedia.src} alt={activeMedia.alt} decoding="async" />
+            <span className="absolute bottom-4 right-4 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-wine shadow-md transition group-hover:bg-wine group-hover:text-white" aria-hidden="true">
+              <Maximize2 className="h-4 w-4" />
+            </span>
+          </button>
+        ) : (
+          <div className={previewClass}>
+            <VideoThumbnail key={activeMedia.url} video={activeMedia} />
+            <span className="absolute left-4 top-4 bg-white/95 px-3 py-1 text-xs font-semibold text-wine">{platformLabels[activeMedia.platform]}</span>
+            {isRealisationVideoUrl(activeMedia.url, activeMedia.platform) ? (
+              <a className="absolute bottom-4 left-4 right-4 flex min-h-11 items-center justify-center gap-2 bg-white/95 px-3 py-3 text-center text-sm font-semibold text-wine shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine" href={activeMedia.url} target="_blank" rel="noopener noreferrer">
+                <PlayCircle className="h-5 w-5 shrink-0" aria-hidden="true" />
+                Voir la vidéo sur {platformLabels[activeMedia.platform]}
+                <span className="sr-only"> : {activeMedia.title} (nouvel onglet)</span>
+              </a>
+            ) : null}
+          </div>
+        )}
+        <figcaption className="mt-3 text-sm leading-6 text-espresso/60" aria-live="polite" aria-atomic="true">
+          {activeMedia.caption?.trim() || (activeMedia.type === "image" ? activeMedia.alt : activeMedia.title)}
         </figcaption>
       </figure>
 
-      {images.length > 1 ? (
-        <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4" aria-label={`Photographies de ${title}`}>
-          {images.map((image, index) => (
+      {media.length > 1 ? (
+        <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4" role="group" aria-label={`Médias de ${title}`}>
+          {media.map((item, index) => (
             <button
-              className={`aspect-square overflow-hidden border bg-white p-1 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine ${
-                index === activeIndex ? "border-wine" : "border-blush/60 hover:border-wine/50"
-              }`}
+              className={`relative aspect-square min-w-0 overflow-hidden border bg-white p-1 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wine ${index === activeIndex ? "border-wine" : "border-blush/60 hover:border-wine/50"}`}
               type="button"
               onClick={() => onSelect(index)}
-              aria-label={`Afficher la photographie ${index + 1}`}
+              onKeyDown={(event) => {
+                const offset = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
+                const next = event.key === "Home" ? 0 : event.key === "End" ? media.length - 1 : (index + offset + media.length) % media.length;
+                if (!offset && event.key !== "Home" && event.key !== "End") return;
+                event.preventDefault();
+                onSelect(next);
+                const controls = event.currentTarget.parentElement?.querySelectorAll("button");
+                controls?.[next]?.focus();
+              }}
+              aria-label={item.type === "image" ? `Afficher la photographie ${media.slice(0, index + 1).filter((entry) => entry.type === "image").length}` : `Afficher la vidéo ${platformLabels[item.platform]} : ${item.title}`}
               aria-pressed={index === activeIndex}
-              key={`${image.src}-${index}`}
+              key={item.type === "image" ? `${item.src}-${index}` : `${item.url}-${index}`}
             >
-              <img className="h-full w-full object-cover" src={image.src} alt="" loading="lazy" decoding="async" />
+              {item.type === "image" ? (
+                <img className="h-full w-full object-cover" src={item.src} alt="" loading="lazy" decoding="async" />
+              ) : (
+                <>
+                  <VideoThumbnail video={item} compact />
+                  <span className="absolute right-2 top-2" aria-hidden="true"><PlayCircle className="h-6 w-6 rounded-full bg-white/90 text-wine" /></span>
+                  <span className="absolute bottom-0 left-0 right-0 bg-white/95 px-1 py-1 text-xs font-semibold text-wine">{platformLabels[item.platform]}</span>
+                </>
+              )}
             </button>
           ))}
         </div>

@@ -9,10 +9,14 @@ configuration de produits, sélection persistante, commandes, demandes de
 soumission et portfolio de réalisations. SAVIS et Supabase portent les données
 et les traitements opérationnels.
 
-- Lire `README.md` pour le démarrage et `ARCHITECTURE.md` pour les frontières métier.
-- Consulter `design/` pour les références visuelles et `docs/` pour les procédures.
-- Vérifier les chemins, contrats et commandes dans le code actuel : certaines
-  sections de la documentation décrivent une structure antérieure.
+- Lire `README.md` pour le démarrage et `docs/ARCHITECTURE.md` pour les frontières métier.
+- Consulter `design/` pour les références visuelles et `docs/developpement.md`
+  pour les vérifications et diagnostics; `docs/` contient les guides éditoriaux.
+- Centraliser les frontières, contrats et vues C4 dans `docs/ARCHITECTURE.md`.
+  Garder le README comme point d'entrée et les procédures dans leurs guides,
+  sans recréer une architecture concurrente à la racine.
+- Vérifier les chemins, contrats et commandes dans le code actuel. La
+  documentation décrit le frontend; ne pas en déduire l'état d'un backend déployé.
 - Limiter les modifications au besoin demandé et préserver les changements
   existants de l'utilisateur.
 
@@ -74,8 +78,13 @@ implémenter le port commercial dans un adaptateur d'infrastructure.
 - Préserver l'idempotence des demandes et leurs identifiants lors des reprises.
   Effacer la sélection uniquement après confirmation de réception, jamais
   après une erreur ou un délai dépassé.
-- Sans configuration Supabase, garder le catalogue local utilisable et faire
-  échouer explicitement les envois, sans afficher un succès simulé.
+- Sans configuration Supabase, garder le catalogue local utilisable en
+  développement et faire échouer explicitement les envois, sans succès simulé.
+  Le build de production sans configuration retourne une liste vide. Une erreur
+  du catalogue distant n'active pas automatiquement les données locales.
+- Les six types de soumission incluent `traiteur-decoration`. Préserver la
+  demande mixte sans ajouter Organisation, les véritables identifiants produits
+  et les configurations; vérifier l'intégration avec le backend propriétaire.
 - Les migrations et seeds Supabase appartiennent au dépôt SAVIS. Le démarrage
   local `make run-local` s'effectue depuis SAVIS, pas depuis ce dépôt.
 
@@ -94,7 +103,11 @@ implémenter le port commercial dans un adaptateur d'infrastructure.
 - Pour le portfolio, suivre `docs/ajouter-une-realisation.md`. Utiliser des
   photos dont la provenance est confirmée; ne pas présenter une image générée
   ou de catalogue comme une réalisation réelle. Maintenir les identifiants et
-  slugs uniques ainsi que la cohérence du manifeste et des images locales.
+  slugs et références `REA-XXXX` uniques ainsi que la cohérence du manifeste et
+  des médias locaux. Conserver les couvertures photographiques; les vidéos sont
+  complémentaires, ouvertes par une action explicite sans iframe ni script tiers.
+  Documenter la provenance réelle des aperçus sans présenter une photo comme une
+  capture vidéo vérifiée. Les témoignages nécessitent une autorisation éditoriale.
 
 ## Configuration et livraison
 

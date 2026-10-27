@@ -14,7 +14,7 @@ export function WhySection() {
       <h2 className="mt-3 font-serif text-4xl font-semibold leading-none tracking-[-0.02em] text-espresso sm:text-5xl">
         Plus qu'un service, une expérience
       </h2>
-      <div className="mt-8 grid gap-px overflow-hidden border border-blush/40 bg-blush/40 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-8 grid gap-px overflow-hidden border border-blush/40 bg-blush/40 sm:grid-cols-2 lg:grid-cols-4">
         {reasons.map(({ icon: Icon, title, text }) => (
           <article className="bg-white px-5 py-7 text-center" key={title}>
             <Icon className="mx-auto h-7 w-7 stroke-[1.4] text-wine" aria-hidden="true" />

@@ -25,26 +25,5 @@ export const heroSlides = [
   },
 ];
 
-export const testimonials = [
-  {
-    name: "Marie-Claire",
-    event: "Anniversaire familial",
-    quote:
-      "La décoration était exactement dans l'ambiance souhaitée. Tout était soigné, chaleureux et prêt à temps.",
-  },
-  {
-    name: "Nadine",
-    event: "Baby shower",
-    quote:
-      "L'équipe a compris notre thème rapidement et a proposé des détails qui ont vraiment transformé la salle.",
-  },
-  {
-    name: "Jean & Stéphanie",
-    event: "Réception privée",
-    quote:
-      "La combinaison décoration et bouchées a rendu la soirée simple à organiser et très appréciée par nos invités.",
-  },
-];
-
 export const youtubeChannelUrl = "https://youtube.com/@SavourEtplus";
-export const youtubeEmbedUrl = "https://www.youtube.com/embed/u2pTPB8lK94";
+export const tiktokProfileUrl = "https://www.tiktok.com/@savouretplus";

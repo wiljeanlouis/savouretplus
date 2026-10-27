@@ -1,8 +1,7 @@
-import { ArrowRight, Maximize2, PlayCircle } from "lucide-react";
+import { ArrowRight, Maximize2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { publishedRealisations } from "../../content/realisations";
 import { RealisationLightbox } from "../realisations/RealisationLightbox";
-import { youtubeChannelUrl, youtubeEmbedUrl } from "./homeContent";
 
 const previewRealisations = publishedRealisations.slice(0, 4);
 const previewImages = previewRealisations.map(
@@ -77,31 +76,7 @@ export function RealisationsSection() {
           </a>
         </div>
 
-        <div className="mt-8 grid max-w-5xl overflow-hidden border border-espresso/10 bg-white text-espresso shadow-[0_16px_40px_rgba(53,42,43,0.06)] sm:grid-cols-[16rem_1fr] lg:ml-auto lg:grid-cols-[19rem_1fr]">
-          <iframe
-            className="aspect-video h-full min-h-40 w-full bg-black"
-            src={youtubeEmbedUrl}
-            title="Vidéos YouTube Savour Et Plus"
-            loading="lazy"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-          />
-          <div className="flex items-center p-6 sm:p-7">
-            <div>
-              <div className="flex items-center gap-3">
-                <PlayCircle className="h-6 w-6 text-wine" aria-hidden="true" />
-                <h3 className="font-serif text-2xl font-semibold">Dans les coulisses</h3>
-              </div>
-              <p className="mt-2 max-w-xl text-sm leading-6 text-espresso/60">
-                Retrouvez les décors, les préparations et les moments partagés par Savour Et Plus.
-              </p>
-              <a className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-wine hover:text-espresso" href={youtubeChannelUrl} target="_blank" rel="noreferrer">
-                Voir la chaîne YouTube
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </a>
-            </div>
-          </div>
-        </div>
+
       </div>
 
       {lightboxOpen ? (

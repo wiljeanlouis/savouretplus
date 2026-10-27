@@ -1,6 +1,9 @@
-import { ArrowRight, Mail, MessageCircle, Phone, PlayCircle } from "lucide-react";
+import { ArrowRight, Mail, MessageCircle, Phone } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "../ui/button";
+import { TikTokIcon } from "../ui/TikTokIcon";
+import { YouTubeIcon } from "../ui/YouTubeIcon";
+import { tiktokProfileUrl } from "../home/homeContent";
 
 const contactMethods = [
   {
@@ -19,10 +22,17 @@ const contactMethods = [
     lines: [["savouretplus@gmail.com", "mailto:savouretplus@gmail.com"]],
   },
   {
-    icon: <PlayCircle className="h-5 w-5" aria-hidden="true" />,
+    icon: <YouTubeIcon className="h-5 w-5" aria-hidden="true" />,
     title: "YouTube",
     description: "Découvrez les préparations et les moments partagés par SavouretPlus.",
     lines: [["@SavourEtplus", "https://youtube.com/@SavourEtplus"]],
+  },
+  {
+    icon: <TikTokIcon className="h-5 w-5" aria-hidden="true" />,
+    title: "TikTok",
+    description: "Suivez nos créations et nos moments partagés sur TikTok.",
+    lines: [["@savouretplus", tiktokProfileUrl]],
+    external: true,
   },
 ];
 
@@ -67,7 +77,7 @@ export function ContactPage() {
               Choisissez le moyen qui vous convient
             </h2>
           </div>
-          <div className="mt-9 grid items-stretch gap-5 md:grid-cols-3">
+          <div className="mt-9 grid items-stretch gap-5 md:grid-cols-2 xl:grid-cols-4">
             {contactMethods.map((method) => (
               <ContactCard {...method} key={method.title} />
             ))}
@@ -102,11 +112,13 @@ function ContactCard({
   title,
   description,
   lines,
+  external = false,
 }: {
   icon: ReactNode;
   title: string;
   description: string;
   lines: string[][];
+  external?: boolean;
 }) {
   return (
     <article className="surface-card flex h-full flex-col p-6 sm:p-7">
@@ -117,8 +129,9 @@ function ContactCard({
       <p className="mt-3 text-sm leading-6 text-espresso/60">{description}</p>
       <div className="mt-auto grid gap-2 pt-6">
         {lines.map(([label, href]) => (
-          <a className="editorial-link w-fit" href={href} key={href}>
+          <a className="editorial-link w-fit" href={href} key={href} target={external ? "_blank" : undefined} rel={external ? "noopener noreferrer" : undefined}>
             {label}
+            {external ? <span className="sr-only"> (nouvel onglet)</span> : null}
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </a>
         ))}

@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { HomePage } from "../../../src/components/home/HomePage";
 import { publishedRealisations } from "../../../src/content/realisations";
+import { Footer } from "../../../src/components/layout/Footer";
 import { Header } from "../../../src/components/layout/Header";
 
 describe("UI-1 home page", () => {
@@ -22,6 +23,35 @@ describe("UI-1 home page", () => {
     expect(html).toContain('href="#/realisations"');
   });
 
+  it("separates full-width commitments and testimonials before the final CTA", () => {
+    const html = renderToStaticMarkup(<HomePage />);
+    for (const title of ["Service sur mesure", "Gastronomie authentique", "Accompagnement personnalisé", "Attention aux détails"]) {
+      expect(html).toContain(title);
+    }
+    expect(html).toContain('aria-label="Témoignages"');
+    expect(html).not.toContain("Témoignage fictif");
+    expect(html).not.toContain("xl:grid-cols-[1.45fr_0.75fr]");
+    expect(html).toContain("sm:grid-cols-2 lg:grid-cols-4");
+    expect(html).toContain("Ils nous ont fait confiance");
+    expect(html).toContain("Les témoignages de nos clients");
+    const testimonialSection = html.indexOf('aria-labelledby="home-testimonials-title"');
+    expect(testimonialSection).toBeGreaterThan(html.indexOf("Attention aux détails"));
+    expect(testimonialSection).toBeLessThan(html.indexOf("Prêts à planifier votre prochain événement ?"));
+    expect(html).toMatch(/<\/section><section[^>]+aria-labelledby="home-testimonials-title"><div class="container-page">/);
+  });
+
+  it("removes the video section and preserves social links in the footer", () => {
+    const html = renderToStaticMarkup(<HomePage />);
+    expect(html).not.toContain("Dans les coulisses");
+    expect(html).not.toContain("home-videos-title");
+    expect(html).not.toContain("<iframe");
+    expect(html).not.toContain("<script");
+    const footer = renderToStaticMarkup(<Footer />);
+    for (const url of ["https://www.tiktok.com/@savouretplus", "https://youtube.com/@SavourEtplus"]) {
+      expect(footer).toContain(`href="${url}" target="_blank" rel="noopener noreferrer"`);
+    }
+  });
+
   it("loads the hero image eagerly and defers below-the-fold photographs", () => {
     const html = renderToStaticMarkup(<HomePage />);
 
@@ -40,7 +70,7 @@ describe("UI-1 home page", () => {
 
     const html = renderToStaticMarkup(<HomePage />);
     expect(html).toContain("col-span-2 row-span-2");
-    expect(html).toContain("Dans les coulisses");
+    expect(html).not.toContain("Dans les coulisses");
   });
 });
 

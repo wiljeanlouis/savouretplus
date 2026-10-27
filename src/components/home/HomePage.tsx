@@ -1,3 +1,4 @@
+import { homeRealisationTestimonials } from "../../content/realisations";
 import { ExpertiseSection, ExpertiseStrip } from "./ExpertiseSection";
 import { FinalCtaSection } from "./FinalCtaSection";
 import { GastronomySection } from "./GastronomySection";
@@ -15,11 +16,11 @@ export function HomePage() {
       <RealisationsSection />
       <GastronomySection />
       <section className="bg-ivory py-16 lg:py-24">
-        <div className="container-page grid gap-10 xl:grid-cols-[1.45fr_0.75fr] xl:items-stretch">
+        <div className="container-page">
           <WhySection />
-          <TestimonialsSection />
         </div>
       </section>
+      <TestimonialsSection testimonials={homeRealisationTestimonials} />
       <FinalCtaSection />
     </div>
   );

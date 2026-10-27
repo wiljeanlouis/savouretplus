@@ -7,6 +7,8 @@ import {
   findPublishedRealisationBySlug,
   getAvailableRealisationCategories,
   getOrderedRealisationImages,
+  getOrderedRealisationMedia,
+  type RealisationVideo,
   getPublishedRealisations,
   getRealisationQuoteHref,
   type Realisation,
@@ -32,6 +34,9 @@ describe("realisations manifest", () => {
     expect(validateRealisationsManifest(realisationsManifest)).toBe(realisationsManifest);
 
     for (const realisation of realisationsManifest) {
+      for (const video of (realisation as Realisation).videos ?? []) {
+        if (video.thumbnail) expect(existsSync(resolve(process.cwd(), "public", video.thumbnail.replace(/^\.\//, ""))), video.thumbnail).toBe(true);
+      }
       for (const image of realisation.images) {
         const path = resolve(process.cwd(), "public", image.src.replace(/^\.\//, ""));
         expect(existsSync(path), image.src).toBe(true);
@@ -63,7 +68,7 @@ describe("realisations manifest", () => {
       "realisation-bouquet-cadeau-billets-bleu-or": "REA-0005",
     };
     const changed = [...realisationsManifest].reverse().map((item, index) => ({
-      ...item, title: `Titre ${index}`, category: "traiteur" as const, displayOrder: -item.displayOrder,
+      ...item, title: `Titre ${index}`, category: "cartering" as const, displayOrder: -item.displayOrder,
     }));
     for (const items of [realisationsManifest, getPublishedRealisations(changed)]) {
       expect(Object.fromEntries(items.map(({ id, reference }) => [id, reference]))).toEqual(expected);
@@ -96,13 +101,13 @@ describe("realisations manifest", () => {
   it("filters only categories present in the published collection", () => {
     const items = [
       fixture(),
-      fixture({ id: "food", slug: "food", category: "traiteur" }),
+      fixture({ id: "food", slug: "food", category: "cartering" }),
     ];
 
-    expect(filterRealisations(items, "traiteur").map((item) => item.slug)).toEqual(["food"]);
+    expect(filterRealisations(items, "cartering").map((item) => item.slug)).toEqual(["food"]);
     expect(getAvailableRealisationCategories(items).map((category) => category.id)).toEqual([
       "decoration",
-      "traiteur",
+      "cartering",
     ]);
   });
 
@@ -158,5 +163,63 @@ describe("realisation testimonial validation", () => {
       expect(() => validateRealisationsManifest([fixture({ testimonials: [{ ...testimonial, [field]: value } as never] })]))
         .toThrow(new RegExp(field));
     }
+  });
+});
+
+
+describe("multimedia realisations", () => {
+  const youtube: RealisationVideo = {
+    type: "video", platform: "youtube", url: "https://www.youtube.com/watch?v=test",
+    title: "Vidéo fictive non publiée", thumbnail: "./images/test.jpg", thumbnailAlt: "Aperçu de test", displayOrder: 1,
+  };
+  const tiktok: RealisationVideo = { type: "video", platform: "tiktok", url: "https://www.tiktok.com/@test/video/123", title: "Test TikTok", displayOrder: 3 };
+
+  it("keeps photo-only data and orders several videos among photographs without changing identity", () => {
+    const photoOnly = fixture();
+    expect(validateRealisationsManifest([photoOnly])[0]).toBe(photoOnly);
+    const mixed = fixture({ videos: [tiktok, youtube], published: false });
+    const before = structuredClone(mixed);
+    expect(validateRealisationsManifest([mixed])[0]).toBe(mixed);
+    expect(getOrderedRealisationMedia(mixed).map((media) => media.type)).toEqual(["video", "image", "video"]);
+    expect(mixed).toEqual(before);
+    expect(findPublishedRealisationBySlug([mixed], mixed.slug)).toBeNull();
+    expect(getPublishedRealisations([mixed])).toEqual([]);
+    expect(() => validateRealisationsManifest([fixture({ images: [], videos: [youtube] })])).toThrow(/photographie/);
+    expect(() => validateRealisationsManifest([fixture({ coverImage: youtube.thumbnail, videos: [youtube] })])).toThrow(/couverture/i);
+  });
+
+  it.each([
+    ["youtube", "https://youtu.be/test"], ["youtube", "https://m.youtube.com/shorts/test"],
+    ["tiktok", "https://vm.tiktok.com/test/"], ["tiktok", tiktok.url],
+  ])("accepts official HTTPS %s URL %s", (platform, url) => {
+    expect(() => validateRealisationsManifest([fixture({ videos: [{ ...youtube, platform, url } as RealisationVideo] })])).not.toThrow();
+  });
+
+  it.each([
+    "javascript:alert(1)", "http://www.youtube.com/watch?v=test", "https://youtube.com.evil.test/video",
+    "https://evilyoutube.com/test", "https://youtube.com@evil.test/test", "https://user@youtube.com/test",
+    "https://www.tiktok.com/@test/video/123", "https://youtube.com:444/test", "https:youtube.com/test", "https:///youtube.com/test", "not a URL", " https://youtube.com/test",
+    "https://youtube.com\\@evil.test/test",
+  ])("rejects unsafe or mismatched YouTube URL %s", (url) => {
+    expect(() => validateRealisationsManifest([fixture({ videos: [{ ...youtube, url }] })])).toThrow(/URL/);
+  });
+
+  it.each([
+    { platform: "vimeo" }, { type: "audio" }, { title: " " }, { url: undefined },
+    { thumbnail: "https://example.com/test.jpg" }, { thumbnail: "./images/../secret.jpg" },
+    { thumbnailAlt: "" }, { caption: 123 }, { displayOrder: NaN },
+  ])("rejects invalid video fields %j", (overrides) => {
+    expect(() => validateRealisationsManifest([fixture({ videos: [{ ...youtube, ...overrides } as RealisationVideo] })])).toThrow();
+  });
+
+  it("allows missing previews but rejects malformed lists and duplicate identities", () => {
+    expect(() => validateRealisationsManifest([fixture({ videos: [tiktok] })])).not.toThrow();
+    for (const videos of [null, {}, [null]]) {
+      expect(() => validateRealisationsManifest([fixture({ videos: videos as never })])).toThrow(/vidéo/);
+    }
+    expect(() => validateRealisationsManifest([fixture({ videos: [youtube] }), fixture({ slug: "other", reference: "REA-0101" })])).toThrow(/Identifiant/);
+    expect(realisationsManifest.map(({ slug }) => slug)).toEqual([
+      "grand-opening-soul-store", "anniversaire-winnie", "decor-colonne-ballons-rouge-blanc", "anniversaire-marvensley", "bouquet-cadeau-billets-bleu-or",
+    ]);
   });
 });
